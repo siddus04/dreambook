@@ -355,52 +355,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Published Course -->
-                <a href="editor.html" class="bg-surface rounded-lg border border-border p-6 hover:border-primary/30 transition-all cursor-pointer group block">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-bg text-success text-xs font-medium">
-                            <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
-                            Published
-                        </span>
-                        <button onclick="event.preventDefault(); event.stopPropagation();" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-tertiary transition-all">
-                            <span class="material-symbols-outlined text-text-tertiary text-lg">more_horiz</span>
-                        </button>
-                    </div>
-                    <h3 class="text-lg font-semibold text-text-primary mb-1 group-hover:text-primary transition-colors">Introduction to Cell Biology</h3>
-                    <p class="text-sm text-text-secondary mb-4">Undergraduate · 5 Chapters · 847 Students</p>
-                    <div class="flex items-center justify-between pt-4 border-t border-border">
-                        <div class="flex -space-x-2">
-                            <div class="w-7 h-7 rounded-full bg-primary-bg text-primary text-xs font-medium flex items-center justify-center border-2 border-surface">SC</div>
-                        </div>
-                        <span class="text-xs text-text-tertiary">Updated 2 days ago</span>
-                    </div>
-                </a>
-
-                <!-- Draft Course -->
-                <a href="editor.html" class="bg-surface rounded-lg border border-dashed border-border p-6 hover:border-warning/50 transition-all cursor-pointer group block">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-bg text-warning text-xs font-medium">
-                            <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
-                            Draft
-                        </span>
-                        <button onclick="event.preventDefault(); event.stopPropagation();" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-tertiary transition-all">
-                            <span class="material-symbols-outlined text-text-tertiary text-lg">more_horiz</span>
-                        </button>
-                    </div>
-                    <h3 class="text-lg font-semibold text-text-primary mb-1 group-hover:text-warning transition-colors">Advanced Cell Biology</h3>
-                    <p class="text-sm text-text-secondary mb-4">Graduate · 8 Chapters planned</p>
-                    <div class="mb-2">
-                        <div class="flex justify-between text-xs mb-1.5">
-                            <span class="text-text-tertiary">Progress</span>
-                            <span class="font-medium text-warning">45%</span>
-                        </div>
-                        <div class="w-full bg-surface-tertiary rounded-full h-1.5">
-                            <div class="bg-warning h-1.5 rounded-full" style="width: 45%"></div>
-                        </div>
-                    </div>
-                </a>
-
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-grid">
                 <!-- Create New -->
                 <div onclick="openCreateModal()" class="bg-surface-secondary rounded-lg border-2 border-dashed border-border p-6 hover:border-primary hover:bg-primary-bg/20 transition-all cursor-pointer flex flex-col items-center justify-center text-center min-h-[220px] group">
                     <div class="w-12 h-12 rounded-lg bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary group-hover:bg-primary-bg transition-all">
@@ -1379,9 +1334,11 @@ async function createBook() {
 
     // If blank, we just pass an empty structure
     if (state.structureStyle === 'blank') {
+        const newBookId = 'book_' + Date.now();
+        sessionStorage.setItem('book_id', newBookId);
         sessionStorage.setItem('generated_structure', JSON.stringify({ chapters: [] }));
         sessionStorage.setItem('book_title', state.title);
-        window.location.href = 'editor.html';
+        window.location.href = 'editor.html?id=' + newBookId;
         return;
     }
 
@@ -1390,9 +1347,11 @@ async function createBook() {
     const cachedStructure = localStorage.getItem(cacheKey);
     if (cachedStructure) {
         console.log("Using cached structure");
+        const newBookId = 'book_' + Date.now();
+        sessionStorage.setItem('book_id', newBookId);
         sessionStorage.setItem('generated_structure', cachedStructure);
         sessionStorage.setItem('book_title', state.title);
-        setTimeout(() => { window.location.href = 'editor.html'; }, 500); // Small delay for UX
+        setTimeout(() => { window.location.href = 'editor.html?id=' + newBookId; }, 500); // Small delay for UX
         return;
     }
 
@@ -1423,7 +1382,7 @@ You MUST respond with a valid JSON object matching this exact schema:
   ]
 }`;
 
-    try {
+        try {
         if (!state.apiKey) {
             // Fallback mock data if no API key
             const mockData = {
@@ -1431,9 +1390,11 @@ You MUST respond with a valid JSON object matching this exact schema:
                     { title: "Introduction", subtitle: "Getting started", sections: [{ title: "Overview", content: "This is a mock section." }] }
                 ]
             };
+            const newBookId = 'book_' + Date.now();
+            sessionStorage.setItem('book_id', newBookId);
             sessionStorage.setItem('generated_structure', JSON.stringify(mockData));
             sessionStorage.setItem('book_title', state.title);
-            setTimeout(() => { window.location.href = 'editor.html'; }, 1000);
+            setTimeout(() => { window.location.href = 'editor.html?id=' + newBookId; }, 1000);
             return;
         }
 
@@ -1462,10 +1423,12 @@ You MUST respond with a valid JSON object matching this exact schema:
         localStorage.setItem(cacheKey, result);
         
         // Pass to editor
+        const newBookId = 'book_' + Date.now();
+        sessionStorage.setItem('book_id', newBookId);
         sessionStorage.setItem('generated_structure', result);
         sessionStorage.setItem('book_title', state.title);
         
-        window.location.href = 'editor.html';
+        window.location.href = 'editor.html?id=' + newBookId;
 
     } catch (error) {
         console.error("Structure generation failed:", error);
@@ -1484,7 +1447,72 @@ document.addEventListener('DOMContentLoaded', () => {
             radio.closest('.select-card').classList.add('active');
         });
     });
+
+    renderDashboard();
 });
+
+function renderDashboard() {
+    const grid = document.getElementById('dashboard-grid');
+    if (!grid) return;
+    
+    // Find all saved books in localStorage
+    const savedBooks = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('dreambook_data_')) {
+            try {
+                const bookData = JSON.parse(localStorage.getItem(key));
+                savedBooks.push(bookData);
+            } catch(e) {
+                console.error("Failed to parse book data", key);
+            }
+        }
+    }
+    
+    // Sort by updated descending
+    savedBooks.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    
+    let html = '';
+    savedBooks.forEach(book => {
+        const chapterCount = book.appState && book.appState.chapters ? Object.keys(book.appState.chapters).length : 0;
+        const lastUpdated = new Date(book.updatedAt || Date.now()).toLocaleDateString();
+        html += `
+            <a href="editor.html?id=${book.id}" class="bg-surface rounded-lg border border-border p-6 hover:border-primary/30 transition-all cursor-pointer group block">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-bg text-warning text-xs font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+                        Draft
+                    </span>
+                    <button onclick="event.preventDefault(); event.stopPropagation(); if(confirm('Delete this textbook?')) { localStorage.removeItem('dreambook_data_${book.id}'); renderDashboard(); }" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-tertiary transition-all" title="Delete Textbook">
+                        <span class="material-symbols-outlined text-text-tertiary text-lg">delete</span>
+                    </button>
+                </div>
+                <h3 class="text-lg font-semibold text-text-primary mb-1 group-hover:text-primary transition-colors">${book.title}</h3>
+                <p class="text-sm text-text-secondary mb-4">${chapterCount} Chapter${chapterCount !== 1 ? 's' : ''}</p>
+                <div class="flex items-center justify-between pt-4 border-t border-border">
+                    <div class="flex -space-x-2">
+                        <div class="w-7 h-7 rounded-full bg-primary-bg text-primary text-xs font-medium flex items-center justify-center border-2 border-surface">SC</div>
+                    </div>
+                    <span class="text-xs text-text-tertiary">Updated ${lastUpdated}</span>
+                </div>
+            </a>
+        `;
+    });
+    
+    // Append the Create New button
+    html += `
+        <!-- Create New -->
+        <div onclick="openCreateModal()" class="bg-surface-secondary rounded-lg border-2 border-dashed border-border p-6 hover:border-primary hover:bg-primary-bg/20 transition-all cursor-pointer flex flex-col items-center justify-center text-center min-h-[220px] group">
+            <div class="w-12 h-12 rounded-lg bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary group-hover:bg-primary-bg transition-all">
+                <span class="material-symbols-outlined text-text-tertiary text-2xl group-hover:text-primary transition-colors">add</span>
+            </div>
+            <h3 class="font-semibold text-text-primary mb-1">Create New Project</h3>
+            <p class="text-sm text-text-tertiary max-w-[180px]">Start a new textbook or import existing content</p>
+        </div>
+    `;
+    
+    grid.innerHTML = html;
+}
 </script>
 
 </body>

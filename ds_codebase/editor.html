@@ -841,9 +841,9 @@
                         <nav class="flex items-center gap-1 text-sm">
                             <a href="code.html" class="text-text-tertiary hover:text-primary">Home</a>
                             <span class="material-symbols-outlined text-text-tertiary text-base">chevron_right</span>
-                            <span class="text-text-secondary">Introduction to Cell Biology</span>
+                            <span id="book-title-display" class="text-text-secondary">Introduction to Cell Biology</span>
                             <span class="material-symbols-outlined text-text-tertiary text-base">chevron_right</span>
-                            <span class="text-text-primary font-medium">Chapter 1</span>
+                            <span id="header-chapter-title" class="text-text-primary font-medium">Chapter 1</span>
                         </nav>
                     </div>
                     <div class="flex items-center gap-2">
@@ -1825,6 +1825,25 @@
         activeChapterId: 'chapter-1'
     };
 
+    let currentBookId = new URLSearchParams(window.location.search).get('id') || sessionStorage.getItem('book_id');
+    if (!currentBookId) {
+        currentBookId = 'book_' + Date.now();
+        window.history.replaceState(null, '', '?id=' + currentBookId);
+    }
+    sessionStorage.removeItem('book_id');
+
+    function saveBook() {
+        const bookTitle = document.getElementById('book-title-display')?.textContent || 'Untitled Book';
+        const data = {
+            id: currentBookId,
+            title: bookTitle,
+            appState: appState,
+            copilotHistory: state.copilotHistory,
+            updatedAt: Date.now()
+        };
+        localStorage.setItem('dreambook_data_' + currentBookId, JSON.stringify(data));
+    }
+
     /** Strip AI-provided section prefixes (e.g. "1.1:", "2.3 -") before we apply our own numbering. */
     function stripSectionNumberPrefix(title) {
         return (title || '').replace(/^\d+\.\d+\s*[:\-–—.]?\s*/, '').trim();
@@ -1902,7 +1921,7 @@
                 
                 // Update the top left title if available
                 if (bookTitle) {
-                    const topTitle = document.querySelector('header h1');
+                    const topTitle = document.getElementById('book-title-display');
                     if (topTitle) topTitle.textContent = bookTitle;
                 }
             } else {
@@ -1913,6 +1932,8 @@
             // Clean up session storage so it doesn't persist forever
             sessionStorage.removeItem('generated_structure');
             sessionStorage.removeItem('book_title');
+            
+            saveBook(); // Persist the newly generated structure
             
         } catch (e) {
             console.error("Error loading generated structure:", e);
@@ -1925,6 +1946,7 @@
         const content = document.getElementById('editor').innerHTML;
         
         appState.chapters[appState.activeChapterId] = { title, subtitle, content };
+        saveBook();
     }
 
     function loadChapterState(chapterId) {
@@ -1940,6 +1962,7 @@
         // Update dynamic navigation when loading a chapter
         updateChapterSections();
         updateCopilotContext();
+        saveBook();
     }
 
     // ════════════════════════════════════════════════════════════════════════════
@@ -2135,6 +2158,7 @@
         
         document.getElementById('chapter-title').focus();
         checkPlaceholder();
+        saveBook();
         
         // Re-initialize sortable for the new chapter's sections container
         const newSectionList = chapterList.lastElementChild.querySelector('.chapter-sections');
@@ -2143,9 +2167,16 @@
 
     function renumberChapters() {
         const chapters = document.querySelectorAll('#chapter-list > .chapter-group');
+        const newChaptersState = {};
         
         chapters.forEach((chapterBlock, chapterIndex) => {
             const chapterNum = chapterIndex + 1;
+            const chapterId = chapterBlock.getAttribute('data-chapter-id');
+            
+            // Rebuild state in new order
+            if (appState.chapters[chapterId]) {
+                newChaptersState[chapterId] = appState.chapters[chapterId];
+            }
             
             // Update Chapter Title Text
             const titleSpan = chapterBlock.querySelector('.chapter-title-text');
@@ -2156,10 +2187,10 @@
                 titleSpan.setAttribute('title', newFullTitle); // Update tooltip
                 
                 // If this is the active chapter, update the editor's title input too
-                if (chapterBlock.getAttribute('data-chapter-id') === appState.activeChapterId) {
+                if (chapterId === appState.activeChapterId) {
                      // Update state
-                     if(appState.chapters[appState.activeChapterId]) {
-                         appState.chapters[appState.activeChapterId].title = currentTitle;
+                     if(newChaptersState[appState.activeChapterId]) {
+                         newChaptersState[appState.activeChapterId].title = currentTitle;
                      }
                      // Update the "Chapter N" label above the editor title
                      const editorChapterLabel = document.getElementById('editor-chapter-label');
@@ -2180,9 +2211,12 @@
             });
         });
         
+        appState.chapters = newChaptersState;
+        
         // Re-run dynamic nav update for the active chapter to ensure headers match
         updateChapterSections();
         updateCopilotContext();
+        saveBook();
     }
 
     function initSortableForSections(sectionList) {
@@ -2225,6 +2259,7 @@
                     checkPlaceholder();
                 }
             }
+            saveBook();
         }
     }
 
@@ -2263,6 +2298,98 @@
         { id: 'adjust-reading-level', label: 'Adjust reading level...', category: 'Format', action: 'openReadingLevelModal' },
     ];
 
+    function loadSavedBook() {
+        const saved = localStorage.getItem('dreambook_data_' + currentBookId);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                
+                // Restore appState
+                Object.assign(appState, data.appState);
+                
+                // Restore copilot history
+                state.copilotHistory = data.copilotHistory || [];
+                
+                // Update top title
+                const topTitle = document.getElementById('book-title-display');
+                if (topTitle && data.title) topTitle.textContent = data.title;
+                
+                // Re-render chapter list
+                const chapterList = document.getElementById('chapter-list');
+                chapterList.innerHTML = '';
+                
+                Object.keys(appState.chapters).forEach((chapterId, index) => {
+                    const chapter = appState.chapters[chapterId];
+                    const chapterNum = index + 1;
+                    const chapterHTML = `
+                        <div class="mb-2 chapter-group" data-chapter-id="${chapterId}">
+                            <div class="chapter-item group ${chapterId === appState.activeChapterId ? 'active' : ''}" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base drag-handle" title="Drag to reorder">drag_indicator</span>
+                                <span class="material-symbols-outlined text-base ${chapterId === appState.activeChapterId ? 'rotate-90' : ''} transition-transform text-text-tertiary">chevron_right</span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-warning flex-shrink-0"></span>
+                                <span class="nav-truncate font-medium chapter-title-text" title="${chapterNum}. ${chapter.title}">${chapterNum}. ${chapter.title}</span>
+                                <button onclick="deleteChapter(this, event)" class="p-1 rounded hover:bg-surface-tertiary text-text-tertiary hover:text-error transition-colors opacity-0 group-hover:opacity-100" title="Delete Chapter">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
+                            </div>
+                            <div class="chapter-sections ${chapterId === appState.activeChapterId ? '' : 'hidden'}"></div>
+                        </div>
+                    `;
+                    chapterList.insertAdjacentHTML('beforeend', chapterHTML);
+                    
+                    const sectionList = chapterList.lastElementChild.querySelector('.chapter-sections');
+                    if (typeof initSortableForSections === 'function') {
+                        initSortableForSections(sectionList);
+                    }
+                });
+                
+                // Load active chapter
+                loadChapterState(appState.activeChapterId);
+                
+                // Render copilot history
+                const messagesContainer = document.getElementById('copilot-messages');
+                messagesContainer.innerHTML = '';
+                state.copilotHistory.forEach(msg => {
+                    renderCopilotMessageHTML(msg.role, msg.content);
+                });
+                
+                return true;
+            } catch (e) {
+                console.error('Failed to load saved book', e);
+            }
+        }
+        return false;
+    }
+
+    function renderCopilotMessageHTML(sender, message) {
+        const container = document.getElementById('copilot-messages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `flex gap-3 animate-fade-in ${sender === 'user' ? 'flex-row-reverse' : ''}`;
+        
+        if (sender === 'ai') {
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded bg-primary-bg flex items-center justify-center shrink-0 border border-primary/20">
+                    <span class="material-symbols-outlined text-primary text-sm">smart_toy</span>
+                </div>
+                <div class="flex-1 bg-surface-secondary border border-border rounded-lg p-3 rounded-tl-none">
+                    <div class="text-sm text-text-primary leading-relaxed">${message}</div>
+                </div>
+            `;
+        } else {
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-border">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAP3EN7nDOxMk9Dul-2-TSDpEnzmWgnkUVgiQLR9M8d6LfV8MNUmDFAnuVc3bKIh_oN6BEFySxlheQcDiIDyzMrTCHuDq6PbUzzo1PFuHc-4vNa2DLfrOhfma0SFdIpVpcPMogtuvxiJWWwlmH3oit6fgLmCAjZBwDULhBJ-_38lF1y_781KmtItxiLz0iwGDItAw0eYpoR2Tlhcs1HQRMYb0NFcntQimMh7uRJDdG5fO9mAeMQVsebg-XldlSMgdoeKLNmVMPt" alt="User" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1 bg-primary text-text-inverse rounded-lg p-3 rounded-tr-none shadow-sm">
+                    <div class="text-sm leading-relaxed">${message}</div>
+                </div>
+            `;
+        }
+        
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+    }
+
     // ════════════════════════════════════════════════════════════════════════════
     // INITIALIZATION
     // ════════════════════════════════════════════════════════════════════════════
@@ -2270,8 +2397,11 @@
         document.getElementById('api-key-input').value = state.apiKey;
         document.getElementById('model-select').value = state.model;
         
-        // Load generated structure if it exists
-        loadGeneratedStructure();
+        // Try to load saved book first, if not try generated structure
+        if (!loadSavedBook()) {
+            loadGeneratedStructure();
+        }
+
         
         updateWordCount();
         
@@ -2311,9 +2441,13 @@
                 }
             }
             updateCopilotContext();
+            saveCurrentChapterState();
         });
 
-        document.getElementById('chapter-subtitle').addEventListener('input', updateCopilotContext);
+        document.getElementById('chapter-subtitle').addEventListener('input', () => {
+            updateCopilotContext();
+            saveCurrentChapterState();
+        });
 
         initVoiceInput();
         updateCopilotContext();
@@ -2648,7 +2782,10 @@
 
         // Debounced nav update — runs after user pauses typing
         clearTimeout(window.navUpdateTimeout);
-        window.navUpdateTimeout = setTimeout(updateChapterSections, 600);
+        window.navUpdateTimeout = setTimeout(() => {
+            updateChapterSections();
+            saveCurrentChapterState();
+        }, 600);
     }
 
     function checkPlaceholder() {
@@ -4516,6 +4653,7 @@ Return ONLY the implications text (2–3 short paragraphs).`,
         }
         
         state.copilotPending = false;
+        saveBook();
     }
     
     async function generateCopilotResponse(hybridContext) {
@@ -5479,6 +5617,7 @@ CRITICAL RULES:
         }
 
         state.copilotPending = false;
+        saveBook();
     }
 
     async function generateWidgetChatResponse(chat) {
