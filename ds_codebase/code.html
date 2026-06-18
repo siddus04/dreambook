@@ -1401,9 +1401,9 @@ async function createBook() {
     if (state.structureStyle === 'toc') {
         prompt = `Generate a Table of Contents for a textbook titled "${state.title}". Return exactly 8 chapters. Each chapter should have a title and a subtitle, but NO subsections.`;
     } else if (state.structureStyle === 'outline') {
-        prompt = `Generate a Chapter Outline for a textbook titled "${state.title}". Return exactly 4 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a title and a brief description (1 sentence).`;
+        prompt = `Generate a Chapter Outline for a textbook titled "${state.title}". Return exactly 4 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a plain-text title (no numeric prefix like "1.1") and a brief description (1 sentence).`;
     } else if (state.structureStyle === 'full') {
-        prompt = `Generate a Full Draft structure for a textbook titled "${state.title}". Return exactly 3 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a title and 2 paragraphs of full draft content.`;
+        prompt = `Generate a Full Draft structure for a textbook titled "${state.title}". Return exactly 3 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a plain-text title (no numeric prefix like "1.1") and 2 paragraphs of full draft content.`;
     }
 
     const systemPrompt = `You are an expert academic textbook author.
@@ -1415,7 +1415,7 @@ You MUST respond with a valid JSON object matching this exact schema:
       "subtitle": "Chapter Subtitle",
       "sections": [
         {
-          "title": "Section Title",
+          "title": "Section Title (plain text only — do NOT include numbering like 1.1)",
           "content": "Brief description OR full draft content (depending on the prompt). Omit this field if the prompt asks for NO subsections."
         }
       ]

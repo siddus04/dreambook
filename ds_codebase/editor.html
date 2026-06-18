@@ -207,20 +207,122 @@
 
         /* AI Selection Menu */
         .ai-menu {
-            @apply fixed z-[100] w-72 bg-surface border border-border rounded-lg shadow-xl overflow-hidden;
+            @apply fixed z-[100] w-72 bg-surface border border-border rounded-lg shadow-xl overflow-hidden flex flex-col;
         }
+        .ai-menu.hidden { display: none; }
         .ai-menu-search {
-            @apply w-full px-3 py-2.5 border-b border-border text-sm outline-none;
+            @apply w-full px-3 py-2.5 border-b border-border text-sm outline-none shrink-0;
             @apply placeholder-text-tertiary focus:bg-surface-secondary;
         }
         .ai-menu-content {
-            @apply max-h-80 overflow-y-auto p-1;
+            @apply max-h-80 overflow-y-auto p-1 flex-1 min-h-0;
         }
         .source-toggle {
             @apply flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer;
         }
         .source-toggle.active { @apply bg-primary text-white; }
         .source-toggle:not(.active) { @apply bg-surface-tertiary text-text-secondary hover:bg-border; }
+
+        /* Selection Toolbar (Stage 1 bubble) */
+        .selection-toolbar {
+            @apply fixed z-[120] flex items-center gap-0.5 bg-surface border border-border rounded-lg shadow-xl px-1 py-1;
+        }
+        /* @apply flex bakes display:flex into .selection-toolbar, which would override the
+           .hidden utility — this higher-specificity rule ensures .hidden actually hides it. */
+        .selection-toolbar.hidden { display: none; }
+        .selection-toolbar-btn {
+            @apply flex items-center gap-1 px-2 py-1.5 rounded text-text-secondary hover:bg-surface-tertiary transition-colors;
+        }
+        .selection-toolbar-btn.active { @apply bg-primary-bg text-primary; }
+        .selection-toolbar-ask { @apply text-text-primary hover:bg-primary-bg; }
+        .selection-toolbar-kbd {
+            @apply text-[10px] text-text-tertiary bg-surface-tertiary px-1 py-0.5 rounded;
+        }
+        .selection-toolbar-divider { @apply w-px h-5 bg-border mx-0.5; }
+        .selection-toolbar-text { @apply gap-0.5; }
+
+        .selection-highlight-layer { @apply fixed inset-0 z-[110] pointer-events-none; }
+        .selection-highlight-rect {
+            position: fixed;
+            background: rgba(46, 76, 185, 0.18);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        .jargon-term {
+            @apply text-amber-700 bg-amber-50 px-0.5 rounded border-b border-dashed border-amber-400;
+        }
+        #editor .jargon-term { @apply cursor-pointer; }
+        .jargon-popover {
+            @apply fixed z-[300] max-w-sm p-3 bg-surface border border-border rounded-lg shadow-xl;
+        }
+        .jargon-popover.hidden { display: none; }
+        .jargon-popover-term {
+            @apply font-semibold text-text-primary text-sm mb-1.5;
+        }
+        .jargon-popover-def {
+            @apply text-sm text-text-secondary leading-relaxed;
+        }
+        .jargon-popover-textarea {
+            @apply w-full mt-1 mb-2 px-2 py-1.5 text-sm border border-border rounded resize-none outline-none focus:border-primary;
+        }
+        .jargon-popover-actions {
+            @apply flex justify-end gap-2 mt-1;
+        }
+        .jargon-popover-btn {
+            @apply px-3 py-1 text-xs rounded transition-colors;
+        }
+        .jargon-popover-save {
+            @apply bg-primary text-white hover:bg-primary-dark;
+        }
+        .jargon-popover-remove {
+            @apply text-text-secondary hover:bg-surface-tertiary border border-border;
+        }
+        .jargon-popover-read { pointer-events: none; }
+        .reading-level-btn {
+            @apply w-full flex flex-col items-start gap-0.5 px-4 py-3 text-left rounded-lg hover:bg-surface-tertiary transition-colors;
+        }
+
+        /* Widget config modal */
+        .wcm-difficulty-btn.active, .wcm-turns-btn.active {
+            @apply border-primary bg-primary-bg text-primary font-medium;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Widget delete button in editor */
+        .pedagogy-block-inserted .widget-delete-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            z-index: 10;
+        }
+        .pedagogy-block-inserted .widget-delete-btn:hover {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+        .pedagogy-block-inserted .widget-delete-btn .material-symbols-outlined {
+            font-size: 18px;
+            color: #9ca3af;
+        }
+        .pedagogy-block-inserted .widget-delete-btn:hover .material-symbols-outlined {
+            color: #dc2626;
+        }
 
         /* Animations */
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -231,6 +333,9 @@
         }
         .animate-pulse-slow { animation: pulse 2s ease-in-out infinite; }
         .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+        #copilot-context.context-updated { animation: fadeIn 0.3s ease-out; }
+        .voice-input-btn.active { @apply bg-primary-bg text-primary; }
+        .voice-input-btn:disabled { @apply opacity-40 cursor-not-allowed; }
         .animate-shimmer {
             background: linear-gradient(90deg, currentColor 25%, rgba(99, 102, 241, 0.6) 50%, currentColor 75%);
             background-size: 200% 100%;
@@ -321,13 +426,18 @@
         #reading-view {
             display: none;
             position: absolute;
-            inset: 0;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
             z-index: 50;
             background: #FAFBFF;
             overflow-y: auto;
             animation: fadeIn 0.25s ease-out;
+            transition: right 0.2s ease;
         }
         #reading-view.active { display: block; }
+        #reading-view.copilot-visible { right: 320px; }
 
         .reading-page {
             max-width: 680px;
@@ -422,6 +532,17 @@
             padding: 20px 24px;
             border-radius: 0 8px 8px 0;
         }
+        .rv-body .jargon-term {
+            color: #b45309;
+            background: #fffbeb;
+            padding: 0 2px;
+            border-radius: 2px;
+            border-bottom: 1px dashed #fbbf24;
+            cursor: help;
+        }
+        .rv-body .jargon-popover-read .jargon-popover-def {
+            color: #475569;
+        }
         .rv-body blockquote p {
             font-family: 'Inter', sans-serif;
             font-size: 16px;
@@ -435,6 +556,182 @@
         .rv-body .pedagogy-block-inserted {
             margin: 32px 0;
         }
+
+        /* Interactive pedagogy widgets (student reading view) */
+        .pedagogy-widget {
+            margin: 32px 0;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            overflow: hidden;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .pedagogy-widget.pw-reflect { border-color: #a7f3d0; background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); }
+        .pedagogy-widget.pw-challenge { border-color: #fde68a; background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%); }
+        .pedagogy-widget.pw-apply { border-color: #ddd6fe; background: linear-gradient(135deg, #f5f3ff 0%, #faf5ff 100%); }
+        .pedagogy-widget.pw-explain { border-color: #bfdbfe; background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%); }
+        .pedagogy-widget[data-status="engaged"] { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        .pedagogy-widget[data-status="completed"] { border-color: #6ee7b7; }
+        .pedagogy-widget[data-status="skipped"] { border-color: #fcd34d; opacity: 0.92; }
+
+        .pw-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 16px 12px;
+        }
+        .pw-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .pw-icon.emerald { background: #10b981; color: #fff; }
+        .pw-icon.amber { background: #f59e0b; color: #fff; }
+        .pw-icon.violet { background: #8b5cf6; color: #fff; }
+        .pw-icon.blue { background: #3b82f6; color: #fff; }
+        .pw-icon .material-symbols-outlined { font-size: 20px; }
+        .pw-title-wrap { flex: 1; min-width: 0; }
+        .pw-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .pw-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .pw-status-badge {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            color: #475569;
+            flex-shrink: 0;
+        }
+        .pw-status-badge.pending { background: #e2e8f0; color: #475569; }
+        .pw-status-badge.engaged {
+            background: #3b82f6;
+            color: #fff;
+            animation: pulse 2s infinite;
+        }
+        .pw-status-badge.completed { background: #10b981; color: #fff; }
+        .pw-status-badge.skipped { background: #f59e0b; color: #fff; }
+
+        .pw-prompt {
+            margin: 0 16px 12px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            line-height: 1.65;
+            color: #334155;
+        }
+        .pw-meta {
+            margin: 0 16px 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pw-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 16px 16px;
+        }
+        .pw-engage-btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #2E4CB9;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .pw-engage-btn:hover { background: #243a94; }
+        .pw-engage-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pw-skip-btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.7);
+            color: #64748b;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .pw-skip-btn:hover { background: #fff; color: #334155; }
+        .pw-skip-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Engagement fade — next section only (until next heading) */
+        .rv-faded-section {
+            opacity: 0.35;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            filter: blur(0.3px);
+        }
+        .rv-faded-section.unlocked {
+            opacity: 1;
+            pointer-events: auto;
+            filter: none;
+        }
+
+        /* Reading progress in topbar */
+        .rv-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 180px;
+        }
+        .rv-progress-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            color: #64748b;
+            white-space: nowrap;
+        }
+        .rv-progress-bar {
+            width: 100px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .rv-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #2E4CB9);
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+
+        /* Student chat mode in copilot panel */
+        .copilot-student-bar {
+            display: none;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+        .copilot-student-bar.active { display: block; }
+        .copilot-widget-done-btn {
+            display: none;
+        }
+        .copilot-widget-done-btn.visible { display: flex; }
 
         /* Reading view top bar */
         .rv-topbar {
@@ -549,7 +846,7 @@
                         </button>
                         <button onclick="toggleCopilot()" id="copilot-btn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors">
                             <span class="material-symbols-outlined text-lg">smart_toy</span>
-                            Copilot
+                            Writing Copilot
                         </button>
                     </div>
                 </div>
@@ -629,6 +926,12 @@
                         <div class="rv-topbar-label">
                             <span class="material-symbols-outlined" style="font-size:16px;">visibility</span>
                             Viewing as Student
+                        </div>
+                        <div id="rv-progress" class="rv-progress hidden">
+                            <span id="rv-progress-label" class="rv-progress-label">0 of 0 checkpoints</span>
+                            <div class="rv-progress-bar">
+                                <div id="rv-progress-fill" class="rv-progress-fill" style="width: 0%"></div>
+                            </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <span style="font-family:'Inter',sans-serif;font-size:12px;color:#9ca3af;">Read-only preview</span>
@@ -785,45 +1088,32 @@
                     </div>
                 </main>
 
-                <!-- Copilot Panel -->
-                <aside id="copilot-panel" class="w-80 bg-surface border-l border-border flex-shrink-0 flex flex-col">
+                <!-- Writing Copilot Panel -->
+                <aside id="copilot-panel" class="w-80 bg-surface border-l border-border flex-shrink-0 flex flex-col relative z-[60]">
                     <div class="p-3 border-b border-border flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">smart_toy</span>
-                            <span class="font-semibold text-text-primary">Copilot</span>
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span id="copilot-header-icon" class="material-symbols-outlined text-primary">smart_toy</span>
+                            <span id="copilot-header-title" class="font-semibold text-text-primary truncate">Writing Copilot</span>
                         </div>
                         <button onclick="toggleCopilot()" class="p-1 rounded hover:bg-surface-tertiary">
                             <span class="material-symbols-outlined text-sm text-text-tertiary">close</span>
                         </button>
                     </div>
                     
-                    <!-- Quick Actions -->
-                    <div class="p-3 border-b border-border space-y-2">
-                        <div class="text-xs font-medium text-text-tertiary uppercase">Quick Actions</div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="aiAction('outline')" class="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary bg-surface-tertiary rounded hover:bg-border transition-colors">
-                                <span class="material-symbols-outlined text-sm">list_alt</span>
-                                Generate Outline
-                            </button>
-                            <button onclick="aiAction('continue')" class="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary bg-surface-tertiary rounded hover:bg-border transition-colors">
-                                <span class="material-symbols-outlined text-sm">edit_note</span>
-                                Continue Writing
-                            </button>
-                            <button onclick="aiAction('simplify')" class="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary bg-surface-tertiary rounded hover:bg-border transition-colors">
-                                <span class="material-symbols-outlined text-sm">psychology</span>
-                                Simplify Text
-                            </button>
-                            <button onclick="openExampleModal()" class="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary bg-surface-tertiary rounded hover:bg-border transition-colors">
-                                <span class="material-symbols-outlined text-sm">lightbulb</span>
-                                Add Example
-                            </button>
-                        </div>
+                    <!-- Hybrid context (author mode) -->
+                    <div id="copilot-author-context" class="px-3 py-2 bg-surface-secondary text-xs border-b border-border flex items-center gap-1.5 min-w-0">
+                        <span class="material-symbols-outlined text-sm text-text-tertiary flex-shrink-0">article</span>
+                        <span class="text-text-tertiary flex-shrink-0">Writing Copilot sees:</span>
+                        <span id="copilot-context" class="text-text-secondary font-medium truncate">Chapter 1 (full) · 4-chapter outline</span>
                     </div>
-                    
-                    <!-- Context -->
-                    <div class="px-3 py-2 bg-surface-secondary text-xs border-b border-border">
-                        <span class="text-text-tertiary">Context:</span>
-                        <span id="copilot-context" class="text-text-secondary ml-1">Chapter 1 - What is a Cell?</span>
+
+                    <!-- Student widget context (reading view) -->
+                    <div id="copilot-student-bar" class="copilot-student-bar">
+                        <div class="flex items-center gap-2 text-xs text-text-secondary">
+                            <span id="copilot-student-icon" class="material-symbols-outlined text-sm text-primary">school</span>
+                            <span id="copilot-student-label">Learning Assistant</span>
+                        </div>
+                        <p id="copilot-student-hint" class="text-xs text-text-tertiary mt-1 leading-relaxed">Engage with a checkpoint to start a guided conversation here.</p>
                     </div>
                     
                     <!-- Chat Messages -->
@@ -831,7 +1121,7 @@
                         <div class="flex gap-2">
                             <span class="material-symbols-outlined text-primary text-lg flex-shrink-0 mt-0.5">smart_toy</span>
                             <div class="text-sm text-text-secondary">
-                                <p>Hi! I'm your AI writing assistant. I can help you:</p>
+                                <p>Hi! I'm your Writing Copilot.</p>
                                 <ul class="mt-2 space-y-1 text-xs">
                                     <li>• Generate chapter outlines and content</li>
                                     <li>• Simplify text for different grade levels</li>
@@ -847,16 +1137,27 @@
                     <div class="p-3 border-t border-border">
                         <div class="flex flex-col gap-2">
                             <textarea id="copilot-input" rows="3" 
-                                      placeholder="Ask me anything about your content, request changes, or describe what you want to write..." 
+                                      placeholder="Ask about this chapter, or describe a change..." 
                                       class="w-full px-3 py-2.5 text-sm border border-border rounded-lg resize-none outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                                       onkeydown="handleCopilotKeydown(event)"
                                       oninput="autoResizeTextarea(this)"></textarea>
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs text-text-tertiary">Press Enter to send, Shift+Enter for new line</span>
-                                <button onclick="sendCopilotMessage()" class="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark transition-colors">
-                                    <span class="material-symbols-outlined text-base">send</span>
-                                    Send
-                                </button>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <button id="copilot-voice-btn" type="button" onclick="toggleVoiceInput()" class="voice-input-btn p-1.5 rounded-lg text-text-tertiary hover:bg-surface-tertiary hover:text-text-secondary transition-colors flex-shrink-0" title="Voice input">
+                                        <span class="material-symbols-outlined text-base">mic</span>
+                                    </button>
+                                    <span id="copilot-input-hint" class="text-xs text-text-tertiary truncate">Enter to send · Shift+Enter for newline</span>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <button id="copilot-widget-done-btn" type="button" onclick="completeActiveWidget()" class="copilot-widget-done-btn items-center gap-1 px-3 py-1.5 text-sm border border-success text-success rounded-lg hover:bg-success/10 transition-colors">
+                                        <span class="material-symbols-outlined text-base">check_circle</span>
+                                        Done
+                                    </button>
+                                    <button onclick="sendCopilotMessage()" class="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark transition-colors flex-shrink-0">
+                                        <span class="material-symbols-outlined text-base">send</span>
+                                        Send
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -886,6 +1187,33 @@
         </div>
     </div>
 
+    <!-- Persistent selection highlight overlay -->
+    <div id="selection-highlight-layer" class="selection-highlight-layer"></div>
+
+    <!-- Selection Toolbar (Stage 1: format + Ask AI entry) -->
+    <div id="selection-toolbar" class="hidden selection-toolbar">
+        <button type="button" class="selection-toolbar-btn selection-toolbar-ask" onmousedown="event.preventDefault()" onclick="openAIFromSelection()">
+            <span class="material-symbols-outlined text-base text-primary">auto_awesome</span>
+            <span class="text-sm font-medium">Ask AI</span>
+            <span class="selection-toolbar-kbd">⌘K</span>
+        </button>
+        <span class="selection-toolbar-divider"></span>
+        <button type="button" id="bubble-link" class="selection-toolbar-btn" onmousedown="event.preventDefault()" onclick="bubbleLink()" title="Link">
+            <span class="material-symbols-outlined text-base">link</span>
+        </button>
+        <button type="button" id="bubble-bold" class="selection-toolbar-btn" onmousedown="event.preventDefault()" onclick="bubbleFormat('bold')" title="Bold">
+            <span class="material-symbols-outlined text-base">format_bold</span>
+        </button>
+        <button type="button" id="bubble-italic" class="selection-toolbar-btn" onmousedown="event.preventDefault()" onclick="bubbleFormat('italic')" title="Italic">
+            <span class="material-symbols-outlined text-base">format_italic</span>
+        </button>
+        <span class="selection-toolbar-divider"></span>
+        <button type="button" id="bubble-block-type-btn" class="selection-toolbar-btn selection-toolbar-text" onmousedown="event.preventDefault()" onclick="toggleBubbleBlockMenu()">
+            <span id="bubble-block-type" class="text-sm">Text</span>
+            <span class="material-symbols-outlined text-sm">expand_more</span>
+        </button>
+    </div>
+
     <!-- Slash Command Menu -->
     <div id="slash-menu" class="hidden fixed z-[200] w-72 bg-surface border border-border rounded-lg shadow-2xl overflow-hidden">
         <input type="text" id="slash-search" class="w-full px-3 py-2.5 border-b border-border text-sm outline-none" 
@@ -895,9 +1223,9 @@
 
     <!-- AI Selection Menu (only appears on text selection) -->
     <div id="ai-selection-menu" class="hidden ai-menu">
-        <input type="text" id="ai-menu-search" class="ai-menu-search" placeholder="Ask AI to transform this text..." 
+        <input type="text" id="ai-menu-search" class="ai-menu-search" placeholder="Ask writing copilot..." 
                oninput="filterAIMenu(this.value)" onkeydown="handleAIMenuKeydown(event)"/>
-        <div class="flex items-center gap-2 px-3 py-2 border-b border-border">
+        <div class="flex items-center gap-2 px-3 py-2 border-b border-border shrink-0">
             <button onclick="toggleSourceToggle('web')" id="toggle-web" class="source-toggle">Web</button>
             <button onclick="toggleSourceToggle('library')" id="toggle-library" class="source-toggle active">Library</button>
         </div>
@@ -1032,6 +1360,178 @@
             <div class="p-4 border-t border-border flex justify-end gap-2">
                 <button onclick="closeExampleModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
                 <button onclick="generateCustomExample()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jargon Checker Modal -->
+    <div id="jargon-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-[500px] bg-surface rounded-lg shadow-xl max-h-[80vh] flex flex-col">
+            <div class="p-4 border-b border-border flex justify-between items-center shrink-0">
+                <div>
+                    <h3 class="font-semibold text-text-primary">Detected Jargon Terms</h3>
+                    <p class="text-xs text-text-tertiary mt-0.5">Select terms and edit definitions before inserting</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="selectAllJargon(true)" class="text-xs text-primary hover:underline">Select all</button>
+                    <button onclick="selectAllJargon(false)" class="text-xs text-text-tertiary hover:underline">Deselect all</button>
+                </div>
+            </div>
+            <div id="jargon-list" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0"></div>
+            <div class="p-4 border-t border-border flex justify-end gap-2 shrink-0">
+                <button onclick="closeJargonModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
+                <button onclick="insertSelectedJargon()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">Insert Selected Definitions</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube Video Modal -->
+    <div id="video-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-96 bg-surface rounded-lg shadow-xl">
+            <div class="p-4 border-b border-border">
+                <h3 class="font-semibold text-text-primary">Insert YouTube Video</h3>
+                <p class="text-sm text-text-secondary mt-1">Paste a link to embed below your selection</p>
+            </div>
+            <div class="p-4">
+                <input id="video-url-input" type="text" placeholder="https://www.youtube.com/watch?v=..."
+                       class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary"
+                       onkeydown="if(event.key==='Enter') insertYouTubeVideo()"/>
+            </div>
+            <div class="p-4 border-t border-border flex justify-end gap-2">
+                <button onclick="closeVideoModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
+                <button onclick="insertYouTubeVideo()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">Insert</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reading Level Modal -->
+    <div id="reading-level-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-80 bg-surface rounded-lg shadow-xl">
+            <div class="p-4 border-b border-border">
+                <h3 class="font-semibold text-text-primary">Adjust Reading Level</h3>
+                <p class="text-sm text-text-secondary mt-1">Rewrite selected text for:</p>
+            </div>
+            <div class="p-2">
+                <button type="button" onclick="adjustReadingLevel('elementary')" class="reading-level-btn">
+                    <span class="font-medium text-text-primary">Elementary</span>
+                    <span class="text-xs text-text-tertiary">Ages 8–10, simple vocabulary</span>
+                </button>
+                <button type="button" onclick="adjustReadingLevel('high-school')" class="reading-level-btn">
+                    <span class="font-medium text-text-primary">High School</span>
+                    <span class="text-xs text-text-tertiary">Ages 14–18, moderate complexity</span>
+                </button>
+                <button type="button" onclick="adjustReadingLevel('undergraduate')" class="reading-level-btn">
+                    <span class="font-medium text-text-primary">Undergraduate</span>
+                    <span class="text-xs text-text-tertiary">College level, academic tone</span>
+                </button>
+            </div>
+            <div class="p-3 border-t border-border flex justify-end">
+                <button onclick="closeReadingLevelModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Widget Configuration Modal -->
+    <div id="widget-config-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-[480px] bg-surface rounded-xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+            <div class="p-4 border-b border-border flex items-center gap-3">
+                <div id="wcm-icon-wrap" class="w-10 h-10 rounded-lg flex items-center justify-center">
+                    <span id="wcm-icon" class="material-symbols-outlined text-white">lightbulb</span>
+                </div>
+                <div class="flex-1">
+                    <h3 id="wcm-title" class="font-semibold text-text-primary">Configure Widget</h3>
+                    <p id="wcm-subtitle" class="text-xs text-text-tertiary mt-0.5">Customize this interactive exercise</p>
+                </div>
+                <button onclick="closeWidgetConfigModal()" class="p-1.5 rounded-lg hover:bg-surface-tertiary text-text-tertiary">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Context -->
+                <div class="bg-surface-secondary rounded-lg p-3 text-xs text-text-secondary">
+                    <span class="font-medium text-text-tertiary">Based on selected text:</span>
+                    <p id="wcm-context" class="mt-1 line-clamp-2 italic">"..."</p>
+                </div>
+
+                <!-- Personalization input -->
+                <div>
+                    <label class="block text-sm font-medium text-text-primary mb-1.5">Personalize this exercise (optional)</label>
+                    <textarea id="wcm-personalize" rows="2" 
+                        placeholder="E.g., 'Focus on the ethical implications' or 'Make it relevant to healthcare students'"
+                        class="w-full px-3 py-2 text-sm border border-border rounded-lg resize-none outline-none focus:border-primary"></textarea>
+                </div>
+
+                <!-- Difficulty -->
+                <div>
+                    <label class="block text-sm font-medium text-text-primary mb-1.5">Difficulty level</label>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="setWidgetDifficulty('easy')" class="wcm-difficulty-btn flex-1 px-3 py-2 text-sm border border-border rounded-lg hover:border-primary hover:bg-primary-bg transition-colors" data-value="easy">
+                            Easy
+                        </button>
+                        <button type="button" onclick="setWidgetDifficulty('moderate')" class="wcm-difficulty-btn flex-1 px-3 py-2 text-sm border border-border rounded-lg hover:border-primary hover:bg-primary-bg transition-colors active" data-value="moderate">
+                            Moderate
+                        </button>
+                        <button type="button" onclick="setWidgetDifficulty('challenging')" class="wcm-difficulty-btn flex-1 px-3 py-2 text-sm border border-border rounded-lg hover:border-primary hover:bg-primary-bg transition-colors" data-value="challenging">
+                            Challenging
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Max turns -->
+                <div>
+                    <label class="block text-sm font-medium text-text-primary mb-1.5">Conversation turns</label>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="setWidgetTurns('3')" class="wcm-turns-btn flex-1 px-3 py-2 text-sm border border-border rounded-lg hover:border-primary hover:bg-primary-bg transition-colors" data-value="3">3</button>
+                        <button type="button" onclick="setWidgetTurns('5')" class="wcm-turns-btn flex-1 px-3 py-2 text-sm border border-border rounded-lg hover:border-primary hover:bg-primary-bg transition-colors active" data-value="5">5</button>
+                        <button type="button" onclick="setWidgetTurns('10')" class="wcm-turns-btn flex-1 px-3 py-2 text-sm border border-border rounded-lg hover:border-primary hover:bg-primary-bg transition-colors" data-value="10">10</button>
+                        <button type="button" onclick="setWidgetTurns('unlimited')" class="wcm-turns-btn flex-1 px-3 py-2 text-sm border border-border rounded-lg hover:border-primary hover:bg-primary-bg transition-colors" data-value="unlimited">Unlimited</button>
+                    </div>
+                </div>
+
+                <!-- Preview section (shown after generation) -->
+                <div id="wcm-preview-section" class="hidden">
+                    <label class="block text-sm font-medium text-text-primary mb-1.5">Opening question preview</label>
+                    <div id="wcm-preview-card" class="bg-surface-tertiary rounded-lg p-3">
+                        <textarea id="wcm-opening-prompt" rows="3" class="w-full px-3 py-2 text-sm border border-border rounded-lg resize-none outline-none focus:border-primary bg-white"></textarea>
+                        <p class="text-xs text-text-tertiary mt-2">You can edit this before inserting.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-border flex items-center justify-between gap-3">
+                <button onclick="closeWidgetConfigModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded-lg">Cancel</button>
+                <div class="flex gap-2">
+                    <button id="wcm-generate-btn" onclick="generateWidgetPreview()" class="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-dark flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">auto_awesome</span>
+                        Generate with AI
+                    </button>
+                    <button id="wcm-insert-btn" onclick="insertConfiguredWidget()" class="hidden px-4 py-2 text-sm bg-success text-white rounded-lg hover:bg-success/90 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">add</span>
+                        Insert Widget
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Widget Confirmation Modal -->
+    <div id="widget-delete-modal" class="hidden fixed inset-0 z-[210] flex items-center justify-center bg-black/50">
+        <div class="w-80 bg-surface rounded-lg shadow-xl">
+            <div class="p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-error">delete</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-text-primary">Delete Widget?</h3>
+                        <p class="text-sm text-text-secondary">This cannot be undone.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 border-t border-border flex justify-end gap-2">
+                <button onclick="closeDeleteWidgetModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded-lg">Cancel</button>
+                <button onclick="confirmDeleteWidget()" class="px-4 py-2 text-sm bg-error text-white rounded-lg hover:bg-error/90">Delete</button>
             </div>
         </div>
     </div>
@@ -1177,6 +1677,125 @@
         sourceToggles: { web: false, library: true },
         generatedContent: '',
         copilotPending: false,
+        copilotHistory: [],
+        selectionToolbarVisible: false,
+        aiPanelOpen: false,
+        preserveSelectionUI: false,
+        isMouseSelecting: false,
+        jargonTerms: [],
+        jargonRange: null,
+        jargonSourceText: '',
+        jargonEditTarget: null,
+        readingViewActive: false,
+        copilotMode: 'author',
+        activeWidgetChat: null,
+        readingSessionStart: null,
+    };
+
+    const ANALYTICS_STORAGE_KEY = 'dreambook_analytics';
+
+    const Analytics = {
+        load() {
+            try {
+                return JSON.parse(localStorage.getItem(ANALYTICS_STORAGE_KEY) || '{}');
+            } catch {
+                return {};
+            }
+        },
+        save(data) {
+            localStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(data));
+        },
+        getChapterData(chapterId) {
+            const all = this.load();
+            if (!all[chapterId]) {
+                all[chapterId] = {
+                    chapterId,
+                    widgets: {},
+                    sessionStart: null,
+                    totalReadingTimeMs: 0
+                };
+            }
+            return all[chapterId];
+        },
+        getWidgetStatus(widgetId) {
+            const chapterId = appState.activeChapterId;
+            const chapter = this.getChapterData(chapterId);
+            return chapter.widgets[widgetId] || null;
+        },
+        trackEvent(widgetId, event, data = {}) {
+            const chapterId = appState.activeChapterId;
+            const all = this.load();
+            const chapter = this.getChapterData(chapterId);
+            const now = Date.now();
+
+            if (!chapter.sessionStart && state.readingViewActive) {
+                chapter.sessionStart = now;
+            }
+
+            if (!chapter.widgets[widgetId]) {
+                chapter.widgets[widgetId] = {
+                    type: data.type || 'unknown',
+                    status: 'pending',
+                    engagedAt: null,
+                    completedAt: null,
+                    skippedAt: null,
+                    timeSpentMs: 0,
+                    messageCount: 0,
+                    viewedAt: null
+                };
+            }
+
+            const record = chapter.widgets[widgetId];
+            if (data.type) record.type = data.type;
+
+            switch (event) {
+                case 'widget_viewed':
+                    if (!record.viewedAt) record.viewedAt = now;
+                    break;
+                case 'engagement_started':
+                    record.status = 'engaged';
+                    record.engagedAt = now;
+                    break;
+                case 'message_sent':
+                    record.messageCount = (record.messageCount || 0) + 1;
+                    if (record.engagedAt) {
+                        record.timeSpentMs = now - record.engagedAt;
+                    }
+                    break;
+                case 'engagement_completed':
+                    record.status = 'completed';
+                    record.completedAt = now;
+                    if (record.engagedAt) {
+                        record.timeSpentMs = now - record.engagedAt;
+                    }
+                    break;
+                case 'engagement_skipped':
+                    record.status = 'skipped';
+                    record.skippedAt = now;
+                    break;
+            }
+
+            all[chapterId] = chapter;
+            this.save(all);
+            return record;
+        },
+        getChapterProgress(chapterId, widgetIds) {
+            const chapter = this.getChapterData(chapterId);
+            const total = widgetIds.length;
+            let completed = 0;
+            let skipped = 0;
+            let engaged = 0;
+
+            widgetIds.forEach(id => {
+                const status = chapter.widgets[id]?.status || 'pending';
+                if (status === 'completed') completed++;
+                else if (status === 'skipped') skipped++;
+                else if (status === 'engaged') engaged++;
+            });
+
+            const addressed = completed + skipped;
+            return { total, completed, skipped, engaged, addressed, pending: total - addressed - engaged };
+        }
     };
 
     // ════════════════════════════════════════════════════════════════════════════
@@ -1192,6 +1811,17 @@
         },
         activeChapterId: 'chapter-1'
     };
+
+    /** Strip AI-provided section prefixes (e.g. "1.1:", "2.3 -") before we apply our own numbering. */
+    function stripSectionNumberPrefix(title) {
+        return (title || '').replace(/^\d+\.\d+\s*[:\-–—.]?\s*/, '').trim();
+    }
+
+    function formatSectionHeading(chapterNum, sectionIndex, rawTitle) {
+        const sectionNum = `${chapterNum}.${sectionIndex + 1}`;
+        const title = stripSectionNumberPrefix(rawTitle);
+        return `${sectionNum} ${title}`;
+    }
 
     function loadGeneratedStructure() {
         const generatedData = sessionStorage.getItem('generated_structure');
@@ -1216,8 +1846,7 @@
                     let editorContent = '';
                     if (chapter.sections && chapter.sections.length > 0) {
                         chapter.sections.forEach((section, sIndex) => {
-                            const sectionNum = `${chapterNum}.${sIndex + 1}`;
-                            editorContent += `<h1>${sectionNum} ${section.title}</h1>`;
+                            editorContent += `<h1>${formatSectionHeading(chapterNum, sIndex, section.title)}</h1>`;
                             if (section.content) {
                                 editorContent += `<p>${section.content}</p>`;
                             }
@@ -1297,6 +1926,7 @@
         
         // Update dynamic navigation when loading a chapter
         updateChapterSections();
+        updateCopilotContext();
     }
 
     // ════════════════════════════════════════════════════════════════════════════
@@ -1530,7 +2160,7 @@
             const sections = chapterBlock.querySelectorAll('.section-title-text');
             sections.forEach((sectionSpan, sectionIndex) => {
                 const sectionNum = sectionIndex + 1;
-                const currentSectionTitle = sectionSpan.textContent.replace(/^\d+\.\d+\s*/, ''); // Strip old number
+                const currentSectionTitle = stripSectionNumberPrefix(sectionSpan.textContent);
                 const newFullSectionTitle = `${chapterNum}.${sectionNum} ${currentSectionTitle}`;
                 sectionSpan.textContent = newFullSectionTitle;
                 sectionSpan.setAttribute('title', newFullSectionTitle); // Update tooltip
@@ -1539,6 +2169,7 @@
         
         // Re-run dynamic nav update for the active chapter to ensure headers match
         updateChapterSections();
+        updateCopilotContext();
     }
 
     function initSortableForSections(sectionList) {
@@ -1605,18 +2236,18 @@
 
     // AI menu options for selected text
     const aiMenuOptions = [
-        { id: 'simplify', label: 'Simplify', category: 'Strengthen' },
-        { id: 'paraphrase', label: 'Paraphrase', category: 'Strengthen' },
-        { id: 'expand', label: 'Expand', category: 'Strengthen' },
-        { id: 'formal', label: 'Make more formal', category: 'Style' },
-        { id: 'engaging', label: 'Make more engaging', category: 'Style' },
-        { id: 'grade-elem', label: 'Simplify for Elementary', category: 'Grade Level' },
-        { id: 'grade-high', label: 'Adjust for High School', category: 'Grade Level' },
-        { id: 'grade-undergrad', label: 'Adjust for Undergraduate', category: 'Grade Level' },
-        { id: 'add-example', label: 'Add real-world example', category: 'Enhance' },
-        { id: 'custom-analogy', label: 'Add custom analogy...', category: 'Enhance', action: 'openExampleModal' },
-        { id: 'bullet-list', label: 'Convert to bullet list', category: 'Transform' },
-        { id: 'numbered-list', label: 'Convert to numbered list', category: 'Transform' },
+        { id: 'polish-flow', label: 'Polish academic flow', category: 'Strengthen and Clarify' },
+        { id: 'check-jargon', label: 'Check for confusing jargon', category: 'Strengthen and Clarify', action: 'openJargonModal' },
+        { id: 'key-takeaways', label: 'Extract key takeaways', category: 'Strengthen and Clarify' },
+        { id: 'add-example', label: 'Add real-world example', category: 'Engage and Illustrate' },
+        { id: 'custom-analogy', label: 'Add an analogy...', category: 'Engage and Illustrate', action: 'openExampleModal' },
+        { id: 'insert-image', label: 'Insert AI image...', category: 'Engage and Illustrate', action: 'openImageGenModal' },
+        { id: 'insert-video', label: 'Insert YouTube video...', category: 'Engage and Illustrate', action: 'openVideoModal' },
+        { id: 'opposing-view', label: 'Add opposing viewpoint', category: 'Foster Critical Thinking' },
+        { id: 'socratic-question', label: 'Generate Socratic question', category: 'Foster Critical Thinking' },
+        { id: 'real-world-implications', label: 'Explain real-world implications', category: 'Foster Critical Thinking' },
+        { id: 'mini-case-study', label: 'Create mini case-study', category: 'Foster Critical Thinking' },
+        { id: 'adjust-reading-level', label: 'Adjust reading level...', category: 'Format', action: 'openReadingLevelModal' },
     ];
 
     // ════════════════════════════════════════════════════════════════════════════
@@ -1666,45 +2297,124 @@
                     titleSpan.setAttribute('title', newFullTitle);
                 }
             }
+            updateCopilotContext();
         });
+
+        document.getElementById('chapter-subtitle').addEventListener('input', updateCopilotContext);
+
+        initVoiceInput();
+        updateCopilotContext();
+        initJargonInteractions(document.getElementById('editor'), { editable: true });
         
         // Listen to selection changes to move the placeholder to the active empty line and update block type dropdown
+        let selectionChangeTimer = null;
         document.addEventListener('selectionchange', () => {
             if (document.activeElement === document.getElementById('editor')) {
                 checkPlaceholder();
                 updateBlockTypeDropdown();
             }
+
+            // Don't react mid-drag (wait for mouseup) or while the AI panel owns focus
+            if (state.isMouseSelecting || state.aiPanelOpen) return;
+
+            clearTimeout(selectionChangeTimer);
+            selectionChangeTimer = setTimeout(() => {
+                if (state.isMouseSelecting || state.aiPanelOpen) return;
+                const range = getEditorSelectionRange();
+                if (range && document.activeElement === document.getElementById('editor')) {
+                    showSelectionToolbar();
+                } else if (!range && (state.selectionToolbarVisible || state.selectedRange)) {
+                    clearSelectionUI();
+                }
+            }, 50);
         });
         
         // Global click to close menus
         document.addEventListener('click', (e) => {
+            if (e.target.closest('#jargon-modal') || e.target.closest('#video-modal') ||
+                e.target.closest('#reading-level-modal') || e.target.closest('#example-modal') ||
+                e.target.closest('#image-gen-modal') || e.target.closest('#jargon-popover') ||
+                e.target.closest('#widget-config-modal') || e.target.closest('#widget-delete-modal')) {
+                return;
+            }
+            if (state.jargonEditTarget && !e.target.closest('.jargon-term')) {
+                hideJargonPopover();
+            }
             // Close slash menu
             if (state.slashMenuVisible && !e.target.closest('#slash-menu')) {
                 closeSlashMenu();
             }
             // Close block menu
-            if (!e.target.closest('#block-menu') && !e.target.closest('#block-type-btn')) {
+            if (!e.target.closest('#block-menu') && !e.target.closest('#block-type-btn') && !e.target.closest('#bubble-block-type-btn')) {
                 document.getElementById('block-menu').classList.add('hidden');
             }
-            // Close AI selection menu
-            if (!e.target.closest('#ai-selection-menu')) {
-                document.getElementById('ai-selection-menu').classList.add('hidden');
+            // Dismiss selection UI when clicking outside the editor and selection menus
+            const inSelectionUI = e.target.closest('#selection-toolbar') ||
+                e.target.closest('#ai-selection-menu') ||
+                e.target.closest('#block-menu');
+            if (!inSelectionUI && !e.target.closest('#editor') &&
+                (state.selectedRange || state.selectionToolbarVisible || state.aiPanelOpen)) {
+                clearSelectionUI();
             }
         });
 
-        // Handle text selection for AI menu
-        document.addEventListener('mouseup', (e) => {
-            setTimeout(() => {
-                const selection = window.getSelection();
-                const text = selection.toString().trim();
-                
-                if (text.length > 10 && e.target.closest('#editor')) {
-                    state.selectedText = text;
-                    state.selectedRange = selection.getRangeAt(0).cloneRange();
-                    showAISelectionMenu(e.clientX, e.clientY);
+        // Cmd/Ctrl+K opens AI panel for current selection
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                if (getEditorSelectionRange() || state.selectedRange) {
+                    e.preventDefault();
+                    if (!state.selectedRange) captureEditorSelection();
+                    openAIFromSelection();
                 }
-            }, 10);
+            }
+            if (e.key === 'Escape') {
+                if (!document.getElementById('widget-delete-modal').classList.contains('hidden')) {
+                    closeDeleteWidgetModal();
+                } else if (!document.getElementById('widget-config-modal').classList.contains('hidden')) {
+                    closeWidgetConfigModal();
+                } else if (!document.getElementById('jargon-modal').classList.contains('hidden')) {
+                    closeJargonModal();
+                } else if (!document.getElementById('video-modal').classList.contains('hidden')) {
+                    closeVideoModal();
+                } else if (!document.getElementById('reading-level-modal').classList.contains('hidden')) {
+                    closeReadingLevelModal();
+                } else if (!document.getElementById('example-modal').classList.contains('hidden')) {
+                    closeExampleModal();
+                } else if (!document.getElementById('image-gen-modal').classList.contains('hidden')) {
+                    closeImageGenModal();
+                } else if (state.selectionToolbarVisible || state.aiPanelOpen || state.selectedRange) {
+                    clearSelectionUI({ collapse: true });
+                }
+            }
         });
+
+        // Hide the bubble as soon as a new drag/click starts so it never blocks selecting
+        const editorEl = document.getElementById('editor');
+        editorEl.addEventListener('mousedown', () => {
+            state.isMouseSelecting = true;
+            clearSelectionUI();
+        });
+
+        // Finalize selection on mouseup (anywhere — drag may end outside the editor)
+        document.addEventListener('mouseup', (e) => {
+            if (!state.isMouseSelecting) return;
+            state.isMouseSelecting = false;
+            setTimeout(() => {
+                if (state.aiPanelOpen) return;
+                if (getEditorSelectionRange()) {
+                    showSelectionToolbar();
+                } else {
+                    clearSelectionUI();
+                }
+            }, 0);
+        });
+
+        // Reposition bubble on scroll and resize
+        const editorScrollContainer = document.querySelector('main.flex-1.bg-surface-canvas.overflow-y-auto');
+        if (editorScrollContainer) {
+            editorScrollContainer.addEventListener('scroll', repositionSelectionUI, { passive: true });
+        }
+        window.addEventListener('resize', repositionSelectionUI);
 
         // Focus editor
         document.getElementById('editor').focus();
@@ -1764,25 +2474,43 @@
         btn.classList.toggle('text-white', state.copilotVisible);
         btn.classList.toggle('bg-surface-tertiary', !state.copilotVisible);
         btn.classList.toggle('text-text-secondary', !state.copilotVisible);
+        updateReadingViewLayout();
     }
 
     // ════════════════════════════════════════════════════════════════════════════
     // TOOLBAR
     // ════════════════════════════════════════════════════════════════════════════
     function execCmd(command, value = null) {
+        if (state.selectedRange) state.preserveSelectionUI = true;
         document.execCommand(command, false, value);
         document.getElementById('editor').focus();
+        if (state.selectedRange) {
+            captureEditorSelection();
+            refreshSelectionToolbarState();
+            repositionSelectionUI();
+            requestAnimationFrame(() => { state.preserveSelectionUI = false; });
+        }
     }
 
     function setBlockType(tag) {
+        state.preserveSelectionUI = true;
+        restoreEditorSelection();
         document.execCommand('formatBlock', false, `<${tag}>`);
         document.getElementById('block-menu').classList.add('hidden');
-        document.getElementById('current-block-type').textContent = 
-            tag === 'p' ? 'Paragraph' : tag.toUpperCase();
+        const blockLabel = tag === 'p' ? 'Paragraph' : tag.toUpperCase();
+        document.getElementById('current-block-type').textContent = blockLabel;
+        const bubbleLabel = document.getElementById('bubble-block-type');
+        if (bubbleLabel) {
+            bubbleLabel.textContent = tag === 'p' ? 'Text' : (tag === 'blockquote' ? 'Quote' : tag.toUpperCase());
+        }
+        captureEditorSelection();
+        refreshSelectionToolbarState();
+        repositionSelectionUI();
         document.getElementById('editor').focus();
         
         // Update nav after block type change — 200ms gives the DOM time to settle
         setTimeout(updateChapterSections, 200);
+        requestAnimationFrame(() => { state.preserveSelectionUI = false; });
     }
 
     function toggleBlockMenu() {
@@ -1874,7 +2602,7 @@
         
         if (event.key === 'Escape') {
             closeSlashMenu();
-            document.getElementById('ai-selection-menu').classList.add('hidden');
+            clearSelectionUI({ collapse: true });
         }
     }
 
@@ -1889,6 +2617,9 @@
     }
 
     function handleEditorInput(event) {
+        if (!state.preserveSelectionUI) {
+            clearSelectionUI();
+        }
         checkPlaceholder();
         
         document.getElementById('save-status').innerHTML = `
@@ -2082,19 +2813,299 @@
     }
 
     // ════════════════════════════════════════════════════════════════════════════
-    // AI SELECTION MENU (only on text selection)
+    // SELECTION TOOLBAR + AI PANEL
     // ════════════════════════════════════════════════════════════════════════════
-    function showAISelectionMenu(x, y) {
+    function isNodeInsideEditor(node) {
+        const editor = document.getElementById('editor');
+        while (node) {
+            if (node === editor) return true;
+            node = node.parentNode;
+        }
+        return false;
+    }
+
+    function getEditorSelectionRange() {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return null;
+        const range = selection.getRangeAt(0);
+        if (range.collapsed) return null;
+        if (!range.toString().trim()) return null;
+        if (!isNodeInsideEditor(range.commonAncestorContainer)) return null;
+        return range;
+    }
+
+    function captureEditorSelection() {
+        const range = getEditorSelectionRange();
+        if (!range) return false;
+        state.selectedText = range.toString().trim();
+        state.selectedRange = range.cloneRange();
+        return true;
+    }
+
+    function restoreEditorSelection() {
+        if (!state.selectedRange) return;
+        const editor = document.getElementById('editor');
+        editor.focus();
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(state.selectedRange);
+    }
+
+    function getSelectionAnchorRect() {
+        if (state.selectedRange) {
+            return state.selectedRange.getBoundingClientRect();
+        }
+        const range = getEditorSelectionRange();
+        return range ? range.getBoundingClientRect() : null;
+    }
+
+    function positionFloatingUI(element, rect, options = {}) {
+        const fallbackWidth = options.width || 300;
+        const fallbackHeight = options.height || 44;
+        const preferAbove = options.preferAbove !== false;
+
+        const elWidth = element.offsetWidth || fallbackWidth;
+        const elHeight = element.offsetHeight || fallbackHeight;
+
+        let left = rect.left + rect.width / 2 - elWidth / 2;
+        left = Math.max(8, Math.min(left, window.innerWidth - elWidth - 8));
+
+        const spaceAbove = rect.top;
+        const spaceBelow = window.innerHeight - rect.bottom;
+
+        let top;
+        let maxHeight = null;
+
+        if (preferAbove) {
+            if (spaceAbove >= elHeight + 8) {
+                top = rect.top - elHeight - 8;
+            } else if (spaceBelow >= elHeight + 8) {
+                top = rect.bottom + 8;
+            } else {
+                if (spaceAbove > spaceBelow) {
+                    top = 8;
+                    maxHeight = spaceAbove - 16;
+                } else {
+                    top = rect.bottom + 8;
+                    maxHeight = spaceBelow - 16;
+                }
+            }
+        } else {
+            if (spaceBelow >= elHeight + 8) {
+                top = rect.bottom + 8;
+            } else if (spaceAbove >= elHeight + 8) {
+                top = rect.top - elHeight - 8;
+            } else {
+                if (spaceBelow > spaceAbove) {
+                    top = rect.bottom + 8;
+                    maxHeight = spaceBelow - 16;
+                } else {
+                    top = 8;
+                    maxHeight = spaceAbove - 16;
+                }
+            }
+        }
+
+        // Safety clamp just in case (but ideally maxHeight handles bounds)
+        if (!maxHeight) {
+            top = Math.max(8, Math.min(top, window.innerHeight - elHeight - 8));
+        }
+
+        element.style.left = `${left}px`;
+        element.style.top = `${top}px`;
+        
+        if (maxHeight) {
+            element.style.maxHeight = `${Math.max(150, maxHeight)}px`;
+        } else {
+            element.style.maxHeight = '';
+        }
+    }
+
+    function renderSelectionHighlight() {
+        const layer = document.getElementById('selection-highlight-layer');
+        if (!layer || !state.selectedRange) return;
+        layer.innerHTML = '';
+        const rects = state.selectedRange.getClientRects();
+        for (let i = 0; i < rects.length; i++) {
+            const r = rects[i];
+            if (r.width === 0 && r.height === 0) continue;
+            const div = document.createElement('div');
+            div.className = 'selection-highlight-rect';
+            div.style.left = `${r.left}px`;
+            div.style.top = `${r.top}px`;
+            div.style.width = `${r.width}px`;
+            div.style.height = `${r.height}px`;
+            layer.appendChild(div);
+        }
+    }
+
+    function clearSelectionHighlight() {
+        const layer = document.getElementById('selection-highlight-layer');
+        if (layer) layer.innerHTML = '';
+    }
+
+    function hideSelectionToolbar() {
+        const toolbar = document.getElementById('selection-toolbar');
+        if (toolbar) toolbar.classList.add('hidden');
+        state.selectionToolbarVisible = false;
+    }
+
+    function hideAIPanel() {
         const menu = document.getElementById('ai-selection-menu');
-        
-        // Position menu
-        menu.style.left = `${Math.min(x, window.innerWidth - 300)}px`;
-        menu.style.top = `${Math.min(y + 10, window.innerHeight - 400)}px`;
-        
+        if (menu) menu.classList.add('hidden');
+        state.aiPanelOpen = false;
+    }
+
+    function hideSelectionMenus() {
+        hideSelectionToolbar();
+        hideAIPanel();
+        document.getElementById('block-menu')?.classList.add('hidden');
+    }
+
+    function clearSelectionUI(options = {}) {
+        hideSelectionMenus();
+        clearSelectionHighlight();
+        if (options.collapse) {
+            const selection = window.getSelection();
+            if (state.selectedRange) {
+                document.getElementById('editor').focus();
+                selection.removeAllRanges();
+                selection.addRange(state.selectedRange);
+                selection.collapseToEnd();
+            } else if (selection && selection.rangeCount && isNodeInsideEditor(selection.anchorNode)) {
+                selection.collapseToEnd();
+            }
+        }
+        state.selectedText = '';
+        state.selectedRange = null;
+    }
+
+    function refreshSelectionToolbarState() {
+        const boldBtn = document.getElementById('bubble-bold');
+        const italicBtn = document.getElementById('bubble-italic');
+        if (boldBtn) boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+        if (italicBtn) italicBtn.classList.toggle('active', document.queryCommandState('italic'));
+
+        const label = document.getElementById('bubble-block-type');
+        if (label && state.selectedRange) {
+            let node = state.selectedRange.commonAncestorContainer;
+            if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+            while (node && node.id !== 'editor') {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    const tag = node.tagName.toLowerCase();
+                    if (['p', 'h1', 'h2', 'h3', 'blockquote'].includes(tag)) {
+                        if (tag === 'p') label.textContent = 'Text';
+                        else if (tag === 'blockquote') label.textContent = 'Quote';
+                        else label.textContent = tag.toUpperCase();
+                        return;
+                    }
+                }
+                node = node.parentNode;
+            }
+            label.textContent = 'Text';
+        }
+    }
+
+    function showSelectionToolbar() {
+        if (!captureEditorSelection()) {
+            clearSelectionUI();
+            return;
+        }
+
+        closeSlashMenu();
+        hideAIPanel();
+
+        const toolbar = document.getElementById('selection-toolbar');
+        const rect = state.selectedRange.getBoundingClientRect();
+        if (!toolbar || !rect) return;
+
+        toolbar.classList.remove('hidden');
+        state.selectionToolbarVisible = true;
+        positionFloatingUI(toolbar, rect, { width: 320, height: 44, preferAbove: true });
+        refreshSelectionToolbarState();
+    }
+
+    function repositionSelectionUI() {
+        if (!state.selectedRange) return;
+        const rect = state.selectedRange.getBoundingClientRect();
+
+        const highlightLayer = document.getElementById('selection-highlight-layer');
+        if (state.aiPanelOpen || (highlightLayer && highlightLayer.innerHTML !== '')) {
+            renderSelectionHighlight();
+        }
+
+        if (state.selectionToolbarVisible) {
+            const toolbar = document.getElementById('selection-toolbar');
+            if (toolbar && !toolbar.classList.contains('hidden')) {
+                positionFloatingUI(toolbar, rect, { width: 320, height: 44, preferAbove: true });
+            }
+        }
+        if (state.aiPanelOpen) {
+            const menu = document.getElementById('ai-selection-menu');
+            if (menu && !menu.classList.contains('hidden')) {
+                positionFloatingUI(menu, rect, { width: 288, height: 400, preferAbove: false });
+            }
+        }
+    }
+
+    function bubbleFormat(cmd) {
+        state.preserveSelectionUI = true;
+        restoreEditorSelection();
+        document.execCommand(cmd, false, null);
+        captureEditorSelection();
+        refreshSelectionToolbarState();
+        repositionSelectionUI();
+        requestAnimationFrame(() => { state.preserveSelectionUI = false; });
+    }
+
+    function bubbleLink() {
+        state.preserveSelectionUI = true;
+        restoreEditorSelection();
+        const url = prompt('Enter URL:');
+        if (url) {
+            document.execCommand('createLink', false, url);
+            captureEditorSelection();
+        }
+        refreshSelectionToolbarState();
+        repositionSelectionUI();
+        requestAnimationFrame(() => { state.preserveSelectionUI = false; });
+    }
+
+    function toggleBubbleBlockMenu() {
+        restoreEditorSelection();
+        const menu = document.getElementById('block-menu');
+        const btn = document.getElementById('bubble-block-type-btn');
+        if (!menu || !btn) return;
+        const rect = btn.getBoundingClientRect();
+        menu.style.left = `${rect.left}px`;
+        menu.style.top = `${rect.bottom + 4}px`;
+        menu.classList.toggle('hidden');
+    }
+
+    function openAIFromSelection() {
+        captureEditorSelection();
+        if (!state.selectedRange) return;
+
+        hideSelectionToolbar();
+        closeSlashMenu();
+
+        const menu = document.getElementById('ai-selection-menu');
+        const rect = getSelectionAnchorRect();
+        if (!menu || !rect) return;
+
         menu.classList.remove('hidden');
+        state.aiPanelOpen = true;
         renderAIMenu();
         document.getElementById('ai-menu-search').value = '';
+        positionFloatingUI(menu, rect, { width: 288, height: 400, preferAbove: false });
+        renderSelectionHighlight();
         document.getElementById('ai-menu-search').focus();
+    }
+
+    function showAISelectionMenu(x, y) {
+        captureEditorSelection();
+        if (!state.selectedRange) return;
+        openAIFromSelection();
     }
 
     function renderAIMenu(filter = '') {
@@ -2125,7 +3136,7 @@
 
     function handleAIMenuKeydown(event) {
         if (event.key === 'Escape') {
-            document.getElementById('ai-selection-menu').classList.add('hidden');
+            clearSelectionUI({ collapse: true });
         }
         if (event.key === 'Enter' && event.target.value.trim()) {
             event.preventDefault();
@@ -2138,30 +3149,767 @@
         document.getElementById(`toggle-${source}`).classList.toggle('active', state.sourceToggles[source]);
     }
 
+    const pedagogyWidgetActions = {
+        'key-takeaways': {
+            type: 'reflect',
+            title: 'Key Takeaways',
+            icon: 'lightbulb',
+            color: 'emerald',
+            goalPrompt: 'Synthesize the key insights from this section.',
+            prompt: `Extract 3–5 key takeaways from this text as concise bullet points. Focus on what a student MUST remember. Start each bullet with a strong action verb. Return ONLY the bullet list.`,
+            openingPromptGen: `Based on these key takeaways, generate ONE reflective question that asks the student to connect these ideas to their prior knowledge or real-world experience. Return ONLY the question.`
+        },
+        'socratic-question': {
+            type: 'socratic',
+            title: 'Socratic Checkpoint',
+            icon: 'psychology_alt',
+            color: 'emerald',
+            goalPrompt: 'Guide students to discover deeper understanding through questioning.',
+            prompt: `Formulate 2–3 open-ended, thought-provoking discussion questions based on this text. The questions must NOT have simple yes/no answers. They should force students to analyze underlying assumptions, evaluate evidence, or consider implications. Return ONLY the numbered questions.`,
+            openingPromptGen: `From these Socratic questions, select the MOST thought-provoking one that will spark dialogue. Return ONLY that single question.`
+        },
+        'opposing-view': {
+            type: 'debate',
+            title: 'Challenge Your Thinking',
+            icon: 'forum',
+            color: 'amber',
+            goalPrompt: 'Examine this concept from an opposing perspective.',
+            prompt: `Present a credible counter-argument or alternative perspective to the following text. The goal is to help students understand that this topic has multiple viewpoints and encourage critical analysis. Do NOT dismiss the original view — present the alternative fairly and academically. Return ONLY the opposing viewpoint text (2–4 paragraphs).`,
+            openingPromptGen: `Turn this opposing viewpoint into a challenging opening question that forces the student to defend the original position OR acknowledge the merit of this alternative view. Return ONLY the question.`
+        },
+        'real-world-implications': {
+            type: 'firstprinciples',
+            title: 'Real-World Implications',
+            icon: 'public',
+            color: 'violet',
+            goalPrompt: 'Understand why this concept matters beyond the classroom.',
+            prompt: `Explain the ethical, societal, economic, or environmental implications of the concept described in this text. Help students understand why this matters outside the classroom. Use 2–3 short paragraphs. Return ONLY the implications text.`,
+            openingPromptGen: `Based on these implications, generate ONE question that asks the student to consider how this concept affects their own life or community. Return ONLY the question.`
+        },
+        'mini-case-study': {
+            type: 'firstprinciples',
+            title: 'Mini Case Study',
+            icon: 'cases',
+            color: 'violet',
+            goalPrompt: 'Apply the concept to a realistic scenario.',
+            prompt: `Transform this concept into a short (150–200 word) narrative case study. Include a fictional but realistic scenario with named characters or organizations applying this concept. End with 1–2 discussion questions for students. Return ONLY the case study.`,
+            openingPromptGen: `Extract the FIRST discussion question from this case study. Return ONLY that question.`
+        }
+    };
+
     function executeAIMenuAction(actionId) {
-        document.getElementById('ai-selection-menu').classList.add('hidden');
+        const capturedText = state.selectedText || '';
+        const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
+        
+        hideAIPanel();
+        
+        if (pedagogyWidgetActions[actionId]) {
+            generatePedagogyWidget(actionId, capturedText, capturedRange);
+            return;
+        }
         
         const prompts = {
-            'simplify': 'Simplify this text to make it easier to understand',
-            'paraphrase': 'Paraphrase this text while keeping the same meaning',
-            'expand': 'Expand this text with more detail and explanation',
-            'formal': 'Rewrite this in a more formal academic tone',
-            'engaging': 'Make this more engaging and interesting to read',
-            'grade-elem': 'Simplify this text for elementary school students (ages 8-10)',
-            'grade-high': 'Adjust this text for high school students',
-            'grade-undergrad': 'Adjust this text for undergraduate college students',
-            'add-example': 'Add a real-world example to illustrate this concept',
-            'bullet-list': 'Convert this text into a clear bulleted list',
-            'numbered-list': 'Convert this text into a numbered list',
+            'polish-flow': `Improve the academic flow and transitions in this text. Fix passive voice where it weakens clarity, ensure consistent tone, and improve paragraph cohesion. Return ONLY the improved text without commentary or preamble.`,
+
+            'add-example': `Add a concrete real-world example (2–4 sentences) that illustrates the concept in the selected text. Place it naturally after the concept. Return the original text with the example woven in, or the example block alone if the selection is a single phrase.`,
         };
         
         const prompt = prompts[actionId] || `Transform: ${actionId}`;
-        generateAIResponse(prompt, state.selectedText);
+        generateAIResponse(prompt, capturedText, capturedRange);
+    }
+
+    let widgetConfigState = {
+        actionId: null,
+        selectedText: '',
+        insertRange: null,
+        difficulty: 'moderate',
+        maxTurns: '5',
+        openingPrompt: '',
+        generatedContent: ''
+    };
+
+    function generatePedagogyWidget(actionId, capturedText, capturedRange) {
+        const config = pedagogyWidgetActions[actionId];
+        if (!config) return;
+
+        widgetConfigState = {
+            actionId,
+            selectedText: capturedText || state.selectedText || '',
+            insertRange: capturedRange || (state.selectedRange ? state.selectedRange.cloneRange() : null),
+            difficulty: 'moderate',
+            maxTurns: '5',
+            openingPrompt: '',
+            generatedContent: ''
+        };
+
+        const colorBgMap = { emerald: 'bg-emerald-500', amber: 'bg-amber-500', violet: 'bg-violet-500' };
+        document.getElementById('wcm-icon-wrap').className = `w-10 h-10 rounded-lg flex items-center justify-center ${colorBgMap[config.color] || 'bg-emerald-500'}`;
+        document.getElementById('wcm-icon').textContent = config.icon;
+        document.getElementById('wcm-title').textContent = config.title;
+        document.getElementById('wcm-subtitle').textContent = config.goalPrompt;
+        document.getElementById('wcm-context').textContent = widgetConfigState.selectedText.slice(0, 150) + (widgetConfigState.selectedText.length > 150 ? '...' : '');
+        document.getElementById('wcm-personalize').value = '';
+        document.getElementById('wcm-opening-prompt').value = '';
+        document.getElementById('wcm-preview-section').classList.add('hidden');
+        document.getElementById('wcm-generate-btn').classList.remove('hidden');
+        document.getElementById('wcm-insert-btn').classList.add('hidden');
+
+        document.querySelectorAll('.wcm-difficulty-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === 'moderate');
+        });
+        document.querySelectorAll('.wcm-turns-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === '5');
+        });
+
+        document.getElementById('widget-config-modal').classList.remove('hidden');
+    }
+
+    function closeWidgetConfigModal() {
+        document.getElementById('widget-config-modal').classList.add('hidden');
+        widgetConfigState = { actionId: null, selectedText: '', insertRange: null, difficulty: 'moderate', maxTurns: '5', openingPrompt: '', generatedContent: '' };
+    }
+
+    function setWidgetDifficulty(value) {
+        widgetConfigState.difficulty = value;
+        document.querySelectorAll('.wcm-difficulty-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === value);
+        });
+    }
+
+    function setWidgetTurns(value) {
+        widgetConfigState.maxTurns = value;
+        document.querySelectorAll('.wcm-turns-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === value);
+        });
+    }
+
+    async function generateWidgetPreview() {
+        const config = pedagogyWidgetActions[widgetConfigState.actionId];
+        if (!config) return;
+
+        const generateBtn = document.getElementById('wcm-generate-btn');
+        generateBtn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Generating...';
+        generateBtn.disabled = true;
+
+        const personalization = document.getElementById('wcm-personalize').value.trim();
+        const difficultyHint = `Difficulty: ${widgetConfigState.difficulty}. ${widgetConfigState.difficulty === 'easy' ? 'Use simple language and straightforward questions.' : widgetConfigState.difficulty === 'challenging' ? 'Use complex reasoning and nuanced questions.' : ''}`;
+        const personalHint = personalization ? `Author's instruction: ${personalization}` : '';
+
+        try {
+            const contentResult = state.apiKey 
+                ? await fetchStructuredAI(
+                    'You are creating educational content for a textbook.',
+                    `${config.prompt}\n\n${difficultyHint}\n${personalHint}\n\nText:\n${widgetConfigState.selectedText}`
+                  )
+                : getMockPedagogyContent(widgetConfigState.actionId, widgetConfigState.selectedText);
+
+            const openingPrompt = state.apiKey
+                ? await fetchStructuredAI(
+                    'You are creating an opening question for an interactive learning exercise.',
+                    `${config.openingPromptGen}\n\n${difficultyHint}\n${personalHint}\n\nContent:\n${contentResult}`
+                  )
+                : getMockPedagogyOpening(widgetConfigState.actionId);
+
+            widgetConfigState.generatedContent = contentResult;
+            widgetConfigState.openingPrompt = openingPrompt.trim();
+
+            document.getElementById('wcm-opening-prompt').value = widgetConfigState.openingPrompt;
+            document.getElementById('wcm-preview-section').classList.remove('hidden');
+            generateBtn.classList.add('hidden');
+            document.getElementById('wcm-insert-btn').classList.remove('hidden');
+
+        } catch (error) {
+            addCopilotMessage('ai', `<span class="text-error">Failed to generate: ${error.message}</span>`);
+        } finally {
+            generateBtn.innerHTML = '<span class="material-symbols-outlined text-base">auto_awesome</span> Generate with AI';
+            generateBtn.disabled = false;
+        }
+    }
+
+    function insertConfiguredWidget() {
+        const config = pedagogyWidgetActions[widgetConfigState.actionId];
+        if (!config) return;
+
+        const openingPrompt = document.getElementById('wcm-opening-prompt').value.trim() || widgetConfigState.openingPrompt;
+        const difficulty = widgetConfigState.difficulty;
+        const maxTurns = widgetConfigState.maxTurns;
+        const insertRange = widgetConfigState.insertRange;
+        const generatedContent = widgetConfigState.generatedContent;
+
+        const blockId = 'ped-' + Date.now();
+        const colorClasses = {
+            emerald: { bg: 'from-emerald-50 to-teal-50', border: 'border-emerald-200', header: 'bg-emerald-100/50', tag: 'bg-emerald-100 text-emerald-700', iconBg: 'bg-emerald-500' },
+            amber: { bg: 'from-amber-50 to-orange-50', border: 'border-amber-200', header: 'bg-amber-100/50', tag: 'bg-amber-100 text-amber-700', iconBg: 'bg-amber-500' },
+            violet: { bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', header: 'bg-violet-100/50', tag: 'bg-violet-100 text-violet-700', iconBg: 'bg-violet-500' }
+        };
+        const colors = colorClasses[config.color] || colorClasses.emerald;
+        const goal = config.goalPrompt;
+        const turnsLabel = maxTurns === 'unlimited' ? 'Unlimited turns' : `${maxTurns} turns`;
+
+        const html = `<div id="${blockId}" class="pedagogy-block-inserted relative my-6 rounded-xl border-2 ${colors.border} bg-gradient-to-br ${colors.bg} overflow-hidden" contenteditable="false" data-type="${config.type}" data-goal="${encodeURIComponent(goal)}" data-prompt="${encodeURIComponent(openingPrompt)}" data-difficulty="${difficulty}" data-max-turns="${maxTurns}" data-content="${encodeURIComponent(generatedContent)}">
+    <button type="button" class="widget-delete-btn" onclick="showDeleteWidgetModal('${blockId}')" title="Delete widget">
+        <span class="material-symbols-outlined">delete</span>
+    </button>
+    <div class="p-4 flex items-center gap-3 ${colors.header}">
+        <div class="w-9 h-9 rounded-lg ${colors.iconBg} flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined text-white">${config.icon}</span>
+        </div>
+        <div class="flex-1">
+            <div class="font-semibold text-text-primary">${config.title}</div>
+            <div class="text-xs text-text-tertiary mt-0.5">${difficulty} difficulty · ${turnsLabel}</div>
+        </div>
+        <span class="text-xs font-medium px-2 py-1 rounded-full ${colors.tag}">Interactive</span>
+    </div>
+    <div class="p-4 pt-3">
+        <div class="bg-white/80 rounded-lg p-4 border border-white/50 shadow-sm">
+            <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-full ${colors.iconBg} flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span class="material-symbols-outlined text-white text-sm">${config.icon}</span>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm text-text-primary leading-relaxed">${escapeHtml(openingPrompt)}</p>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-xs text-text-tertiary">
+            <span class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">target</span>
+                Goal: ${escapeHtml(goal.slice(0, 60))}
+            </span>
+            <span class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">school</span>
+                Student interaction enabled
+            </span>
+        </div>
+    </div>
+</div>`;
+
+        document.getElementById('widget-config-modal').classList.add('hidden');
+
+        const editor = document.getElementById('editor');
+        editor.focus();
+
+        if (insertRange) {
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            insertRange.collapse(false);
+            selection.addRange(insertRange);
+        }
+
+        document.execCommand('insertHTML', false, html);
+        checkPlaceholder();
+        updateWordCount();
+
+        widgetConfigState = { actionId: null, selectedText: '', insertRange: null, difficulty: 'moderate', maxTurns: '5', openingPrompt: '', generatedContent: '' };
+
+        addCopilotMessage('ai', `<span class="flex items-center gap-2"><span class="material-symbols-outlined text-${config.color}-500">${config.icon}</span> <strong>${config.title}</strong> widget created!</span><br><span class="text-xs text-text-tertiary">Click "Preview" to see the interactive student experience.</span>`);
+    }
+
+    let widgetToDelete = null;
+
+    function showDeleteWidgetModal(blockId) {
+        widgetToDelete = blockId;
+        document.getElementById('widget-delete-modal').classList.remove('hidden');
+    }
+
+    function closeDeleteWidgetModal() {
+        widgetToDelete = null;
+        document.getElementById('widget-delete-modal').classList.add('hidden');
+    }
+
+    function confirmDeleteWidget() {
+        if (widgetToDelete) {
+            const el = document.getElementById(widgetToDelete);
+            if (el) el.remove();
+            checkPlaceholder();
+            updateWordCount();
+        }
+        closeDeleteWidgetModal();
+    }
+
+    function getMockPedagogyContent(actionId, text) {
+        const mocks = {
+            'key-takeaways': '• Understand the fundamental principles at play\n• Recognize how this applies to real-world scenarios\n• Connect this concept to previously learned material\n• Identify potential limitations and exceptions',
+            'socratic-question': '1. What assumptions are we making about this concept that might not always hold true?\n2. How might someone with a different perspective interpret this information?\n3. What evidence would you need to see to change your understanding?',
+            'opposing-view': 'While the presented view has merit, consider an alternative perspective: some researchers argue that the conventional interpretation overlooks important contextual factors. This counter-view suggests that the relationship may be more nuanced than typically presented, with significant implications for practical applications.',
+            'real-world-implications': 'This concept has far-reaching implications for how we approach everyday decisions. In healthcare, it affects treatment protocols. In business, it shapes strategic planning. Understanding these connections helps bridge the gap between theory and practice.',
+            'mini-case-study': 'Dr. Sarah Chen faced a challenging decision at Metro Hospital when a new treatment protocol conflicted with established practices. Her team had to weigh the evidence carefully, considering both patient outcomes and resource constraints. What factors should guide her decision?'
+        };
+        return mocks[actionId] || 'Consider the key concepts presented in this section.';
+    }
+
+    function getMockPedagogyOpening(actionId) {
+        const mocks = {
+            'key-takeaways': 'Looking at these key takeaways, which one do you think will be most relevant to your future studies or career? Why?',
+            'socratic-question': 'What assumptions are we making about this concept that might not always hold true in different contexts?',
+            'opposing-view': 'The author presents one perspective, but can you think of situations where the opposite might actually be true?',
+            'real-world-implications': 'How might this concept affect decisions you or your community make in everyday life?',
+            'mini-case-study': 'If you were in Dr. Chen\'s position, what would be the first factor you\'d consider when making this decision?'
+        };
+        return mocks[actionId] || 'What are your initial thoughts on this topic?';
     }
 
     function executeCustomAIPrompt(prompt) {
-        document.getElementById('ai-selection-menu').classList.add('hidden');
-        generateAIResponse(prompt, state.selectedText);
+        const capturedText = state.selectedText || '';
+        const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
+        hideAIPanel();
+        generateAIResponse(prompt, capturedText, capturedRange);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // JARGON CHECKER, VIDEO, READING LEVEL
+    // ════════════════════════════════════════════════════════════════════════════
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    async function fetchStructuredAI(systemPrompt, userPrompt) {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.apiKey}`
+            },
+            body: JSON.stringify({
+                model: state.model,
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ],
+                temperature: 0.3
+            })
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || `API Error ${response.status}`);
+        }
+        const data = await response.json();
+        return data.choices[0]?.message?.content || '';
+    }
+
+    function parseJargonJSON(text) {
+        const match = text.match(/\[[\s\S]*\]/);
+        if (!match) return [];
+        try {
+            const parsed = JSON.parse(match[0]);
+            return Array.isArray(parsed) ? parsed.filter(t => t && t.term) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function getMockJargonTerms(text) {
+        const candidates = [
+            { term: 'catabolic', definition: 'Metabolic pathways that break down complex molecules to release energy.' },
+            { term: 'anabolic', definition: 'Metabolic pathways that build complex molecules from simpler ones, requiring energy input.' },
+            { term: 'ATP', definition: 'Adenosine triphosphate — the primary energy currency used by cells.' },
+            { term: 'oxidation', definition: 'A chemical process that removes electrons from a molecule, often releasing energy.' },
+            { term: 'photosynthesis', definition: 'The process plants use to convert light energy into chemical energy stored in sugars.' },
+            { term: 'organelle', definition: 'A specialized structure inside a cell that performs a specific function.' },
+        ];
+        const lower = text.toLowerCase();
+        return candidates.filter(c => lower.includes(c.term.toLowerCase())).slice(0, 6);
+    }
+
+    async function openJargonModal() {
+        hideSelectionMenus();
+        if (!state.selectedRange && !captureEditorSelection()) return;
+        if (!state.selectedText.trim()) {
+            alert('Select some text first to check for jargon.');
+            return;
+        }
+
+        state.jargonRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
+        state.jargonSourceText = state.selectedText;
+
+        document.getElementById('jargon-modal').classList.remove('hidden');
+        document.getElementById('jargon-list').innerHTML = `
+            <div class="flex items-center gap-2 text-sm text-text-secondary py-4">
+                <span class="material-symbols-outlined text-ai-accent animate-spin text-lg">progress_activity</span>
+                Analyzing text for jargon...
+            </div>`;
+
+        const systemPrompt = `You are an instructional designer helping textbook authors. Identify jargon, technical terms, and acronyms that students might not understand. Return ONLY a valid JSON array with no markdown: [{"term":"word","definition":"plain-language definition in 1-2 sentences"}]. Maximum 8 terms.`;
+        const userPrompt = `Text:\n"${state.selectedText}"`;
+
+        try {
+            let terms = [];
+            if (state.apiKey) {
+                const raw = await fetchStructuredAI(systemPrompt, userPrompt);
+                terms = parseJargonJSON(raw);
+            }
+            if (!terms.length) {
+                terms = getMockJargonTerms(state.selectedText);
+            }
+            state.jargonTerms = terms;
+            renderJargonList(terms);
+        } catch (error) {
+            state.jargonTerms = getMockJargonTerms(state.selectedText);
+            renderJargonList(state.jargonTerms);
+            if (!state.jargonTerms.length) {
+                document.getElementById('jargon-list').innerHTML =
+                    `<p class="text-sm text-text-secondary">Could not detect jargon. ${escapeHtml(error.message)}</p>`;
+            }
+        }
+    }
+
+    function closeJargonModal() {
+        document.getElementById('jargon-modal').classList.add('hidden');
+        state.jargonTerms = [];
+        state.jargonRange = null;
+        state.jargonSourceText = '';
+    }
+
+    function renderJargonList(terms) {
+        const list = document.getElementById('jargon-list');
+        if (!terms.length) {
+            list.innerHTML = '<p class="text-sm text-text-secondary">No jargon terms detected in this selection.</p>';
+            return;
+        }
+        list.innerHTML = terms.map((item, i) => `
+            <label class="flex gap-3 items-start p-3 border border-border rounded-lg cursor-pointer hover:bg-surface-secondary">
+                <input type="checkbox" id="jargon-check-${i}" checked class="mt-1 accent-primary"/>
+                <div class="flex-1 min-w-0">
+                    <span class="font-medium text-text-primary">${escapeHtml(item.term)}</span>
+                    <textarea id="jargon-def-${i}" rows="2"
+                        class="w-full mt-1.5 px-2 py-1.5 text-sm border border-border rounded resize-none outline-none focus:border-primary">${escapeHtml(item.definition || '')}</textarea>
+                </div>
+            </label>
+        `).join('');
+    }
+
+    function selectAllJargon(selectAll) {
+        state.jargonTerms.forEach((_, i) => {
+            const cb = document.getElementById(`jargon-check-${i}`);
+            if (cb) cb.checked = selectAll;
+        });
+    }
+
+    function rangeIntersectsTextNode(range, textNode) {
+        const nodeRange = document.createRange();
+        nodeRange.selectNodeContents(textNode);
+        return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) < 0 &&
+            range.compareBoundaryPoints(Range.START_TO_END, nodeRange) > 0;
+    }
+
+    function getTextNodeSliceBounds(range, textNode) {
+        let start = 0;
+        let end = textNode.textContent.length;
+        if (range.startContainer === textNode) start = range.startOffset;
+        if (range.endContainer === textNode) end = range.endOffset;
+        return { start, end };
+    }
+
+    function getTextNodesInRange(container, range) {
+        const nodes = [];
+        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+            if (node.parentElement?.closest('.jargon-term')) continue;
+            if (!rangeIntersectsTextNode(range, node)) continue;
+            nodes.push(node);
+        }
+        return nodes;
+    }
+
+    function wrapAllTermsInTextNode(textNode, range, terms) {
+        if (!textNode.isConnected) return;
+        if (textNode.parentElement?.closest('.jargon-term')) return;
+
+        const { start, end } = getTextNodeSliceBounds(range, textNode);
+        const fullText = textNode.textContent;
+        const slice = fullText.slice(start, end);
+        if (!slice) return;
+
+        const matches = [];
+        terms.forEach(({ term, definition }) => {
+            if (!term || !definition) return;
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`\\b(${escaped})\\b`, 'gi');
+            let match;
+            while ((match = regex.exec(slice)) !== null) {
+                matches.push({
+                    start: match.index,
+                    end: match.index + match[0].length,
+                    text: match[0],
+                    definition
+                });
+            }
+        });
+
+        if (!matches.length) return;
+
+        matches.sort((a, b) => a.start - b.start || b.end - a.end);
+        const filtered = [];
+        let lastEnd = 0;
+        for (const m of matches) {
+            if (m.start >= lastEnd) {
+                filtered.push(m);
+                lastEnd = m.end;
+            }
+        }
+
+        const frag = document.createDocumentFragment();
+        let lastIndex = 0;
+        filtered.forEach(m => {
+            if (m.start > lastIndex) {
+                frag.appendChild(document.createTextNode(fullText.slice(start + lastIndex, start + m.start)));
+            }
+            const span = document.createElement('span');
+            span.className = 'jargon-term';
+            span.setAttribute('data-definition', m.definition);
+            span.textContent = m.text;
+            frag.appendChild(span);
+            lastIndex = m.end;
+        });
+        if (lastIndex < slice.length) {
+            frag.appendChild(document.createTextNode(fullText.slice(start + lastIndex, start + end)));
+        }
+
+        const parent = textNode.parentNode;
+        if (start > 0) {
+            parent.insertBefore(document.createTextNode(fullText.slice(0, start)), textNode);
+        }
+        parent.insertBefore(frag, textNode);
+        if (end < fullText.length) {
+            parent.insertBefore(document.createTextNode(fullText.slice(end)), textNode);
+        }
+        parent.removeChild(textNode);
+    }
+
+    function wrapJargonTermsInRange(range, terms) {
+        const editor = document.getElementById('editor');
+        const sorted = [...terms].sort((a, b) => b.term.length - a.term.length);
+        // Snapshot text nodes before any DOM mutation — re-walking with the same
+        // range after the first wrap breaks boundary points and skips remaining terms.
+        const nodes = getTextNodesInRange(editor, range);
+        nodes.forEach(node => wrapAllTermsInTextNode(node, range, sorted));
+    }
+
+    function insertSelectedJargon() {
+        const selected = [];
+        state.jargonTerms.forEach((item, i) => {
+            const cb = document.getElementById(`jargon-check-${i}`);
+            const defEl = document.getElementById(`jargon-def-${i}`);
+            if (cb && cb.checked) {
+                selected.push({
+                    term: item.term,
+                    definition: defEl ? defEl.value.trim() : item.definition
+                });
+            }
+        });
+
+        if (!selected.length) {
+            alert('Select at least one term to insert definitions.');
+            return;
+        }
+
+        if (!state.jargonRange) {
+            alert('Selection was lost. Please select text and run Check for jargon again.');
+            return;
+        }
+
+        wrapJargonTermsInRange(state.jargonRange, selected);
+
+        closeJargonModal();
+        clearSelectionUI();
+        updateWordCount();
+        checkPlaceholder();
+    }
+
+    function openVideoModal() {
+        hideSelectionMenus();
+        if (!state.selectedRange) captureEditorSelection();
+        document.getElementById('video-modal').classList.remove('hidden');
+        document.getElementById('video-url-input').value = '';
+        document.getElementById('video-url-input').focus();
+    }
+
+    function closeVideoModal() {
+        document.getElementById('video-modal').classList.add('hidden');
+    }
+
+    function insertYouTubeVideo() {
+        const url = document.getElementById('video-url-input').value.trim();
+        const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&?/]+)/)?.[1];
+        if (!videoId) {
+            alert('Please enter a valid YouTube URL.');
+            return;
+        }
+
+        const iframe = `<div class="my-4"><iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full max-w-2xl rounded-lg" style="aspect-ratio:16/9;height:auto;"></iframe></div>`;
+
+        const editor = document.getElementById('editor');
+        editor.focus();
+
+        if (state.selectedRange) {
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(state.selectedRange);
+            document.execCommand('insertHTML', false, iframe);
+        } else if (state.insertPosition) {
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(state.insertPosition);
+            document.execCommand('insertHTML', false, iframe);
+        } else {
+            document.execCommand('insertHTML', false, iframe);
+        }
+
+        closeVideoModal();
+        clearSelectionUI();
+        updateWordCount();
+    }
+
+    function openReadingLevelModal() {
+        hideSelectionMenus();
+        if (!state.selectedRange && !captureEditorSelection()) return;
+        document.getElementById('reading-level-modal').classList.remove('hidden');
+    }
+
+    function closeReadingLevelModal() {
+        document.getElementById('reading-level-modal').classList.add('hidden');
+    }
+
+    function adjustReadingLevel(level) {
+        const capturedText = state.selectedText || '';
+        const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
+        closeReadingLevelModal();
+
+        const prompts = {
+            'elementary': `Rewrite this text for elementary school readers (ages 8–10). Target ELIX ~600 (very easy readability). Use short sentences, simple everyday vocabulary, and concrete examples. Avoid jargon unless you define it inline. Return ONLY the rewritten text.`,
+            'high-school': `Rewrite this text for high school students (ages 14–18). Use moderate complexity, clear explanations, and relatable examples. Maintain accuracy while improving accessibility. Return ONLY the rewritten text.`,
+            'undergraduate': `Rewrite this text for undergraduate college students. Use precise academic terminology with brief context where needed, logical structure, and a scholarly tone. Return ONLY the rewritten text.`,
+        };
+
+        const prompt = prompts[level];
+        if (prompt) generateAIResponse(prompt, capturedText, capturedRange);
+    }
+
+    let jargonPopoverEl = null;
+
+    function ensureJargonPopover() {
+        if (!jargonPopoverEl) {
+            jargonPopoverEl = document.createElement('div');
+            jargonPopoverEl.id = 'jargon-popover';
+            jargonPopoverEl.className = 'jargon-popover hidden';
+            document.body.appendChild(jargonPopoverEl);
+        }
+        return jargonPopoverEl;
+    }
+
+    function positionJargonPopover(anchorEl) {
+        const pop = ensureJargonPopover();
+        pop.classList.remove('hidden');
+        const rect = anchorEl.getBoundingClientRect();
+        let top = rect.top - pop.offsetHeight - 8;
+        if (top < 8) top = rect.bottom + 8;
+        pop.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - pop.offsetWidth - 8))}px`;
+        pop.style.top = `${top}px`;
+    }
+
+    function showJargonReadPopover(el) {
+        if (state.jargonEditTarget) return;
+        const def = el.getAttribute('data-definition');
+        if (!def) return;
+        const pop = ensureJargonPopover();
+        pop.className = 'jargon-popover jargon-popover-read';
+        pop.innerHTML = `
+            <div class="jargon-popover-term">${escapeHtml(el.textContent)}</div>
+            <div class="jargon-popover-def">${escapeHtml(def)}</div>`;
+        positionJargonPopover(el);
+    }
+
+    function hideJargonPopover() {
+        if (jargonPopoverEl) {
+            jargonPopoverEl.classList.add('hidden');
+            jargonPopoverEl.innerHTML = '';
+            jargonPopoverEl.className = 'jargon-popover hidden';
+        }
+        state.jargonEditTarget = null;
+    }
+
+    function unwrapJargonTerm(el) {
+        const text = document.createTextNode(el.textContent);
+        el.parentNode.replaceChild(text, el);
+    }
+
+    function showJargonEditPopover(el) {
+        if (jargonPopoverEl) {
+            jargonPopoverEl.classList.add('hidden');
+            jargonPopoverEl.innerHTML = '';
+        }
+        state.jargonEditTarget = el;
+        const def = el.getAttribute('data-definition') || '';
+        const pop = ensureJargonPopover();
+        pop.className = 'jargon-popover jargon-popover-edit';
+        pop.innerHTML = `
+            <div class="jargon-popover-term">${escapeHtml(el.textContent)}</div>
+            <textarea class="jargon-popover-textarea" rows="3">${escapeHtml(def)}</textarea>
+            <div class="jargon-popover-actions">
+                <button type="button" class="jargon-popover-btn jargon-popover-remove">Remove highlight</button>
+                <button type="button" class="jargon-popover-btn jargon-popover-save">Save</button>
+            </div>`;
+        positionJargonPopover(el);
+
+        pop.querySelector('.jargon-popover-save').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const newDef = pop.querySelector('.jargon-popover-textarea').value.trim();
+            if (newDef) el.setAttribute('data-definition', newDef);
+            hideJargonPopover();
+        });
+        pop.querySelector('.jargon-popover-remove').addEventListener('click', (e) => {
+            e.stopPropagation();
+            unwrapJargonTerm(el);
+            hideJargonPopover();
+            updateWordCount();
+        });
+    }
+
+    function initJargonInteractions(container, options = {}) {
+        if (!container) return;
+        const editable = options.editable === true;
+
+        if (container._jargonHoverInit) return;
+        container._jargonHoverInit = true;
+
+        container.addEventListener('mouseover', (e) => {
+            const term = e.target.closest('.jargon-term');
+            if (term && !state.jargonEditTarget) showJargonReadPopover(term);
+        });
+        container.addEventListener('mouseout', (e) => {
+            if (state.jargonEditTarget) return;
+            const term = e.target.closest('.jargon-term');
+            if (term && !term.contains(e.relatedTarget)) hideJargonPopover();
+        });
+
+        if (editable) {
+            container.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.jargon-term')) {
+                    e.preventDefault();
+                }
+            });
+            container.addEventListener('click', (e) => {
+                const term = e.target.closest('.jargon-term');
+                if (term) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showJargonEditPopover(term);
+                }
+            });
+        } else {
+            container.addEventListener('click', (e) => {
+                const term = e.target.closest('.jargon-term');
+                if (term) {
+                    e.preventDefault();
+                    showJargonReadPopover(term);
+                }
+            });
+        }
     }
 
     // ════════════════════════════════════════════════════════════════════════════
@@ -2169,6 +3917,9 @@
     // ════════════════════════════════════════════════════════════════════════════
     function aiAction(action) {
         state.currentAIAction = action;
+        
+        const capturedText = state.selectedText || '';
+        const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
         
         const editor = document.getElementById('editor');
         const content = editor.innerText;
@@ -2180,24 +3931,26 @@
             'continue': `Continue writing the following textbook content naturally:\n\n${content.slice(-500) || chapterTitle}`,
             'intro': `Write an engaging introduction paragraph for a textbook chapter about "${chapterTitle}". ${chapterSubtitle}`,
             'conclusion': `Write a conclusion that summarizes the key points from this chapter about "${chapterTitle}":\n\n${content.slice(0, 1000)}`,
-            'expand': `Expand and add more detail to explain this concept better:\n\n${state.selectedText || content.slice(-300) || chapterTitle}`,
-            'simplify': `Simplify this text to make it easier for students to understand:\n\n${state.selectedText || content}`,
-            'example': `Add a real-world example to help explain this concept:\n\n${state.selectedText || content.slice(-300) || chapterTitle}`
+            'expand': `Expand and add more detail to explain this concept better:\n\n${capturedText || content.slice(-300) || chapterTitle}`,
+            'simplify': `Simplify this text to make it easier for students to understand:\n\n${capturedText || content}`,
+            'example': `Add a real-world example to help explain this concept:\n\n${capturedText || content.slice(-300) || chapterTitle}`
         };
         
         const prompt = prompts[action] || `Help with: ${action}`;
         
-        if (action === 'example' && !state.selectedText) {
+        if (action === 'example' && !capturedText) {
             openExampleModal();
         } else {
-            generateAIResponse(prompt, state.selectedText);
+            generateAIResponse(prompt, capturedText, capturedRange);
         }
     }
 
     // ════════════════════════════════════════════════════════════════════════════
     // AI RESPONSE
     // ════════════════════════════════════════════════════════════════════════════
-    async function generateAIResponse(prompt, selectedText = '') {
+    async function generateAIResponse(prompt, selectedText = '', capturedRange = null) {
+        state.insertPosition = capturedRange || (state.selectedRange ? state.selectedRange.cloneRange() : null);
+
         showAIResponseModal();
         
         const systemPrompt = `You are an expert textbook author. Create clear, educational content. When transforming text, return ONLY the transformed text.`;
@@ -2267,6 +4020,24 @@
         
         if (prompt.includes('outline')) {
             mockContent = `## Chapter Outline: What is a Cell?\n\n### 1. Introduction to Cells\n- Definition and importance\n- Historical discovery by Robert Hooke\n- Why cells matter in biology\n\n### 2. The Cell Theory\n- Three fundamental principles\n- Key scientists: Schleiden, Schwann, Virchow\n- Modern understanding\n\n### 3. Types of Cells\n- Prokaryotic cells (bacteria)\n- Eukaryotic cells (plants, animals)\n- Key differences and similarities\n\n### 4. Cell Structure\n- Cell membrane\n- Nucleus and genetic material\n- Organelles and their functions\n\n### 5. Summary\n- Key takeaways\n- Review questions`;
+        } else if (prompt.includes('key takeaways') || prompt.includes('Extract 3')) {
+            mockContent = `- **Define** the core concept in your own words\n- **Explain** why this process matters for living systems\n- **Connect** this idea to a real-world application\n- **Compare** this pathway to its opposite (e.g., anabolic vs catabolic)`;
+        } else if (prompt.includes('opposing') || prompt.includes('counter-argument')) {
+            mockContent = `**Alternative Perspective:**\n\nWhile the text emphasizes energy release through oxidation, some educators argue that focusing solely on catabolic pathways overlooks the equally vital role of anabolic processes in building the molecules life depends on. Without anabolic pathways, the products of catabolism would have nowhere to go — cells need both breaking down AND building up.\n\nStudents should consider: Can we truly understand metabolism by studying only one direction of these pathways?`;
+        } else if (prompt.includes('Socratic') || prompt.includes('discussion questions')) {
+            mockContent = `1. If cells can extract energy by breaking down organic molecules, why don't all organisms simply consume the same fuel sources?\n\n2. How might a mutation that disrupts a catabolic enzyme affect an organism's ability to survive in different environments?\n\n3. What assumptions are we making when we describe metabolic pathways as linear processes?`;
+        } else if (prompt.includes('implications')) {
+            mockContent = `Understanding catabolic pathways has direct implications for medicine, agriculture, and climate science. In medicine, drugs targeting specific metabolic enzymes treat conditions from diabetes to cancer. In agriculture, knowledge of plant respiration helps optimize crop yields. At a societal level, studying how organisms extract energy informs our understanding of carbon cycles and climate change.`;
+        } else if (prompt.includes('case study')) {
+            mockContent = `**Case Study: Dr. Martinez's Lab**\n\nDr. Elena Martinez noticed that her yeast cultures stopped producing ethanol after a heat wave. Her team discovered that elevated temperatures disrupted a key enzyme in the glycolysis pathway — the first step of catabolic energy extraction. By identifying which step failed, they developed a heat-resistant strain that restored production.\n\n*Discussion:* What would happen if the enzyme failed at a different step in the pathway? How might this discovery apply to biofuel production?`;
+        } else if (prompt.includes('academic flow') || prompt.includes('Polish')) {
+            mockContent = selectedText || `Metabolic pathways release energy through the systematic breakdown of organic molecules. Cellular respiration oxidizes sugars with the aid of oxygen, converting stored chemical energy into ATP that powers cellular work.`;
+        } else if (prompt.includes('ELIX') || prompt.includes('elementary')) {
+            mockContent = `Cells need energy to work, just like you need food to run and play. They get this energy by breaking down sugar molecules — a process called catabolism. Think of it like eating a snack: your body breaks the food into smaller pieces and uses the energy to help you move, think, and grow.`;
+        } else if (prompt.includes('high school')) {
+            mockContent = selectedText ? selectedText.replace(/\b(catabolic|anabolic)\b/gi, (m) => m) : `Cells extract usable energy by breaking down organic molecules through catabolic pathways. This process, which includes cellular respiration, converts the chemical bonds in sugars and fats into ATP — the molecule that powers nearly every cellular activity.`;
+        } else if (prompt.includes('undergraduate')) {
+            mockContent = selectedText || `Catabolic pathways constitute the oxidative degradation of organic macromolecules, yielding reduced electron carriers and ATP through substrate-level and oxidative phosphorylation. The thermodynamic favorability of these reactions drives the metabolic flux essential for cellular homeostasis.`;
         } else if (prompt.includes('simplify') || prompt.includes('Elementary')) {
             mockContent = `Cells are like tiny building blocks that make up every living thing! Just like LEGO pieces come together to build a castle, cells come together to build plants, animals, and even you!\n\nEvery cell is like a tiny city with different parts that each have special jobs. Some parts make energy, some store information, and some protect the cell from the outside world.`;
         } else if (prompt.includes('intro')) {
@@ -2278,7 +4049,7 @@
         } else {
             mockContent = selectedText 
                 ? `Here's the transformed text:\n\n${selectedText.split(' ').slice(0, 20).join(' ')}... [transformed content would appear here]`
-                : `I can help you with that! Try selecting some text first, or use the quick actions in the Copilot panel.`;
+                : `I can help you with that! Try selecting some text first, ask in the Writing Copilot chat, or type / in the editor for AI commands.`;
         }
         
         // Simulate streaming
@@ -2328,6 +4099,25 @@
             .replace(/\n/g, '<br>');
     }
 
+    function getBlockElementForRange(range) {
+        const editor = document.getElementById('editor');
+        if (!range) return null;
+        const blockTags = ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'UL', 'OL', 'LI'];
+        let node = range.endContainer;
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+        
+        while (node && node !== editor) {
+            if (blockTags.includes(node.nodeName)) {
+                return node;
+            }
+            if (node.parentNode === editor) {
+                return node;
+            }
+            node = node.parentNode;
+        }
+        return null;
+    }
+
     function acceptAIResponse() {
         if (!state.generatedContent) {
             closeAIResponse();
@@ -2355,6 +4145,7 @@
         }
         
         closeAIResponse();
+        clearSelectionUI();
         updateWordCount();
         checkPlaceholder();
     }
@@ -2368,42 +4159,43 @@
         const editor = document.getElementById('editor');
         editor.focus();
         
-        // Find current paragraph/block and insert after it
-        const selection = window.getSelection();
-        let insertNode = null;
+        const anchorRange = state.insertPosition || state.selectedRange;
         
-        if (state.insertPosition) {
-            selection.removeAllRanges();
-            selection.addRange(state.insertPosition);
-        }
-        
-        if (selection.rangeCount > 0) {
-            let node = selection.getRangeAt(0).commonAncestorContainer;
-            // Walk up to find block-level element
-            while (node && node !== editor && !['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'UL', 'OL'].includes(node.nodeName)) {
-                node = node.parentNode;
-            }
-            insertNode = node;
-        }
-        
-        // Create the new content block
         const newBlock = document.createElement('div');
         newBlock.className = 'ai-generated-block';
         newBlock.innerHTML = formatAIContent(state.generatedContent);
         
-        if (insertNode && insertNode !== editor) {
-            // Insert after the current block
-            insertNode.parentNode.insertBefore(newBlock, insertNode.nextSibling);
-        } else {
-            // Append to editor
+        let inserted = false;
+        
+        if (anchorRange) {
+            const blockElement = getBlockElementForRange(anchorRange);
+            if (blockElement && blockElement.parentNode) {
+                blockElement.parentNode.insertBefore(newBlock, blockElement.nextSibling);
+                inserted = true;
+            } else {
+                let node = anchorRange.endContainer;
+                if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+                
+                while (node && node !== editor && node.parentNode !== editor) {
+                    node = node.parentNode;
+                }
+                
+                if (node && node !== editor && node.parentNode === editor) {
+                    node.parentNode.insertBefore(newBlock, node.nextSibling);
+                    inserted = true;
+                }
+            }
+        }
+        
+        if (!inserted) {
             editor.appendChild(newBlock);
         }
         
         closeAIResponse();
+        clearSelectionUI();
         updateWordCount();
         checkPlaceholder();
         
-        // Scroll to the new content
         newBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     
@@ -2426,12 +4218,162 @@
     function closeAIResponse() {
         document.getElementById('ai-response-overlay').classList.add('hidden');
         document.getElementById('ai-response-container').classList.add('hidden');
+        clearSelectionUI();
         document.getElementById('editor').focus();
     }
 
     // ════════════════════════════════════════════════════════════════════════════
-    // COPILOT
+    // WRITING COPILOT
     // ════════════════════════════════════════════════════════════════════════════
+    const COPILOT_HISTORY_MAX = 20;
+    let voiceRecognition = null;
+    let voiceListening = false;
+    let voiceTranscriptBase = '';
+
+    function trimCopilotHistory() {
+        if (state.copilotHistory.length > COPILOT_HISTORY_MAX) {
+            state.copilotHistory = state.copilotHistory.slice(-COPILOT_HISTORY_MAX);
+        }
+    }
+
+    function getBookTitle() {
+        const breadcrumb = document.querySelector('header nav span.text-text-secondary');
+        return breadcrumb?.textContent?.trim() || 'Untitled Book';
+    }
+
+    function getChaptersInOrder() {
+        const groups = document.querySelectorAll('#chapter-list .chapter-group');
+        return Array.from(groups).map((group, index) => {
+            const chapterId = group.getAttribute('data-chapter-id');
+            const data = appState.chapters[chapterId] || { title: '', subtitle: '', content: '' };
+            return {
+                chapterId,
+                chapterNum: index + 1,
+                title: data.title || 'Untitled Chapter',
+                subtitle: data.subtitle || '',
+                isActive: chapterId === appState.activeChapterId
+            };
+        });
+    }
+
+    function buildHybridCopilotContext() {
+        saveCurrentChapterState();
+        const bookTitle = getBookTitle();
+        const chapters = getChaptersInOrder();
+
+        let outline = `Book: ${bookTitle}\n\nBook outline:\n`;
+        chapters.forEach((ch) => {
+            const line = ch.subtitle
+                ? `- Chapter ${ch.chapterNum}: ${ch.title} — ${ch.subtitle}`
+                : `- Chapter ${ch.chapterNum}: ${ch.title}`;
+            outline += line + '\n';
+        });
+
+        const title = document.getElementById('chapter-title')?.value?.trim() || 'Untitled Chapter';
+        const subtitle = document.getElementById('chapter-subtitle')?.value?.trim() || '';
+        const bodyText = document.getElementById('editor')?.innerText?.trim() || '';
+
+        let currentChapter = `Current chapter (full text):\nTitle: ${title}\n`;
+        if (subtitle) currentChapter += `Subtitle: ${subtitle}\n`;
+        currentChapter += `---\n${bodyText}`;
+
+        return `${outline}\n${currentChapter}`;
+    }
+
+    function getActiveChapterNumber() {
+        const activeItem = document.querySelector('#chapter-list .chapter-item.active');
+        if (activeItem) {
+            const titleSpan = activeItem.querySelector('.chapter-title-text');
+            if (titleSpan) {
+                const match = titleSpan.textContent.match(/^(\d+)\./);
+                if (match) return parseInt(match[1], 10);
+            }
+        }
+        const groups = document.querySelectorAll('#chapter-list .chapter-group');
+        for (let i = 0; i < groups.length; i++) {
+            if (groups[i].querySelector('.chapter-item.active')) return i + 1;
+        }
+        return 1;
+    }
+
+    function updateCopilotContext() {
+        const contextEl = document.getElementById('copilot-context');
+        if (!contextEl) return;
+        const chapterNum = getActiveChapterNumber();
+        const chapterCount = document.querySelectorAll('#chapter-list .chapter-group').length || 1;
+        const label = `Chapter ${chapterNum} (full) · ${chapterCount}-chapter outline`;
+        contextEl.textContent = label;
+        contextEl.title = label;
+        contextEl.classList.remove('context-updated');
+        void contextEl.offsetWidth;
+        contextEl.classList.add('context-updated');
+    }
+
+    function updateVoiceButtonState() {
+        const btn = document.getElementById('copilot-voice-btn');
+        if (!btn) return;
+        const icon = btn.querySelector('.material-symbols-outlined');
+        btn.classList.toggle('active', voiceListening);
+        if (icon) icon.textContent = voiceListening ? 'stop_circle' : 'mic';
+    }
+
+    function initVoiceInput() {
+        const btn = document.getElementById('copilot-voice-btn');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!btn) return;
+        if (!SpeechRecognition) {
+            btn.disabled = true;
+            btn.title = 'Voice input not supported in this browser';
+            return;
+        }
+
+        voiceRecognition = new SpeechRecognition();
+        voiceRecognition.continuous = false;
+        voiceRecognition.interimResults = true;
+        voiceRecognition.lang = 'en-US';
+
+        voiceRecognition.onresult = (event) => {
+            const input = document.getElementById('copilot-input');
+            let interim = '';
+            let final = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) final += transcript;
+                else interim += transcript;
+            }
+            input.value = voiceTranscriptBase + final + interim;
+            autoResizeTextarea(input);
+        };
+
+        voiceRecognition.onend = () => {
+            voiceListening = false;
+            updateVoiceButtonState();
+            const input = document.getElementById('copilot-input');
+            voiceTranscriptBase = input.value;
+        };
+
+        voiceRecognition.onerror = () => {
+            voiceListening = false;
+            updateVoiceButtonState();
+        };
+
+        btn.title = 'Voice input';
+    }
+
+    function toggleVoiceInput() {
+        const btn = document.getElementById('copilot-voice-btn');
+        if (!voiceRecognition || btn?.disabled) return;
+        if (voiceListening) {
+            voiceRecognition.stop();
+            return;
+        }
+        const input = document.getElementById('copilot-input');
+        voiceTranscriptBase = input.value ? input.value + ' ' : '';
+        voiceListening = true;
+        updateVoiceButtonState();
+        voiceRecognition.start();
+    }
+
     function handleCopilotKeydown(event) {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
@@ -2443,25 +4385,41 @@
         const input = document.getElementById('copilot-input');
         const message = input.value.trim();
         if (!message || state.copilotPending) return;
+
+        if (state.copilotMode === 'student' && state.activeWidgetChat) {
+            input.value = '';
+            input.style.height = 'auto';
+            await sendWidgetChatMessage(message);
+            return;
+        }
+
+        if (state.copilotMode === 'student' && !state.activeWidgetChat) {
+            addStudentIdleMessage();
+            input.value = '';
+            return;
+        }
         
         state.copilotPending = true;
         addCopilotMessage('user', message);
         input.value = '';
         input.style.height = 'auto';
-        
-        // Get context
-        const chapterTitle = document.getElementById('chapter-title').value;
-        const editorContent = document.getElementById('editor').innerText.slice(0, 1500);
+
+        const hybridContext = buildHybridCopilotContext();
+        state.copilotHistory.push({ role: 'user', content: message });
+        trimCopilotHistory();
         
         // Show typing indicator
         const typingId = addCopilotTyping();
         
         try {
-            const response = await generateCopilotResponse(message, chapterTitle, editorContent);
+            const response = await generateCopilotResponse(hybridContext);
             removeCopilotTyping(typingId);
             addCopilotMessage('ai', response);
+            state.copilotHistory.push({ role: 'assistant', content: response });
+            trimCopilotHistory();
             state.generatedContent = response;
         } catch (error) {
+            state.copilotHistory.pop();
             removeCopilotTyping(typingId);
             addCopilotMessage('ai', `<span class="text-error">Error: ${error.message || 'Something went wrong. Please try again.'}</span>`);
         }
@@ -2469,24 +4427,20 @@
         state.copilotPending = false;
     }
     
-    async function generateCopilotResponse(message, chapterTitle, editorContent) {
-        const systemPrompt = `You are an AI writing assistant for textbook authors. You help with:
+    async function generateCopilotResponse(hybridContext) {
+        const systemPrompt = `You are a Writing Copilot for textbook authors. You help with:
 - Generating content, outlines, and explanations
 - Simplifying text for different grade levels
 - Adding examples and analogies
 - Improving writing style and clarity
+- Cross-chapter consistency using the book outline
 
-Current chapter: "${chapterTitle}"
-Be helpful, concise, and educational. Format responses with markdown when useful.`;
-
-        const userPrompt = editorContent 
-            ? `Context from the chapter:\n"""${editorContent}"""\n\nUser request: ${message}`
-            : message;
+You receive the full text of the author's current chapter plus an outline of all chapters. Use conversation history to maintain context across follow-up messages. Be helpful, concise, and educational. Format responses with markdown when useful.`;
 
         if (!state.apiKey) {
             // Mock response
             await new Promise(r => setTimeout(r, 1500));
-            return getMockCopilotResponse(message);
+            return getMockCopilotResponse(state.copilotHistory[state.copilotHistory.length - 1]?.content || '');
         }
         
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -2498,8 +4452,8 @@ Be helpful, concise, and educational. Format responses with markdown when useful
             body: JSON.stringify({
                 model: state.model,
                 messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
+                    { role: 'system', content: systemPrompt + '\n\n' + hybridContext },
+                    ...state.copilotHistory
                 ],
                 max_tokens: 1000
             })
@@ -2540,16 +4494,17 @@ Be helpful, concise, and educational. Format responses with markdown when useful
         if (role === 'user') {
             div.innerHTML = `<div class="flex-1"></div><div class="bg-primary text-white text-sm px-3 py-2.5 rounded-lg rounded-br-sm max-w-[85%]">${escapeHtml(content)}</div>`;
         } else {
-            // Format AI response with markdown
             const formattedContent = formatCopilotContent(content);
+            const actionsHtml = state.copilotMode === 'author' ? `
+                    <div class="mt-2 flex items-center gap-2">
+                        <button onclick="insertFromCopilot(this)" class="text-xs text-primary hover:underline">Insert into editor</button>
+                        <button onclick="copyToClipboard(this)" class="text-xs text-text-tertiary hover:text-text-secondary">Copy</button>
+                    </div>` : '';
             div.innerHTML = `
                 <span class="material-symbols-outlined text-primary text-lg flex-shrink-0 mt-0.5">smart_toy</span>
                 <div class="flex-1">
                     <div class="text-sm text-text-primary leading-relaxed">${formattedContent}</div>
-                    <div class="mt-2 flex items-center gap-2">
-                        <button onclick="insertFromCopilot(this)" class="text-xs text-primary hover:underline">Insert into editor</button>
-                        <button onclick="copyToClipboard(this)" class="text-xs text-text-tertiary hover:text-text-secondary">Copy</button>
-                    </div>
+                    ${actionsHtml}
                 </div>`;
         }
         
@@ -2569,12 +4524,6 @@ Be helpful, concise, and educational. Format responses with markdown when useful
             .replace(/^\d+\. (.*$)/gm, '<li class="ml-4 text-text-secondary list-decimal">$1</li>')
             .replace(/\n\n/g, '</p><p class="mt-2">')
             .replace(/\n/g, '<br>');
-    }
-    
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
     
     function addCopilotTyping() {
@@ -2628,12 +4577,23 @@ Be helpful, concise, and educational. Format responses with markdown when useful
     let currentGeneratedImageUrl = '';
 
     function openImageGenModal() {
-        document.getElementById('ai-selection-menu').classList.add('hidden');
+        hideSelectionMenus();
+        if (state.selectedRange) {
+            state.insertPosition = state.selectedRange.cloneRange();
+        } else {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                state.insertPosition = selection.getRangeAt(0).cloneRange();
+            }
+        }
+
         const modal = document.getElementById('image-gen-modal');
         modal.classList.remove('hidden');
         
         const input = document.getElementById('image-prompt-input');
-        input.value = state.selectedText || '';
+        input.value = state.selectedText
+            ? `Educational textbook illustration: ${state.selectedText.slice(0, 150)}`
+            : '';
         input.focus();
         
         // Reset state
@@ -2647,12 +4607,6 @@ Be helpful, concise, and educational. Format responses with markdown when useful
         document.getElementById('image-gen-insert-btn').classList.add('hidden');
         
         currentGeneratedImageUrl = '';
-        
-        // Store selection so we can insert later
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-            state.insertPosition = selection.getRangeAt(0).cloneRange();
-        }
     }
 
     function closeImageGenModal() {
@@ -2827,8 +4781,9 @@ Be helpful, concise, and educational. Format responses with markdown when useful
     }
 
     function openExampleModal() {
-        document.getElementById('ai-selection-menu').classList.add('hidden');
+        hideSelectionMenus();
         document.getElementById('example-modal').classList.remove('hidden');
+        document.getElementById('example-input').value = '';
         document.getElementById('example-input').focus();
     }
 
@@ -2842,9 +4797,12 @@ Be helpful, concise, and educational. Format responses with markdown when useful
 
     function generateCustomExample() {
         const input = document.getElementById('example-input').value.trim();
+        if (!input) return;
+        const capturedText = state.selectedText || '';
+        const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
         closeExampleModal();
-        const prompt = `Add an example based on: "${input}"\n\nFor: ${state.selectedText || document.getElementById('chapter-title').value}`;
-        generateAIResponse(prompt, state.selectedText);
+        const prompt = `Add an analogy based on the author's request: "${input}". Explain the selected concept using this analogy style. Make it vivid, accurate, and appropriate for a textbook audience. Return ONLY the analogy text (2–4 sentences).`;
+        generateAIResponse(prompt, capturedText, capturedRange);
     }
 
     // ════════════════════════════════════════════════════════════════════════════
@@ -2856,14 +4814,13 @@ Be helpful, concise, and educational. Format responses with markdown when useful
         const subtitle = document.getElementById('chapter-subtitle').value || '';
         const editorHTML = document.getElementById('editor').innerHTML;
 
-        // Build the reading page HTML
         const chapterNum = document.querySelector('#chapter-sidebar .chapter-item.active span:last-child')?.textContent || 'Chapter 1';
 
         const page = document.getElementById('reading-page');
         page.innerHTML = `
             <div class="rv-chapter-label">${chapterNum}</div>
-            <h1 class="rv-chapter-title" style="margin-bottom: 16px;">${title}</h1>
-            ${subtitle ? `<p style="font-family:'Inter',sans-serif;font-size:18px;color:#64748b;margin-bottom:40px;line-height:1.6;">${subtitle}</p>` : ''}
+            <h1 class="rv-chapter-title" style="margin-bottom: 16px;">${escapeHtml(title)}</h1>
+            ${subtitle ? `<p style="font-family:'Inter',sans-serif;font-size:18px;color:#64748b;margin-bottom:40px;line-height:1.6;">${escapeHtml(subtitle)}</p>` : ''}
             <hr style="border:none;border-top:1px solid #e5e7eb;margin-bottom:40px;"/>
             <div class="rv-body">${transformEditorToReadingHTML(editorHTML)}</div>
         `;
@@ -2872,7 +4829,24 @@ Be helpful, concise, and educational. Format responses with markdown when useful
         rv.classList.add('active');
         rv.scrollTop = 0;
 
-        // Animate page entry
+        state.readingViewActive = true;
+        state.readingSessionStart = Date.now();
+        state.activeWidgetChat = null;
+
+        if (!state.copilotVisible) {
+            state.copilotVisible = true;
+            document.getElementById('copilot-panel').classList.remove('hidden');
+        }
+        updateReadingViewLayout();
+        setStudentCopilotMode(true);
+
+        const rvBody = page.querySelector('.rv-body');
+        if (rvBody) {
+            initJargonInteractions(rvBody, { editable: false });
+            renderReadingWidgets(rvBody);
+            initWidgetViewportTracking(rvBody);
+        }
+
         page.style.opacity = '0';
         page.style.transform = 'translateY(16px)';
         requestAnimationFrame(() => {
@@ -2884,21 +4858,574 @@ Be helpful, concise, and educational. Format responses with markdown when useful
 
     function exitReadingView() {
         const rv = document.getElementById('reading-view');
-        rv.classList.remove('active');
+        rv.classList.remove('active', 'copilot-visible');
+
+        if (state.readingSessionStart) {
+            const chapter = Analytics.getChapterData(appState.activeChapterId);
+            chapter.totalReadingTimeMs = (chapter.totalReadingTimeMs || 0) + (Date.now() - state.readingSessionStart);
+            const all = Analytics.load();
+            all[appState.activeChapterId] = chapter;
+            Analytics.save(all);
+        }
+
+        state.readingViewActive = false;
+        state.readingSessionStart = null;
+        state.activeWidgetChat = null;
+        setStudentCopilotMode(false);
+
+        document.getElementById('rv-progress').classList.add('hidden');
+    }
+
+    function updateReadingViewLayout() {
+        const rv = document.getElementById('reading-view');
+        if (!state.readingViewActive) return;
+        rv.classList.toggle('copilot-visible', state.copilotVisible);
     }
 
     function transformEditorToReadingHTML(html) {
-        // Clean up the raw editor HTML for reading view rendering
-        // The editor uses div/p tags; we pass them through with reading-view styles applied via CSS
-        // Handle special patterns: lines starting with # for headings (from slash commands)
         let result = html;
-
-        // Strip empty paragraphs at start/end
         result = result.replace(/^(<p><br><\/p>)+/, '').replace(/(<p><br><\/p>)+$/, '');
-
-        // Wrap pedagogy blocks to keep them (they are already contenteditable=false)
-        // They carry their own styles, so just pass through
         return result || '<p style="color:#9ca3af;font-family:\'Inter\',sans-serif;font-size:15px;">No content yet. Start writing in the editor to see your chapter here.</p>';
+    }
+
+    // ── Pedagogical Widget Personas & Visual Config ──────────────────────────
+
+    const widgetCategoryMap = {
+        socratic: 'reflect',
+        debate: 'challenge',
+        firstprinciples: 'apply'
+    };
+
+    const widgetVisualStyles = {
+        reflect: { themeClass: 'pw-reflect', iconColor: 'emerald', categoryLabel: 'Pause and Reflect' },
+        challenge: { themeClass: 'pw-challenge', iconColor: 'amber', categoryLabel: 'Challenge Your Thinking' },
+        apply: { themeClass: 'pw-apply', iconColor: 'violet', categoryLabel: 'Apply the Concept' },
+        explain: { themeClass: 'pw-explain', iconColor: 'blue', categoryLabel: 'Explain to a Peer' }
+    };
+
+    const widgetChatPersonas = {
+        socratic: {
+            name: 'Socratic Guide',
+            icon: 'psychology_alt',
+            systemPrompt: 'You are a Socratic teacher. Guide students through thoughtful questions. Never give answers directly — ask probing questions that lead to insights. Be encouraging but challenging. Keep responses to 2-3 sentences and end with a question.'
+        },
+        debate: {
+            name: 'Critical Challenger',
+            icon: 'forum',
+            systemPrompt: "You are a devil's advocate. Challenge the student's assumptions respectfully but rigorously. Present strong counterarguments. Force them to examine their reasoning. Keep responses to 2-3 sentences and end with a challenging question."
+        },
+        firstprinciples: {
+            name: 'First Principles Coach',
+            icon: 'account_tree',
+            systemPrompt: 'You are a first principles thinking coach. Help students break complex concepts into fundamental truths. Ask "Why?" repeatedly. Use simple analogies. Keep responses to 2-3 sentences and end with a deconstruction question.'
+        },
+        reflect: {
+            name: 'Reflective Coach',
+            icon: 'lightbulb',
+            systemPrompt: 'You are a reflective coach. Help students synthesize key insights from what they read. Ask brief, focused questions. Acknowledge good thinking. Keep responses to 2-3 sentences.'
+        },
+        explain: {
+            name: 'Curious Student',
+            icon: 'school',
+            systemPrompt: 'You are a curious fellow student who wants to understand the material. Ask clarifying questions, request simpler explanations, and share partial understanding. Be friendly and informal. Keep responses to 2-3 sentences.'
+        }
+    };
+
+    function getWidgetPersona(type) {
+        return widgetChatPersonas[type] || widgetChatPersonas.socratic;
+    }
+
+    function getWidgetStatusLabel(status) {
+        const labels = {
+            pending: 'Not started',
+            engaged: 'In progress',
+            completed: 'Completed',
+            skipped: 'Skipped'
+        };
+        return labels[status] || 'Not started';
+    }
+
+    function renderReadingWidgets(rvBody) {
+        const blocks = rvBody.querySelectorAll('.pedagogy-block-inserted');
+        blocks.forEach(block => renderReadingWidget(block));
+        applyAllWidgetEngagementFades(rvBody);
+        updateReadingProgress();
+    }
+
+    function renderReadingWidget(block) {
+        const widgetId = block.id || ('ped-' + Date.now());
+        block.id = widgetId;
+
+        const type = block.dataset.type || 'socratic';
+        const config = pedagogyConfig[type] || pedagogyConfig.socratic;
+        const category = widgetCategoryMap[type] || 'reflect';
+        const visual = widgetVisualStyles[category];
+        const goal = decodeURIComponent(block.dataset.goal || '');
+        const prompt = decodeURIComponent(block.dataset.prompt || '');
+        const difficulty = block.dataset.difficulty || 'moderate';
+        const maxTurns = block.dataset.maxTurns || '5';
+
+        const analyticsRecord = Analytics.getWidgetStatus(widgetId);
+        const status = analyticsRecord?.status || 'pending';
+
+        block.className = `pedagogy-widget ${visual.themeClass}`;
+        block.contentEditable = 'false';
+        block.dataset.widgetId = widgetId;
+        block.dataset.type = type;
+        block.dataset.goal = block.dataset.goal || encodeURIComponent(goal);
+        block.dataset.prompt = block.dataset.prompt || encodeURIComponent(prompt);
+        block.dataset.difficulty = difficulty;
+        block.dataset.maxTurns = maxTurns;
+        block.dataset.status = status;
+
+        const showActions = status === 'pending' || status === 'engaged';
+        const engageLabel = status === 'engaged' ? 'Continue discussion' : 'Discuss with AI';
+        const engageDisabled = status !== 'pending' && status !== 'engaged';
+
+        block.innerHTML = `
+            <div class="pw-header">
+                <div class="pw-icon ${visual.iconColor}">
+                    <span class="material-symbols-outlined">${config.icon}</span>
+                </div>
+                <div class="pw-title-wrap">
+                    <div class="pw-title">${escapeHtml(config.title)}</div>
+                    <div class="pw-subtitle">${escapeHtml(visual.categoryLabel)} · ${escapeHtml(difficulty)} difficulty</div>
+                </div>
+                <span class="pw-status-badge ${status}">${getWidgetStatusLabel(status)}</span>
+            </div>
+            <div class="pw-prompt">${escapeHtml(prompt || 'Reflect on what you just read.')}</div>
+            ${goal ? `<div class="pw-meta"><span class="material-symbols-outlined" style="font-size:14px;">target</span> ${escapeHtml(goal.length > 80 ? goal.slice(0, 80) + '…' : goal)}</div>` : ''}
+            <div class="pw-actions" ${showActions ? '' : 'style="display:none"'}>
+                <button type="button" class="pw-engage-btn" data-widget-id="${widgetId}" ${engageDisabled ? 'disabled' : ''}>
+                    ${engageLabel}
+                </button>
+                <button type="button" class="pw-skip-btn" data-widget-id="${widgetId}" ${status !== 'pending' ? 'disabled' : ''}>
+                    Skip
+                </button>
+            </div>
+        `;
+
+        const engageBtn = block.querySelector('.pw-engage-btn');
+        const skipBtn = block.querySelector('.pw-skip-btn');
+        if (engageBtn) engageBtn.addEventListener('click', () => engageWidget(widgetId));
+        if (skipBtn) skipBtn.addEventListener('click', () => skipWidget(widgetId));
+
+        if (status === 'engaged') {
+            highlightActiveWidget(block);
+        }
+    }
+
+    function getWidgetElement(widgetId) {
+        return document.querySelector(`.pedagogy-widget[data-widget-id="${widgetId}"]`) ||
+               document.getElementById(widgetId);
+    }
+
+    function setWidgetStatus(widgetId, status) {
+        const widgetEl = getWidgetElement(widgetId);
+        if (!widgetEl) return;
+
+        widgetEl.dataset.status = status;
+        const badge = widgetEl.querySelector('.pw-status-badge');
+        if (badge) {
+            badge.className = `pw-status-badge ${status}`;
+            badge.textContent = getWidgetStatusLabel(status);
+        }
+
+        const actions = widgetEl.querySelector('.pw-actions');
+        if (actions) {
+            actions.style.display = (status === 'pending' || status === 'engaged') ? '' : 'none';
+        }
+
+        const engageBtn = widgetEl.querySelector('.pw-engage-btn');
+        const skipBtn = widgetEl.querySelector('.pw-skip-btn');
+        if (engageBtn) {
+            engageBtn.disabled = status !== 'pending' && status !== 'engaged';
+            engageBtn.textContent = status === 'engaged' ? 'Continue discussion' : 'Discuss with AI';
+        }
+        if (skipBtn) skipBtn.disabled = status !== 'pending';
+
+        if (status === 'engaged') highlightActiveWidget(widgetEl);
+        else widgetEl.classList.remove('pw-active');
+
+        updateWidgetEngagementFade(widgetEl);
+        updateReadingProgress();
+    }
+
+    function highlightActiveWidget(widgetEl) {
+        document.querySelectorAll('.pedagogy-widget.pw-active').forEach(el => el.classList.remove('pw-active'));
+        widgetEl.classList.add('pw-active');
+    }
+
+    function applyWidgetEngagementFade(widgetEl) {
+        clearWidgetEngagementFade(widgetEl);
+        const status = widgetEl.dataset.status;
+        if (status !== 'pending') return;
+
+        let sibling = widgetEl.nextElementSibling;
+        const fadedNodes = [];
+        while (sibling) {
+            if (sibling.matches('h1, h2')) break;
+            if (sibling.classList?.contains('rv-faded-section')) {
+                sibling = sibling.nextElementSibling;
+                continue;
+            }
+            fadedNodes.push(sibling);
+            sibling = sibling.nextElementSibling;
+        }
+
+        if (fadedNodes.length === 0) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'rv-faded-section';
+        widgetEl.parentNode.insertBefore(wrapper, fadedNodes[0]);
+        fadedNodes.forEach(node => wrapper.appendChild(node));
+        widgetEl._fadeWrapper = wrapper;
+    }
+
+    function clearWidgetEngagementFade(widgetEl) {
+        const wrapper = widgetEl._fadeWrapper;
+        if (!wrapper || !wrapper.parentNode) return;
+
+        while (wrapper.firstChild) {
+            wrapper.parentNode.insertBefore(wrapper.firstChild, wrapper);
+        }
+        wrapper.remove();
+        delete widgetEl._fadeWrapper;
+    }
+
+    function unlockWidgetEngagementFade(widgetEl) {
+        clearWidgetEngagementFade(widgetEl);
+        let sibling = widgetEl.nextElementSibling;
+        while (sibling) {
+            if (sibling.matches('h1, h2')) break;
+            if (sibling.classList?.contains('rv-faded-section')) {
+                sibling.classList.add('unlocked');
+                sibling.classList.remove('rv-faded-section');
+                sibling.style.opacity = '';
+                sibling.style.pointerEvents = '';
+                sibling.style.filter = '';
+            }
+            sibling = sibling.nextElementSibling;
+        }
+    }
+
+    function updateWidgetEngagementFade(widgetEl) {
+        const status = widgetEl.dataset.status;
+        if (status === 'pending') {
+            applyWidgetEngagementFade(widgetEl);
+        } else {
+            unlockWidgetEngagementFade(widgetEl);
+        }
+    }
+
+    function applyAllWidgetEngagementFades(rvBody) {
+        rvBody.querySelectorAll('.pedagogy-widget[data-status="pending"]').forEach(applyWidgetEngagementFade);
+    }
+
+    function initWidgetViewportTracking(rvBody) {
+        if (state._widgetObserver) {
+            state._widgetObserver.disconnect();
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                const widgetId = entry.target.dataset.widgetId;
+                if (!widgetId) return;
+                Analytics.trackEvent(widgetId, 'widget_viewed', { type: entry.target.dataset.type });
+            });
+        }, { threshold: 0.5 });
+
+        rvBody.querySelectorAll('.pedagogy-widget').forEach(widget => observer.observe(widget));
+        state._widgetObserver = observer;
+    }
+
+    function updateReadingProgress() {
+        const rvBody = document.querySelector('#reading-page .rv-body');
+        const progressEl = document.getElementById('rv-progress');
+        const labelEl = document.getElementById('rv-progress-label');
+        const fillEl = document.getElementById('rv-progress-fill');
+
+        if (!rvBody || !progressEl) return;
+
+        const widgets = rvBody.querySelectorAll('.pedagogy-widget');
+        const widgetIds = Array.from(widgets).map(w => w.dataset.widgetId).filter(Boolean);
+
+        if (widgetIds.length === 0) {
+            progressEl.classList.add('hidden');
+            return;
+        }
+
+        progressEl.classList.remove('hidden');
+        const progress = Analytics.getChapterProgress(appState.activeChapterId, widgetIds);
+        const pct = progress.total ? Math.round((progress.addressed / progress.total) * 100) : 0;
+
+        labelEl.textContent = `${progress.completed} of ${progress.total} checkpoints` +
+            (progress.skipped ? ` · ${progress.skipped} skipped` : '');
+        fillEl.style.width = `${pct}%`;
+    }
+
+    function engageWidget(widgetId) {
+        const widgetEl = getWidgetElement(widgetId);
+        if (!widgetEl) return;
+        const status = widgetEl.dataset.status;
+        if (status !== 'pending' && status !== 'engaged') return;
+
+        if (status === 'pending') {
+            Analytics.trackEvent(widgetId, 'engagement_started', { type: widgetEl.dataset.type });
+            setWidgetStatus(widgetId, 'engaged');
+        }
+
+        initWidgetChat(widgetEl);
+    }
+
+    function skipWidget(widgetId) {
+        const widgetEl = getWidgetElement(widgetId);
+        if (!widgetEl || widgetEl.dataset.status !== 'pending') return;
+
+        Analytics.trackEvent(widgetId, 'engagement_skipped', { type: widgetEl.dataset.type });
+        setWidgetStatus(widgetId, 'skipped');
+
+        if (state.activeWidgetChat?.widgetId === widgetId) {
+            state.activeWidgetChat = null;
+            resetStudentCopilotIdle();
+        }
+    }
+
+    function completeActiveWidget() {
+        if (!state.activeWidgetChat) return;
+        const { widgetId } = state.activeWidgetChat;
+        Analytics.trackEvent(widgetId, 'engagement_completed', { type: state.activeWidgetChat.type });
+        setWidgetStatus(widgetId, 'completed');
+        state.activeWidgetChat = null;
+        resetStudentCopilotIdle();
+    }
+
+    function initWidgetChat(widgetEl) {
+        const widgetId = widgetEl.dataset.widgetId;
+        const type = widgetEl.dataset.type || 'socratic';
+        const persona = getWidgetPersona(type);
+        const goal = decodeURIComponent(widgetEl.dataset.goal || '');
+        const openingPrompt = decodeURIComponent(widgetEl.dataset.prompt || '');
+        const maxTurns = widgetEl.dataset.maxTurns || '5';
+        const pedagogySystem = pedagogyConfig[type]?.systemPrompt || persona.systemPrompt;
+
+        state.activeWidgetChat = {
+            widgetId,
+            type,
+            persona,
+            goal,
+            openingPrompt,
+            maxTurns,
+            pedagogySystem,
+            history: [{ role: 'assistant', content: openingPrompt }],
+            messageCount: 0,
+            engagedAt: Date.now()
+        };
+
+        state.copilotMode = 'student';
+        ensureCopilotVisible();
+        updateCopilotUIForWidget(persona, widgetEl);
+        clearCopilotMessagesForStudent();
+        addWidgetChatMessage('assistant', openingPrompt, persona);
+    }
+
+    function ensureCopilotVisible() {
+        if (!state.copilotVisible) {
+            state.copilotVisible = true;
+            document.getElementById('copilot-panel').classList.remove('hidden');
+            const btn = document.getElementById('copilot-btn');
+            if (btn) {
+                btn.classList.add('bg-primary', 'text-white');
+                btn.classList.remove('bg-surface-tertiary', 'text-text-secondary');
+            }
+        }
+        updateReadingViewLayout();
+    }
+
+    function setStudentCopilotMode(active) {
+        state.copilotMode = active ? 'student' : 'author';
+
+        const authorContext = document.getElementById('copilot-author-context');
+        const studentBar = document.getElementById('copilot-student-bar');
+        const headerIcon = document.getElementById('copilot-header-icon');
+        const headerTitle = document.getElementById('copilot-header-title');
+        const input = document.getElementById('copilot-input');
+        const inputHint = document.getElementById('copilot-input-hint');
+        const doneBtn = document.getElementById('copilot-widget-done-btn');
+
+        if (active) {
+            authorContext.classList.add('hidden');
+            studentBar.classList.add('active');
+            headerIcon.textContent = 'school';
+            headerTitle.textContent = 'Learning Assistant';
+            input.placeholder = 'Share your thoughts…';
+            inputHint.textContent = 'Discuss this checkpoint with AI';
+            clearCopilotMessagesForStudent();
+            resetStudentCopilotIdle();
+        } else {
+            authorContext.classList.remove('hidden');
+            studentBar.classList.remove('active');
+            headerIcon.textContent = 'smart_toy';
+            headerTitle.textContent = 'Writing Copilot';
+            input.placeholder = 'Ask about this chapter, or describe a change…';
+            inputHint.textContent = 'Enter to send · Shift+Enter for newline';
+            doneBtn.classList.remove('visible');
+            state.activeWidgetChat = null;
+        }
+    }
+
+    function updateCopilotUIForWidget(persona, widgetEl) {
+        const headerIcon = document.getElementById('copilot-header-icon');
+        const headerTitle = document.getElementById('copilot-header-title');
+        const studentIcon = document.getElementById('copilot-student-icon');
+        const studentLabel = document.getElementById('copilot-student-label');
+        const studentHint = document.getElementById('copilot-student-hint');
+        const doneBtn = document.getElementById('copilot-widget-done-btn');
+        const input = document.getElementById('copilot-input');
+
+        headerIcon.textContent = persona.icon;
+        headerTitle.textContent = persona.name;
+        studentIcon.textContent = persona.icon;
+        studentLabel.textContent = persona.name;
+        studentHint.textContent = `Checkpoint: ${widgetEl.querySelector('.pw-title')?.textContent || 'Interactive exercise'}`;
+        doneBtn.classList.add('visible');
+        input.placeholder = 'Type your response…';
+        input.focus();
+    }
+
+    function resetStudentCopilotIdle() {
+        const headerIcon = document.getElementById('copilot-header-icon');
+        const headerTitle = document.getElementById('copilot-header-title');
+        const studentLabel = document.getElementById('copilot-student-label');
+        const studentHint = document.getElementById('copilot-student-hint');
+        const doneBtn = document.getElementById('copilot-widget-done-btn');
+        const input = document.getElementById('copilot-input');
+
+        headerIcon.textContent = 'school';
+        headerTitle.textContent = 'Learning Assistant';
+        studentLabel.textContent = 'Learning Assistant';
+        studentHint.textContent = 'Engage with another checkpoint to continue the conversation.';
+        doneBtn.classList.remove('visible');
+        input.placeholder = 'Share your thoughts…';
+
+        addStudentIdleMessage();
+    }
+
+    function clearCopilotMessagesForStudent() {
+        const container = document.getElementById('copilot-messages');
+        container.innerHTML = '';
+    }
+
+    function addStudentIdleMessage() {
+        const container = document.getElementById('copilot-messages');
+        if (container.children.length > 0) return;
+        container.innerHTML = `
+            <div class="flex gap-2">
+                <span class="material-symbols-outlined text-primary text-lg flex-shrink-0 mt-0.5">school</span>
+                <div class="text-sm text-text-secondary">
+                    <p>Welcome to student preview mode.</p>
+                    <p class="mt-2 text-xs">When you reach an interactive checkpoint, click <strong>Discuss with AI</strong> to practice here. You can skip any checkpoint — we'll track your progress for learning insights.</p>
+                </div>
+            </div>`;
+    }
+
+    function addWidgetChatMessage(role, content, persona) {
+        const container = document.getElementById('copilot-messages');
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 animate-fadeIn';
+
+        if (role === 'user') {
+            div.innerHTML = `<div class="flex-1"></div><div class="bg-primary text-white text-sm px-3 py-2.5 rounded-lg rounded-br-sm max-w-[85%]">${escapeHtml(content)}</div>`;
+        } else {
+            const icon = persona?.icon || 'school';
+            div.innerHTML = `
+                <span class="material-symbols-outlined text-primary text-lg flex-shrink-0 mt-0.5">${icon}</span>
+                <div class="text-sm text-text-primary leading-relaxed max-w-[90%]">${formatCopilotContent(content)}</div>`;
+        }
+
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendWidgetChatMessage(message) {
+        const chat = state.activeWidgetChat;
+        if (!chat) return;
+
+        state.copilotPending = true;
+        addWidgetChatMessage('user', message, chat.persona);
+        chat.history.push({ role: 'user', content: message });
+        chat.messageCount++;
+        Analytics.trackEvent(chat.widgetId, 'message_sent', { type: chat.type });
+
+        const typingId = addCopilotTyping();
+
+        try {
+            const response = await generateWidgetChatResponse(chat);
+            removeCopilotTyping(typingId);
+            addWidgetChatMessage('assistant', response, chat.persona);
+            chat.history.push({ role: 'assistant', content: response });
+        } catch (error) {
+            removeCopilotTyping(typingId);
+            addWidgetChatMessage('assistant', `Sorry, I couldn't respond. ${error.message || 'Please try again.'}`, chat.persona);
+        }
+
+        state.copilotPending = false;
+    }
+
+    async function generateWidgetChatResponse(chat) {
+        const systemPrompt = `${chat.pedagogySystem || chat.persona.systemPrompt}
+
+Learning goal: ${chat.goal || 'Help the student engage deeply with the material.'}
+Difficulty: ${getWidgetElement(chat.widgetId)?.dataset.difficulty || 'moderate'}
+Max turns guidance: ${chat.maxTurns === 'unlimited' ? 'Continue until the student demonstrates understanding.' : 'Aim to complete within ' + chat.maxTurns + ' exchanges.'}
+
+Keep responses concise (2-3 sentences). End with a question unless the student has clearly achieved the learning goal.`;
+
+        if (!state.apiKey) {
+            await new Promise(r => setTimeout(r, 900));
+            return getMockWidgetChatResponse(chat, chat.history[chat.history.length - 1]?.content || '');
+        }
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.apiKey}`
+            },
+            body: JSON.stringify({
+                model: state.model,
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    ...chat.history
+                ],
+                max_tokens: 200,
+                temperature: 0.7
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || 'API request failed');
+        }
+
+        const data = await response.json();
+        return data.choices[0]?.message?.content || 'Tell me more about your thinking.';
+    }
+
+    function getMockWidgetChatResponse(chat, userMessage) {
+        const persona = chat.persona.name;
+        if (!userMessage) {
+            return chat.openingPrompt;
+        }
+        const prompts = {
+            'Socratic Guide': `Interesting point about "${userMessage.slice(0, 40)}…" What evidence supports that view? What might someone who disagrees say?`,
+            'Critical Challenger': `I see your reasoning, but consider the opposite: what if the underlying assumption is wrong? How would that change your conclusion?`,
+            'First Principles Coach': `Let's break that down further. What's the most basic truth underneath your explanation? Can you state it in one simple sentence?`,
+            'Reflective Coach': `That's a thoughtful response. What's the single most important takeaway you'd share with a classmate?`,
+            'Curious Student': `Hmm, I'm still confused about part of that. Could you explain it again using an everyday example?`
+        };
+        return prompts[persona] || `Thanks for sharing. Can you elaborate on how that connects to what you just read?`;
     }
 
     // ════════════════════════════════════════════════════════════════════════════
@@ -3331,16 +5858,19 @@ Keep responses concise (2-3 sentences max). Always end with a question unless th
             violet: { bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', header: 'bg-violet-100/50', tag: 'bg-violet-100 text-violet-700', iconBg: 'bg-violet-500' }
         };
         const colors = colorClasses[config.color];
+        const turnsLabel = maxTurns === 'unlimited' ? 'Unlimited turns' : `${maxTurns} turns`;
         
-        const html = `
-<div id="${blockId}" class="pedagogy-block-inserted relative my-6 rounded-xl border-2 ${colors.border} bg-gradient-to-br ${colors.bg} overflow-hidden" contenteditable="false" data-type="${currentPedagogyType}" data-goal="${encodeURIComponent(goal)}" data-prompt="${encodeURIComponent(openingPrompt)}" data-difficulty="${currentPedagogyDifficulty}" data-max-turns="${maxTurns}">
+        const html = `<div id="${blockId}" class="pedagogy-block-inserted relative my-6 rounded-xl border-2 ${colors.border} bg-gradient-to-br ${colors.bg} overflow-hidden" contenteditable="false" data-type="${currentPedagogyType}" data-goal="${encodeURIComponent(goal)}" data-prompt="${encodeURIComponent(openingPrompt)}" data-difficulty="${currentPedagogyDifficulty}" data-max-turns="${maxTurns}">
+    <button type="button" class="widget-delete-btn" onclick="showDeleteWidgetModal('${blockId}')" title="Delete widget">
+        <span class="material-symbols-outlined">delete</span>
+    </button>
     <div class="p-4 flex items-center gap-3 ${colors.header}">
         <div class="w-9 h-9 rounded-lg ${colors.iconBg} flex items-center justify-center shadow-sm">
             <span class="material-symbols-outlined text-white">${config.icon}</span>
         </div>
         <div class="flex-1">
             <div class="font-semibold text-text-primary">${config.title}</div>
-            <div class="text-xs text-text-tertiary mt-0.5">${currentPedagogyDifficulty} difficulty · ${maxTurns === 'unlimited' ? 'Unlimited' : maxTurns + ' turns'}</div>
+            <div class="text-xs text-text-tertiary mt-0.5">${currentPedagogyDifficulty} difficulty · ${turnsLabel}</div>
         </div>
         <span class="text-xs font-medium px-2 py-1 rounded-full ${colors.tag}">Interactive</span>
     </div>
@@ -3366,9 +5896,7 @@ Keep responses concise (2-3 sentences max). Always end with a question unless th
             </span>
         </div>
     </div>
-</div>
-<p><br></p>
-`;
+</div>`;
 
         const editor = document.getElementById('editor');
         editor.focus();
