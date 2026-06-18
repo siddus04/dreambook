@@ -3766,8 +3766,14 @@
     }
 
     function openReadingLevelModal() {
+        if (state.selectedRange) {
+            state.insertPosition = state.selectedRange.cloneRange();
+        } else if (!captureEditorSelection()) {
+            return;
+        } else {
+            state.insertPosition = state.selectedRange.cloneRange();
+        }
         hideSelectionMenus();
-        if (!state.selectedRange && !captureEditorSelection()) return;
         document.getElementById('reading-level-modal').classList.remove('hidden');
     }
 
@@ -3777,7 +3783,7 @@
 
     function adjustReadingLevel(level) {
         const capturedText = state.selectedText || '';
-        const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
+        const capturedRange = state.insertPosition || (state.selectedRange ? state.selectedRange.cloneRange() : null);
         closeReadingLevelModal();
 
         const prompts = {
@@ -4781,6 +4787,14 @@ You receive the full text of the author's current chapter plus an outline of all
     }
 
     function openExampleModal() {
+        if (state.selectedRange) {
+            state.insertPosition = state.selectedRange.cloneRange();
+        } else {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                state.insertPosition = selection.getRangeAt(0).cloneRange();
+            }
+        }
         hideSelectionMenus();
         document.getElementById('example-modal').classList.remove('hidden');
         document.getElementById('example-input').value = '';
@@ -4799,7 +4813,7 @@ You receive the full text of the author's current chapter plus an outline of all
         const input = document.getElementById('example-input').value.trim();
         if (!input) return;
         const capturedText = state.selectedText || '';
-        const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
+        const capturedRange = state.insertPosition || (state.selectedRange ? state.selectedRange.cloneRange() : null);
         closeExampleModal();
         const prompt = `Add an analogy based on the author's request: "${input}". Explain the selected concept using this analogy style. Make it vivid, accurate, and appropriate for a textbook audience. Return ONLY the analogy text (2–4 sentences).`;
         generateAIResponse(prompt, capturedText, capturedRange);
