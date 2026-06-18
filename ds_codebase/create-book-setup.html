@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Create Textbook - Studio Alpha</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#00236f",
+                        "inverse-on-surface": "#f1f0f7",
+                        "secondary-fixed-dim": "#ffb77d",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#dad9e1",
+                        "secondary-container": "#fe932c",
+                        "surface-bright": "#faf8ff",
+                        "on-secondary-fixed-variant": "#6e3900",
+                        "surface-tint": "#4059aa",
+                        "secondary": "#904d00",
+                        "surface-container-high": "#e9e7ef",
+                        "on-tertiary-container": "#9dadc6",
+                        "on-primary-fixed": "#00164e",
+                        "primary-container": "#1e3a8a",
+                        "surface": "#faf8ff",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "on-primary": "#ffffff",
+                        "background": "#faf8ff",
+                        "on-secondary-fixed": "#2f1500",
+                        "surface-container": "#eeedf4",
+                        "outline-variant": "#c5c5d3",
+                        "on-primary-fixed-variant": "#264191",
+                        "surface-variant": "#e3e1e9",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#dce1ff",
+                        "tertiary-container": "#314156",
+                        "on-secondary-container": "#663500",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-surface": "#1a1b21",
+                        "on-primary-container": "#90a8ff",
+                        "inverse-surface": "#2f3036",
+                        "on-background": "#1a1b21",
+                        "surface-container-low": "#f4f3fa",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "tertiary": "#1b2b3f",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "tertiary-fixed": "#d3e4fe",
+                        "secondary-fixed": "#ffdcc3",
+                        "inverse-primary": "#b6c4ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e3e1e9",
+                        "outline": "#757682",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "on-surface-variant": "#444651",
+                        "amber": {"500": "#f59e0b", "100": "#fef3c7"},
+                        "emerald": {"500": "#10b981", "50": "#ecfdf5"}
+                    },
+                    "fontFamily": {
+                        "body-reading": ["\"Source Serif 4\""],
+                        "caption": ["Hanken Grotesk"],
+                        "ui-label": ["Hanken Grotesk"],
+                        "headline-md": ["\"Source Serif 4\""],
+                        "display-lg-mobile": ["\"Source Serif 4\""],
+                        "ui-button": ["Hanken Grotesk"],
+                        "display-lg": ["\"Source Serif 4\""]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        .academic-card {
+            background-color: theme('colors.surface-container-lowest');
+            border: 1px solid theme('colors.outline-variant');
+            transition: all 0.2s ease-in-out;
+        }
+
+        .dropzone {
+            border: 2px dashed theme('colors.outline-variant');
+            background-color: theme('colors.surface-container-lowest');
+            transition: all 0.2s ease;
+        }
+        .dropzone.dragover {
+            border-color: theme('colors.primary');
+            background-color: theme('colors.primary-fixed');
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border-radius: 10px;
+        }
+        
+        .log-entry {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-background font-body-reading h-screen overflow-hidden flex flex-col">
+
+    <!-- Global Header -->
+    <header class="h-[64px] shrink-0 bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-6 z-20">
+        <div class="flex items-center gap-4">
+            <a href="code.html" class="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </a>
+            <div class="h-6 w-px bg-outline-variant"></div>
+            <h1 class="font-headline-md text-[20px] font-bold text-primary">Create New Textbook</h1>
+        </div>
+
+        <!-- Escape Hatch -->
+        <div class="flex items-center gap-4">
+            <button class="text-on-surface-variant font-ui-button text-[14px] hover:text-primary transition-colors flex items-center gap-2">
+                Skip & Start Writing
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Pane: Source Upload & Processing (~60%) -->
+        <main class="flex-1 overflow-y-auto bg-background p-8 lg:p-12 relative border-r border-outline-variant">
+            <div class="max-w-[800px] mx-auto">
+                
+                <div class="mb-8">
+                    <h2 class="font-display-lg text-[36px] leading-tight mb-2 text-on-background">Feed the Brain</h2>
+                    <p class="text-[18px] text-on-surface-variant font-body-reading">
+                        Upload your syllabus, lecture slides, notes, and reference materials. The AI will extract concepts to build your book's scaffold and will <strong>only</strong> use these sources to generate content.
+                    </p>
+                </div>
+
+                <!-- Integrations Row -->
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-full font-ui-label text-[13px] text-on-surface hover:bg-surface-container-low transition-colors">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" class="w-4 h-4" alt="Drive"/>
+                        Google Drive
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-full font-ui-label text-[13px] text-on-surface hover:bg-surface-container-low transition-colors">
+                        <span class="text-[#cc0000] font-bold text-[14px] leading-none">Z</span>
+                        Zotero
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-full font-ui-label text-[13px] text-on-surface hover:bg-surface-container-low transition-colors">
+                        <span class="text-[#9b0000] font-bold text-[14px] leading-none">M</span>
+                        Mendeley
+                    </button>
+                    <div class="flex-1 min-w-[200px] relative">
+                        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-[16px] text-outline">link</span>
+                        </div>
+                        <input type="text" placeholder="Paste DOI, arXiv link, or ISBN..." class="w-full pl-9 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-full font-ui-label text-[13px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"/>
+                    </div>
+                </div>
+
+                <!-- Dropzone -->
+                <div id="dropzone" class="dropzone rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer mb-8 group">
+                    <div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-[32px]">cloud_upload</span>
+                    </div>
+                    <h3 class="font-ui-label text-[16px] font-bold text-on-surface mb-1">Drag & drop files here</h3>
+                    <p class="font-caption text-[13px] text-on-surface-variant mb-4">Supports PDF, DOCX, PPTX, MP3 (Lectures), MP4, Images, and Handwritten Notes</p>
+                    <button class="bg-surface-container-high text-on-surface font-ui-button text-[13px] px-5 py-2 rounded hover:bg-surface-variant transition-colors">
+                        Browse Files
+                    </button>
+                </div>
+
+                <!-- Uploaded Sources & Roles (Hidden initially) -->
+                <div id="sources-section" class="hidden mb-8">
+                    <h3 class="font-ui-label text-[15px] font-bold text-on-surface mb-4 flex items-center justify-between">
+                        <span>Uploaded Sources (3)</span>
+                        <span class="text-primary text-[12px] font-normal cursor-pointer hover:underline">Manage all</span>
+                    </h3>
+                    <div class="space-y-3">
+                        <!-- Source Item 1 -->
+                        <div class="academic-card rounded-lg p-3 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center text-on-surface-variant shrink-0">
+                                <span class="material-symbols-outlined">picture_as_pdf</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-ui-label text-[14px] text-on-surface truncate">Bio101_Fall2025_Syllabus.pdf</h4>
+                                <p class="font-caption text-[12px] text-on-surface-variant">2 pages • 450 KB</p>
+                            </div>
+                            <div class="shrink-0 w-[180px]">
+                                <select class="w-full bg-surface-container-lowest border border-outline-variant rounded font-caption text-[12px] text-on-surface py-1.5 focus:border-primary focus:ring-0">
+                                    <option value="core" selected>🎯 Core Structure (Syllabus)</option>
+                                    <option value="ref">📚 Reference Material</option>
+                                    <option value="assess">📝 Assessment/Quiz Source</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Source Item 2 -->
+                        <div class="academic-card rounded-lg p-3 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center text-on-surface-variant shrink-0">
+                                <span class="material-symbols-outlined">mic</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-ui-label text-[14px] text-on-surface truncate">Lecture_04_Cellular_Respiration.mp3</h4>
+                                <p class="font-caption text-[12px] text-on-surface-variant">45 mins • Audio Transcript</p>
+                            </div>
+                            <div class="shrink-0 w-[180px]">
+                                <select class="w-full bg-surface-container-lowest border border-outline-variant rounded font-caption text-[12px] text-on-surface py-1.5 focus:border-primary focus:ring-0">
+                                    <option value="core">🎯 Core Structure (Syllabus)</option>
+                                    <option value="ref" selected>📚 Reference Material</option>
+                                    <option value="assess">📝 Assessment/Quiz Source</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Source Item 3 -->
+                        <div class="academic-card rounded-lg p-3 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center text-on-surface-variant shrink-0">
+                                <span class="material-symbols-outlined">article</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-ui-label text-[14px] text-on-surface truncate">Nature_Mitochondrial_Dynamics_2024.pdf</h4>
+                                <p class="font-caption text-[12px] text-on-surface-variant">14 pages • Imported via Zotero</p>
+                            </div>
+                            <div class="shrink-0 w-[180px]">
+                                <select class="w-full bg-surface-container-lowest border border-outline-variant rounded font-caption text-[12px] text-on-surface py-1.5 focus:border-primary focus:ring-0">
+                                    <option value="core">🎯 Core Structure (Syllabus)</option>
+                                    <option value="ref" selected>📚 Reference Material</option>
+                                    <option value="assess">📝 Assessment/Quiz Source</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- X-Ray Processing Log (Hidden initially) -->
+                <div id="processing-log" class="hidden bg-inverse-surface text-inverse-on-surface rounded-lg p-5 font-mono text-[13px] leading-relaxed shadow-inner relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-primary/30">
+                        <div class="h-full bg-primary-fixed w-1/3 shimmer"></div>
+                    </div>
+                    <div class="flex items-center gap-2 mb-3 text-primary-fixed">
+                        <span class="material-symbols-outlined text-[16px] animate-spin">sync</span>
+                        <span class="font-bold tracking-wider uppercase text-[11px]">AI X-Ray Extraction</span>
+                    </div>
+                    <div id="log-entries" class="space-y-1.5 text-[#a1a1aa]">
+                        <!-- Logs injected by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Right Pane: Settings & Guardrails (~40%) -->
+        <aside class="w-[400px] lg:w-[480px] shrink-0 bg-surface-container-lowest flex flex-col h-full z-10">
+            
+            <div class="p-8 flex-1 overflow-y-auto">
+                <h3 class="font-headline-md text-[22px] text-on-surface mb-6">Global Guardrails</h3>
+                
+                <!-- Target Audience -->
+                <div class="mb-6">
+                    <label class="block font-ui-label text-[14px] font-bold text-on-surface mb-2">Target Audience & Tone</label>
+                    <p class="font-caption text-[12px] text-on-surface-variant mb-3">The AI will adapt the reading level and complexity to this audience.</p>
+                    <select class="w-full bg-surface-container-low border border-outline-variant rounded-lg font-ui-label text-[14px] text-on-surface p-3 focus:border-primary focus:ring-1 focus:ring-primary">
+                        <option>High School (AP/IB)</option>
+                        <option selected>Undergraduate (Introductory)</option>
+                        <option>Undergraduate (Advanced)</option>
+                        <option>Graduate / Professional</option>
+                    </select>
+                </div>
+
+                <!-- Citation Style -->
+                <div class="mb-6">
+                    <label class="block font-ui-label text-[14px] font-bold text-on-surface mb-2">Citation Style</label>
+                    <select class="w-full bg-surface-container-low border border-outline-variant rounded-lg font-ui-label text-[14px] text-on-surface p-3 focus:border-primary focus:ring-1 focus:ring-primary">
+                        <option selected>APA (7th Edition)</option>
+                        <option>MLA (9th Edition)</option>
+                        <option>Chicago Manual of Style</option>
+                        <option>Harvard</option>
+                    </select>
+                </div>
+
+                <!-- Strictness Toggle -->
+                <div class="mb-8">
+                    <label class="block font-ui-label text-[14px] font-bold text-on-surface mb-2">Source Strictness</label>
+                    <p class="font-caption text-[12px] text-on-surface-variant mb-4">Determine how the AI handles knowledge gaps during generation.</p>
+                    
+                    <div class="bg-surface-container-low border border-outline-variant rounded-lg p-1 flex relative">
+                        <div class="absolute inset-y-1 left-1 w-[calc(50%-4px)] bg-surface-container-lowest rounded shadow-sm border border-outline-variant/50 transition-transform duration-300" id="strictness-slider"></div>
+                        <button class="flex-1 relative z-10 py-2 font-ui-label text-[13px] font-bold text-primary" onclick="document.getElementById('strictness-slider').style.transform = 'translateX(0)'">
+                            Strict (Uploaded Only)
+                        </button>
+                        <button class="flex-1 relative z-10 py-2 font-ui-label text-[13px] text-on-surface-variant" onclick="document.getElementById('strictness-slider').style.transform = 'translateX(100%)'">
+                            Allow Academic Web
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="border-outline-variant/50 mb-8"/>
+
+                <!-- Knowledge Gap Diagnostic (Hidden initially) -->
+                <div id="diagnostic-report" class="hidden academic-card rounded-lg p-5 border-amber-500/30 bg-amber-50 shadow-sm">
+                    <div class="flex items-center gap-2 text-amber-600 mb-3">
+                        <span class="material-symbols-outlined text-[20px]">warning</span>
+                        <h4 class="font-ui-label text-[14px] font-bold">Diagnostic Report</h4>
+                    </div>
+                    <p class="font-caption text-[13px] text-on-surface-variant leading-relaxed mb-4">
+                        Based on your syllabus, I see a module on <strong>Photosynthesis</strong>, but no reference materials have been uploaded for it. 
+                    </p>
+                    <div class="flex flex-col gap-2">
+                        <button class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-ui-button text-[13px] py-2 rounded hover:bg-surface-container-low transition-colors text-left px-3 flex justify-between items-center">
+                            Upload more files
+                            <span class="material-symbols-outlined text-[16px]">upload</span>
+                        </button>
+                        <button class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-ui-button text-[13px] py-2 rounded hover:bg-surface-container-low transition-colors text-left px-3 flex justify-between items-center">
+                            Search Google Scholar for gaps
+                            <span class="material-symbols-outlined text-[16px]">search</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Action Bar -->
+            <div class="p-6 border-t border-outline-variant bg-surface-container-low">
+                <button id="build-scaffold-btn" class="w-full bg-surface-variant text-on-surface-variant font-ui-button text-[15px] py-3.5 rounded shadow-sm transition-colors flex items-center justify-center gap-2 cursor-not-allowed" disabled>
+                    <span class="material-symbols-outlined text-[20px]">account_tree</span>
+                    Build Book Scaffold
+                </button>
+                <p class="text-center font-caption text-[11px] text-on-surface-variant mt-3">
+                    Next step: Review and approve the AI-generated outline.
+                </p>
+            </div>
+
+        </aside>
+    </div>
+
+    <!-- Interactive Prototype Script -->
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const sourcesSection = document.getElementById('sources-section');
+        const processingLog = document.getElementById('processing-log');
+        const logEntries = document.getElementById('log-entries');
+        const diagnosticReport = document.getElementById('diagnostic-report');
+        const buildBtn = document.getElementById('build-scaffold-btn');
+
+        // Simulate Drag & Drop
+        dropzone.addEventListener('click', startSimulatedUpload);
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            startSimulatedUpload();
+        });
+
+        function startSimulatedUpload() {
+            // Hide dropzone, show processing
+            dropzone.style.display = 'none';
+            processingLog.classList.remove('hidden');
+            sourcesSection.classList.remove('hidden');
+
+            const logs = [
+                "Initializing document ingestion...",
+                "Parsing Bio101_Fall2025_Syllabus.pdf (2 pages)...",
+                "<span class='text-emerald-400'>✓ Extracted 12 core learning objectives</span>",
+                "Transcribing Lecture_04_Cellular_Respiration.mp3...",
+                "Audio transcription complete (4,205 words).",
+                "<span class='text-emerald-400'>✓ Identified key entities: ATP Synthase, Glycolysis, Krebs Cycle</span>",
+                "Parsing Nature_Mitochondrial_Dynamics_2024.pdf...",
+                "Cross-referencing syllabus objectives with reference materials...",
+                "<span class='text-amber-400'>⚠ Gap detected: Module 5 (Photosynthesis) lacks reference material.</span>",
+                "Building semantic knowledge graph...",
+                "<span class='text-emerald-400 font-bold'>✓ Brain Setup Complete. Ready for scaffolding.</span>"
+            ];
+
+            let i = 0;
+            logEntries.innerHTML = '';
+            
+            function addLog() {
+                if (i < logs.length) {
+                    const div = document.createElement('div');
+                    div.className = 'log-entry';
+                    div.innerHTML = `> ${logs[i]}`;
+                    logEntries.appendChild(div);
+                    processingLog.scrollTop = processingLog.scrollHeight;
+                    
+                    // Show diagnostic and enable button near the end
+                    if (i === 8) {
+                        setTimeout(() => {
+                            diagnosticReport.classList.remove('hidden');
+                            diagnosticReport.classList.add('animate-[fadeIn_0.5s_ease-out]');
+                        }, 500);
+                    }
+                    if (i === logs.length - 1) {
+                        buildBtn.disabled = false;
+                        buildBtn.className = "w-full bg-primary text-on-primary font-ui-button text-[15px] py-3.5 rounded shadow-sm hover:bg-primary-container transition-colors flex items-center justify-center gap-2";
+                    }
+
+                    i++;
+                    setTimeout(addLog, Math.random() * 800 + 400); // Random delay between 400-1200ms
+                }
+            }
+            
+            setTimeout(addLog, 500);
+        }
+    </script>
+</body>
+</html>

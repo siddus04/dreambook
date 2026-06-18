@@ -1,0 +1,2811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>DreamBook Studio - AI Editor</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#2E4CB9',
+                        'primary-dark': '#1E3A8A',
+                        'primary-light': '#6B7FD7',
+                        'primary-bg': '#EEF1FB',
+                        'surface': '#FFFFFF',
+                        'surface-secondary': '#F8F9FF',
+                        'surface-tertiary': '#F1F3F9',
+                        'surface-canvas': '#FAFBFF',
+                        'border': '#E5E7EB',
+                        'border-strong': '#D1D5DB',
+                        'text-primary': '#111827',
+                        'text-secondary': '#4B5563',
+                        'text-tertiary': '#9CA3AF',
+                        'text-inverse': '#FFFFFF',
+                        'success': '#059669',
+                        'success-bg': '#ECFDF5',
+                        'warning': '#D97706',
+                        'warning-bg': '#FFFBEB',
+                        'error': '#DC2626',
+                        'error-bg': '#FEF2F2',
+                        'ai-bg': '#EFF6FF',
+                        'ai-border': '#BFDBFE',
+                        'ai-text': '#1E40AF',
+                        'ai-accent': '#3B82F6',
+                        'ai-generated': '#F0FDF4',
+                        'ai-generated-border': '#BBF7D0',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'serif': ['Merriweather', 'Georgia', 'serif'],
+                    },
+                    borderRadius: {
+                        'DEFAULT': '8px',
+                        'sm': '6px',
+                        'lg': '12px',
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        .material-symbols-outlined { 
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
+        }
+        .material-symbols-outlined.filled { 
+            font-variation-settings: 'FILL' 1; 
+        }
+
+        /* Left Nav */
+        #left-nav {
+            transition: width 0.2s ease;
+        }
+        #left-nav.expanded {
+            width: 200px;
+        }
+        #left-nav.collapsed {
+            width: 56px;
+        }
+        .nav-item {
+            @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary;
+            @apply hover:bg-surface-tertiary hover:text-text-primary cursor-pointer transition-colors;
+        }
+        .nav-item.active { @apply bg-primary-bg text-primary font-medium; }
+        #left-nav.collapsed .nav-item { @apply justify-center px-2; }
+        #left-nav.collapsed .nav-label { @apply hidden; }
+        #left-nav.collapsed .nav-header { @apply hidden; }
+
+        /* Chapter Sidebar */
+        #chapter-sidebar {
+            transition: width 0.2s ease, opacity 0.2s ease;
+        }
+        #chapter-sidebar.collapsed {
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        .toolbar-btn {
+            @apply p-1.5 rounded hover:bg-surface-tertiary text-text-secondary transition-colors;
+        }
+        .toolbar-btn.active { @apply bg-primary-bg text-primary; }
+        .toolbar-btn:disabled { @apply opacity-40 cursor-not-allowed; }
+        .toolbar-divider { @apply w-px h-5 bg-border mx-1; }
+
+        /* Editor */
+        .editor-canvas {
+            @apply outline-none min-h-[400px];
+        }
+        .editor-canvas:focus { @apply outline-none; }
+        .editor-canvas h1 { @apply text-3xl font-bold mb-4 mt-8 first:mt-0; }
+        .editor-canvas h2 { @apply text-2xl font-bold mb-3 mt-6; }
+        .editor-canvas h3 { @apply text-xl font-semibold mb-2 mt-5; }
+        .editor-canvas h4 { @apply text-lg font-semibold mb-2 mt-4; }
+        .editor-canvas p { @apply mb-4 leading-relaxed min-h-[26px]; }
+        .editor-canvas ul { @apply list-disc pl-6 mb-4; }
+        .editor-canvas ol { @apply list-decimal pl-6 mb-4; }
+        .editor-canvas li { @apply mb-1; }
+        .editor-canvas blockquote { 
+            @apply border-l-4 border-primary pl-4 py-2 my-4 bg-surface-secondary rounded-r italic text-text-secondary;
+        }
+        .editor-canvas pre {
+            @apply bg-gray-900 text-gray-100 p-4 rounded-lg my-4 overflow-x-auto font-mono text-sm;
+        }
+        .editor-canvas code:not(pre code) {
+            @apply bg-surface-tertiary px-1.5 py-0.5 rounded text-sm font-mono text-primary;
+        }
+        .editor-canvas hr { @apply my-6 border-border; }
+        .editor-canvas a { @apply text-primary underline; }
+        .editor-canvas img { @apply max-w-full rounded-lg my-4; }
+
+        /* AI Generated Content */
+        .ai-generated-block {
+            @apply relative bg-ai-generated border-l-4 border-ai-generated-border pl-4 py-2 my-2 rounded-r;
+        }
+
+        /* Menus */
+        .menu-item {
+            @apply flex items-center gap-3 px-3 py-2 rounded text-sm cursor-pointer transition-colors;
+            @apply hover:bg-surface-tertiary;
+        }
+        .menu-item.active { @apply bg-primary-bg text-primary; }
+        .menu-item .icon { 
+            @apply w-6 h-6 flex items-center justify-center text-text-tertiary;
+        }
+        .menu-divider { @apply my-2 border-t border-border; }
+        .menu-header { @apply px-3 py-1.5 text-xs font-semibold text-text-tertiary uppercase tracking-wider; }
+
+        /* Chapter Tree - Improved spacing and alignment */
+        .chapter-item {
+            @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors;
+        }
+        .chapter-item:hover { @apply bg-surface-tertiary; }
+        .chapter-item.active { @apply bg-primary-bg text-primary font-medium; }
+        .chapter-sections {
+            @apply mt-1 mb-2 ml-5 pl-3 border-l-2 border-border space-y-0.5;
+        }
+        .section-item {
+            @apply flex items-center gap-2.5 px-2.5 py-1.5 rounded text-sm text-text-secondary cursor-pointer transition-colors;
+        }
+        .section-item:hover { @apply bg-surface-tertiary text-text-primary; }
+        .section-item.active { @apply bg-primary-bg/50 text-primary font-medium; }
+
+        /* AI Selection Menu */
+        .ai-menu {
+            @apply fixed z-[100] w-72 bg-surface border border-border rounded-lg shadow-xl overflow-hidden;
+        }
+        .ai-menu-search {
+            @apply w-full px-3 py-2.5 border-b border-border text-sm outline-none;
+            @apply placeholder-text-tertiary focus:bg-surface-secondary;
+        }
+        .ai-menu-content {
+            @apply max-h-80 overflow-y-auto p-1;
+        }
+        .source-toggle {
+            @apply flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer;
+        }
+        .source-toggle.active { @apply bg-primary text-white; }
+        .source-toggle:not(.active) { @apply bg-surface-tertiary text-text-secondary hover:bg-border; }
+
+        /* Animations */
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .animate-pulse-slow { animation: pulse 2s ease-in-out infinite; }
+        .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+        .animate-shimmer {
+            background: linear-gradient(90deg, currentColor 25%, rgba(99, 102, 241, 0.6) 50%, currentColor 75%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shimmer 2s infinite linear;
+        }
+
+        /* Pedagogy Block Styles */
+        .pedagogy-block {
+            @apply relative my-6 rounded-xl border-2 overflow-hidden;
+            @apply transition-all duration-200;
+        }
+        .pedagogy-block:hover {
+            @apply shadow-lg;
+        }
+        .pedagogy-block-header {
+            @apply p-4 flex items-center gap-3;
+        }
+        .pedagogy-block-content {
+            @apply p-4 pt-0;
+        }
+        .pedagogy-block.socratic {
+            @apply border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50;
+        }
+        .pedagogy-block.socratic .pedagogy-block-header {
+            @apply bg-emerald-100/50;
+        }
+        .pedagogy-block.debate {
+            @apply border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50;
+        }
+        .pedagogy-block.debate .pedagogy-block-header {
+            @apply bg-amber-100/50;
+        }
+        .pedagogy-block.firstprinciples {
+            @apply border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50;
+        }
+        .pedagogy-block.firstprinciples .pedagogy-block-header {
+            @apply bg-violet-100/50;
+        }
+        .pedagogy-tag {
+            @apply text-xs font-medium px-2 py-0.5 rounded-full;
+        }
+        .pedagogy-test-chat {
+            @apply mt-4 border border-border rounded-lg bg-white overflow-hidden;
+        }
+        .pedagogy-test-messages {
+            @apply max-h-[200px] overflow-y-auto p-3 space-y-3;
+        }
+        .pedagogy-test-input {
+            @apply border-t border-border p-3 flex gap-2;
+        }
+
+        /* Safelist for dynamic pedagogy colors */
+        .bg-emerald-500 { background-color: #10b981; }
+        .bg-emerald-100 { background-color: #d1fae5; }
+        .text-emerald-500 { color: #10b981; }
+        .text-emerald-700 { color: #047857; }
+        .bg-amber-500 { background-color: #f59e0b; }
+        .bg-amber-100 { background-color: #fef3c7; }
+        .text-amber-500 { color: #f59e0b; }
+        .text-amber-700 { color: #b45309; }
+        .bg-violet-500 { background-color: #8b5cf6; }
+        .bg-violet-100 { background-color: #ede9fe; }
+        .text-violet-500 { color: #8b5cf6; }
+        .text-violet-700 { color: #6d28d9; }
+        .from-emerald-50 { --tw-gradient-from: #ecfdf5; }
+        .to-teal-50 { --tw-gradient-to: #f0fdfa; }
+        .from-amber-50 { --tw-gradient-from: #fffbeb; }
+        .to-orange-50 { --tw-gradient-to: #fff7ed; }
+        .from-violet-50 { --tw-gradient-from: #f5f3ff; }
+        .to-purple-50 { --tw-gradient-to: #faf5ff; }
+        .border-emerald-200 { border-color: #a7f3d0; }
+        .border-amber-200 { border-color: #fde68a; }
+        .border-violet-200 { border-color: #ddd6fe; }
+        .bg-emerald-100\/50 { background-color: rgba(209, 250, 229, 0.5); }
+        .bg-amber-100\/50 { background-color: rgba(254, 243, 199, 0.5); }
+        .bg-violet-100\/50 { background-color: rgba(237, 233, 254, 0.5); }
+        
+        .typing-indicator span {
+            @apply inline-block w-2 h-2 bg-primary rounded-full mx-0.5;
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        /* ── Reading View ─────────────────────────────────────────────────── */
+        #reading-view {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            background: #FAFBFF;
+            overflow-y: auto;
+            animation: fadeIn 0.25s ease-out;
+        }
+        #reading-view.active { display: block; }
+
+        .reading-page {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 64px 48px 120px;
+            background: #fff;
+            min-height: 100%;
+        }
+
+        /* Chapter label */
+        .rv-chapter-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #C17400;
+            margin-bottom: 24px;
+        }
+
+        /* Chapter title */
+        .rv-chapter-title {
+            font-family: 'Merriweather', Georgia, serif;
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.12;
+            color: #0f172a;
+            margin-bottom: 40px;
+        }
+
+        /* Drop cap on first paragraph */
+        .rv-body > p:first-of-type::first-letter {
+            font-family: 'Merriweather', Georgia, serif;
+            font-size: 4.5em;
+            font-weight: 700;
+            color: #1e3a8a;
+            float: left;
+            line-height: 0.75;
+            margin-right: 8px;
+            margin-top: 6px;
+        }
+
+        /* Body paragraphs */
+        .rv-body p {
+            font-family: 'Merriweather', Georgia, serif;
+            font-size: 17px;
+            line-height: 1.85;
+            color: #1e293b;
+            margin-bottom: 24px;
+        }
+
+        /* Section heading (h2 equivalent) */
+        .rv-body h2 {
+            font-family: 'Merriweather', Georgia, serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 56px;
+            margin-bottom: 20px;
+            line-height: 1.25;
+        }
+
+        /* Sub-section label (h3 → small caps amber) */
+        .rv-body h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #C17400;
+            margin-top: 40px;
+            margin-bottom: 12px;
+        }
+
+        /* Pull quote / callout block */
+        .rv-body blockquote {
+            border-left: 4px solid #C17400;
+            background: #FFFBF0;
+            margin: 32px 0;
+            padding: 20px 24px;
+            border-radius: 0 8px 8px 0;
+        }
+        .rv-body blockquote p {
+            font-family: 'Merriweather', Georgia, serif;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 0;
+            font-style: italic;
+        }
+
+        /* Pedagogy blocks inside reading view */
+        .rv-body .pedagogy-block-inserted {
+            margin: 32px 0;
+        }
+
+        /* Reading view top bar */
+        .rv-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 52px;
+        }
+        .rv-topbar-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .rv-exit-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: #2E4CB9;
+            background: #EEF1FB;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .rv-exit-btn:hover { background: #dde4f7; }
+    </style>
+</head>
+<body class="bg-surface-secondary font-sans antialiased">
+    <div class="h-screen flex overflow-hidden">
+        
+        <!-- Left Navigation -->
+        <aside id="left-nav" class="collapsed flex flex-col bg-surface border-r border-border flex-shrink-0">
+            <div class="p-2 border-b border-border">
+                <button onclick="toggleNav()" class="w-full flex items-center justify-center p-2 rounded-lg hover:bg-surface-tertiary transition-colors" title="Toggle navigation">
+                    <span class="material-symbols-outlined text-primary text-xl">auto_stories</span>
+                    <span class="nav-label ml-2 text-sm font-semibold text-text-primary whitespace-nowrap">DreamBook</span>
+                </button>
+            </div>
+            <nav class="flex-1 p-2 space-y-1 overflow-hidden">
+                <a href="code.html" class="nav-item" title="Home">
+                    <span class="material-symbols-outlined text-xl">home</span>
+                    <span class="nav-label whitespace-nowrap">Home</span>
+                </a>
+                <a href="#" class="nav-item active" title="My Books">
+                    <span class="material-symbols-outlined text-xl">menu_book</span>
+                    <span class="nav-label whitespace-nowrap">My Books</span>
+                </a>
+                <a href="#" class="nav-item" title="Sources">
+                    <span class="material-symbols-outlined text-xl">folder_open</span>
+                    <span class="nav-label whitespace-nowrap">Sources</span>
+                </a>
+                <a href="#" class="nav-item" title="Analytics">
+                    <span class="material-symbols-outlined text-xl">bar_chart</span>
+                    <span class="nav-label whitespace-nowrap">Analytics</span>
+                </a>
+            </nav>
+            <div class="p-2 border-t border-border space-y-1">
+                <button onclick="openSettings()" class="nav-item w-full" title="Settings">
+                    <span class="material-symbols-outlined text-xl">settings</span>
+                    <span class="nav-label whitespace-nowrap">Settings</span>
+                </button>
+                <div class="nav-item" title="Dr. Sarah Chen">
+                    <div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white text-xs font-medium flex-shrink-0">SC</div>
+                    <span class="nav-label text-sm whitespace-nowrap">Dr. Chen</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Editor Area -->
+        <div class="flex-1 flex flex-col min-w-0">
+            
+            <!-- Top Toolbar -->
+            <header class="bg-surface border-b border-border flex-shrink-0">
+                <!-- Row 1: Navigation & Actions -->
+                <div class="h-12 flex items-center justify-between px-4 border-b border-border">
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleChapterSidebar()" class="p-1.5 rounded hover:bg-surface-tertiary text-text-secondary" title="Toggle chapters">
+                            <span class="material-symbols-outlined text-xl">menu</span>
+                        </button>
+                        <nav class="flex items-center gap-1 text-sm">
+                            <a href="code.html" class="text-text-tertiary hover:text-primary">Home</a>
+                            <span class="material-symbols-outlined text-text-tertiary text-base">chevron_right</span>
+                            <span class="text-text-secondary">Introduction to Cell Biology</span>
+                            <span class="material-symbols-outlined text-text-tertiary text-base">chevron_right</span>
+                            <span class="text-text-primary font-medium">Chapter 1</span>
+                        </nav>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="word-count" class="text-xs text-text-tertiary">0 words</span>
+                        <span id="save-status" class="text-xs text-success flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">check_circle</span>
+                            Saved
+                        </span>
+                        <div class="toolbar-divider"></div>
+                        <button onclick="enterReadingView()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-tertiary rounded transition-colors">
+                            <span class="material-symbols-outlined text-lg">visibility</span>
+                            Preview
+                        </button>
+                        <button onclick="toggleCopilot()" id="copilot-btn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors">
+                            <span class="material-symbols-outlined text-lg">smart_toy</span>
+                            Copilot
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Row 2: Formatting Toolbar -->
+                <div class="h-11 flex items-center px-4 gap-1">
+                    <button onclick="execCmd('undo')" class="toolbar-btn" title="Undo">
+                        <span class="material-symbols-outlined text-lg">undo</span>
+                    </button>
+                    <button onclick="execCmd('redo')" class="toolbar-btn" title="Redo">
+                        <span class="material-symbols-outlined text-lg">redo</span>
+                    </button>
+                    
+                    <div class="toolbar-divider"></div>
+                    
+                    <div class="relative">
+                        <button onclick="toggleBlockMenu()" id="block-type-btn" class="flex items-center gap-1 px-2 py-1.5 rounded hover:bg-surface-tertiary text-sm text-text-secondary">
+                            <span id="current-block-type">Paragraph</span>
+                            <span class="material-symbols-outlined text-sm">expand_more</span>
+                        </button>
+                    </div>
+                    
+                    <div class="toolbar-divider"></div>
+                    
+                    <button onclick="execCmd('bold')" class="toolbar-btn" title="Bold">
+                        <span class="material-symbols-outlined text-lg">format_bold</span>
+                    </button>
+                    <button onclick="execCmd('italic')" class="toolbar-btn" title="Italic">
+                        <span class="material-symbols-outlined text-lg">format_italic</span>
+                    </button>
+                    <button onclick="execCmd('underline')" class="toolbar-btn" title="Underline">
+                        <span class="material-symbols-outlined text-lg">format_underlined</span>
+                    </button>
+                    <button onclick="execCmd('strikethrough')" class="toolbar-btn" title="Strikethrough">
+                        <span class="material-symbols-outlined text-lg">strikethrough_s</span>
+                    </button>
+                    <button onclick="insertCode()" class="toolbar-btn" title="Inline Code">
+                        <span class="material-symbols-outlined text-lg">code</span>
+                    </button>
+                    <button onclick="insertLink()" class="toolbar-btn" title="Insert Link">
+                        <span class="material-symbols-outlined text-lg">link</span>
+                    </button>
+                    <button onclick="toggleHighlight()" class="toolbar-btn" title="Highlight">
+                        <span class="material-symbols-outlined text-lg">ink_highlighter</span>
+                    </button>
+                    
+                    <div class="toolbar-divider"></div>
+                    
+                    <button onclick="execCmd('insertUnorderedList')" class="toolbar-btn" title="Bullet List">
+                        <span class="material-symbols-outlined text-lg">format_list_bulleted</span>
+                    </button>
+                    <button onclick="execCmd('insertOrderedList')" class="toolbar-btn" title="Numbered List">
+                        <span class="material-symbols-outlined text-lg">format_list_numbered</span>
+                    </button>
+                    <button onclick="insertBlockquote()" class="toolbar-btn" title="Quote">
+                        <span class="material-symbols-outlined text-lg">format_quote</span>
+                    </button>
+                    
+                    <div class="toolbar-divider"></div>
+                    
+                    <button onclick="insertImage()" class="toolbar-btn" title="Insert Image">
+                        <span class="material-symbols-outlined text-lg">image</span>
+                    </button>
+                    <button onclick="insertTable()" class="toolbar-btn" title="Insert Table">
+                        <span class="material-symbols-outlined text-lg">table_chart</span>
+                    </button>
+                    
+                </div>
+            </header>
+
+            <!-- Editor Body -->
+            <div class="flex-1 flex min-h-0 overflow-hidden relative">
+
+                <!-- Reading View Overlay (covers chapter sidebar + canvas + copilot) -->
+                <div id="reading-view">
+                    <div class="rv-topbar">
+                        <div class="rv-topbar-label">
+                            <span class="material-symbols-outlined" style="font-size:16px;">visibility</span>
+                            Viewing as Student
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span style="font-family:'Inter',sans-serif;font-size:12px;color:#9ca3af;">Read-only preview</span>
+                            <button onclick="exitReadingView()" class="rv-exit-btn">
+                                <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
+                                Back to Editing
+                            </button>
+                        </div>
+                    </div>
+                    <div id="reading-page" class="reading-page">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- Chapter Sidebar -->
+                <aside id="chapter-sidebar" class="w-56 bg-surface border-r border-border flex-shrink-0 flex flex-col">
+                    <div class="p-3 border-b border-border flex items-center justify-between">
+                        <span class="text-sm font-semibold text-text-primary">Chapters</span>
+                        <button onclick="toggleChapterSidebar()" class="p-1 rounded hover:bg-surface-tertiary" title="Collapse">
+                            <span class="material-symbols-outlined text-sm text-text-tertiary">chevron_left</span>
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-3">
+                        <!-- Chapter 1 with sections -->
+                        <div class="mb-2">
+                            <div class="chapter-item active" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base rotate-90 transition-transform text-text-tertiary">chevron_right</span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-warning flex-shrink-0"></span>
+                                <span class="truncate flex-1 font-medium">1. What is a Cell?</span>
+                            </div>
+                            <div class="chapter-sections">
+                                <div class="section-item active">
+                                    <span class="w-2 h-2 rounded-full bg-success flex-shrink-0"></span>
+                                    <span>1.1 Introduction</span>
+                                </div>
+                                <div class="section-item">
+                                    <span class="w-2 h-2 rounded-full bg-text-tertiary flex-shrink-0"></span>
+                                    <span>1.2 Cell Theory</span>
+                                </div>
+                                <div class="section-item">
+                                    <span class="w-2 h-2 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
+                                    <span>1.3 Types of Cells</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Chapter 2 -->
+                        <div class="mb-2">
+                            <div class="chapter-item" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base transition-transform text-text-tertiary">chevron_right</span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
+                                <span class="truncate flex-1">2. Cell Structure</span>
+                            </div>
+                            <div class="chapter-sections hidden">
+                                <div class="section-item">
+                                    <span class="w-2 h-2 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
+                                    <span>2.1 Cell Membrane</span>
+                                </div>
+                                <div class="section-item">
+                                    <span class="w-2 h-2 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
+                                    <span>2.2 Nucleus</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Chapter 3 -->
+                        <div class="mb-2">
+                            <div class="chapter-item" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base transition-transform text-text-tertiary">chevron_right</span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
+                                <span class="truncate flex-1">3. Photosynthesis</span>
+                            </div>
+                            <div class="chapter-sections hidden"></div>
+                        </div>
+                        
+                        <!-- Chapter 4 -->
+                        <div class="mb-2">
+                            <div class="chapter-item" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base transition-transform text-text-tertiary">chevron_right</span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
+                                <span class="truncate flex-1">4. Cell Division</span>
+                            </div>
+                            <div class="chapter-sections hidden"></div>
+                        </div>
+                    </div>
+                    <div class="p-2 border-t border-border">
+                        <button class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-primary hover:bg-primary-bg rounded transition-colors">
+                            <span class="material-symbols-outlined text-lg">add</span>
+                            Add Chapter
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- Main Canvas -->
+                <main class="flex-1 bg-surface-canvas overflow-y-auto">
+                    <div class="max-w-3xl mx-auto py-10 px-8">
+                        
+                        <!-- Chapter Header -->
+                        <div class="mb-10">
+                            <span class="inline-block text-xs font-semibold text-primary uppercase tracking-wider mb-3">Chapter 1</span>
+                            <div class="space-y-2">
+                                <input type="text" id="chapter-title" value="What is a Cell?" 
+                                       class="block w-full p-0 text-4xl font-bold text-text-primary bg-transparent outline-none border-0 placeholder-text-tertiary leading-tight focus:ring-0"
+                                       placeholder="Chapter Title"/>
+                                <input type="text" id="chapter-subtitle" value="Understanding the fundamental building blocks of life" 
+                                       class="block w-full p-0 text-lg text-text-secondary bg-transparent outline-none border-0 placeholder-text-tertiary leading-relaxed focus:ring-0"
+                                       placeholder="Add a subtitle (optional)"/>
+                            </div>
+                        </div>
+
+                        <!-- Editor Canvas -->
+                        <div class="relative">
+                            <div id="editor-placeholder" class="absolute top-[1px] left-[2px] pointer-events-none flex items-center gap-1.5 text-text-tertiary transition-all duration-200 h-[26px]" style="margin-top: 0;">
+                                <span class="material-symbols-outlined text-ai-accent animate-pulse" style="font-size: 18px;">auto_awesome</span>
+                                <span class="text-base">Start writing, or type / for AI commands...</span>
+                            </div>
+                            <div id="editor" 
+                                 class="editor-canvas text-text-primary relative z-10"
+                                 contenteditable="true"
+                                 onkeydown="handleEditorKeydown(event)"
+                                 onkeyup="handleEditorKeyup(event)"
+                                 oninput="handleEditorInput(event)">
+                                <p>Life requires energy. In most ecosystems, energy enters as sunlight and exits as heat. The chemical elements essential to life are recycled. Photosynthesis generates oxygen and organic molecules, which are used by the mitochondria of eukaryotes as fuel for cellular respiration.</p>
+                                <h2>1.1 Catabolic pathways yield energy by oxidizing organic fuels</h2>
+                                <p>Metabolic pathways that release stored energy by breaking down complex molecules are called catabolic pathways. Electron transfer plays a major role in these pathways. In this section, we consider these processes, which are central to cellular respiration.</p>
+                                <blockquote><p>The breakdown of organic molecules is exergonic. Fermentation is a partial degradation of sugars that occurs without O2. Aerobic respiration consumes organic molecules and O2 and yields ATP.</p></blockquote>
+                                <h3>Redox Reactions</h3>
+                                <p>The transfer of electrons during chemical reactions releases energy stored in organic molecules. This released energy is ultimately used to synthesize ATP. Chemical reactions that transfer electrons between reactants are called oxidation-reduction reactions, or redox reactions.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </main>
+
+                <!-- Copilot Panel -->
+                <aside id="copilot-panel" class="w-80 bg-surface border-l border-border flex-shrink-0 flex flex-col">
+                    <div class="p-3 border-b border-border flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">smart_toy</span>
+                            <span class="font-semibold text-text-primary">Copilot</span>
+                        </div>
+                        <button onclick="toggleCopilot()" class="p-1 rounded hover:bg-surface-tertiary">
+                            <span class="material-symbols-outlined text-sm text-text-tertiary">close</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="p-3 border-b border-border space-y-2">
+                        <div class="text-xs font-medium text-text-tertiary uppercase">Quick Actions</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="aiAction('outline')" class="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary bg-surface-tertiary rounded hover:bg-border transition-colors">
+                                <span class="material-symbols-outlined text-sm">list_alt</span>
+                                Generate Outline
+                            </button>
+                            <button onclick="aiAction('continue')" class="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary bg-surface-tertiary rounded hover:bg-border transition-colors">
+                                <span class="material-symbols-outlined text-sm">edit_note</span>
+                                Continue Writing
+                            </button>
+                            <button onclick="aiAction('simplify')" class="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary bg-surface-tertiary rounded hover:bg-border transition-colors">
+                                <span class="material-symbols-outlined text-sm">psychology</span>
+                                Simplify Text
+                            </button>
+                            <button onclick="openExampleModal()" class="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary bg-surface-tertiary rounded hover:bg-border transition-colors">
+                                <span class="material-symbols-outlined text-sm">lightbulb</span>
+                                Add Example
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Context -->
+                    <div class="px-3 py-2 bg-surface-secondary text-xs border-b border-border">
+                        <span class="text-text-tertiary">Context:</span>
+                        <span id="copilot-context" class="text-text-secondary ml-1">Chapter 1 - What is a Cell?</span>
+                    </div>
+                    
+                    <!-- Chat Messages -->
+                    <div id="copilot-messages" class="flex-1 overflow-y-auto p-3 space-y-3">
+                        <div class="flex gap-2">
+                            <span class="material-symbols-outlined text-primary text-lg flex-shrink-0 mt-0.5">smart_toy</span>
+                            <div class="text-sm text-text-secondary">
+                                <p>Hi! I'm your AI writing assistant. I can help you:</p>
+                                <ul class="mt-2 space-y-1 text-xs">
+                                    <li>• Generate chapter outlines and content</li>
+                                    <li>• Simplify text for different grade levels</li>
+                                    <li>• Add examples and analogies</li>
+                                    <li>• Transform and improve your writing</li>
+                                </ul>
+                                <p class="mt-2">Type <code class="px-1 py-0.5 bg-surface-tertiary rounded text-xs">/</code> in the editor for quick AI commands!</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Input -->
+                    <div class="p-3 border-t border-border">
+                        <div class="flex flex-col gap-2">
+                            <textarea id="copilot-input" rows="3" 
+                                      placeholder="Ask me anything about your content, request changes, or describe what you want to write..." 
+                                      class="w-full px-3 py-2.5 text-sm border border-border rounded-lg resize-none outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                      onkeydown="handleCopilotKeydown(event)"
+                                      oninput="autoResizeTextarea(this)"></textarea>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-text-tertiary">Press Enter to send, Shift+Enter for new line</span>
+                                <button onclick="sendCopilotMessage()" class="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark transition-colors">
+                                    <span class="material-symbols-outlined text-base">send</span>
+                                    Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Block Type Menu -->
+    <div id="block-menu" class="hidden fixed z-50 w-48 bg-surface border border-border rounded-lg shadow-xl p-1">
+        <div class="menu-item" onclick="setBlockType('p')">
+            <span class="icon">T</span>
+            <span>Paragraph</span>
+        </div>
+        <div class="menu-item" onclick="setBlockType('h1')">
+            <span class="icon font-bold text-lg">H1</span>
+            <span>Heading 1</span>
+        </div>
+        <div class="menu-item" onclick="setBlockType('h2')">
+            <span class="icon font-bold">H2</span>
+            <span>Heading 2</span>
+        </div>
+        <div class="menu-item" onclick="setBlockType('h3')">
+            <span class="icon font-semibold text-sm">H3</span>
+            <span>Heading 3</span>
+        </div>
+    </div>
+
+    <!-- Slash Command Menu -->
+    <div id="slash-menu" class="hidden fixed z-[200] w-72 bg-surface border border-border rounded-lg shadow-2xl overflow-hidden">
+        <input type="text" id="slash-search" class="w-full px-3 py-2.5 border-b border-border text-sm outline-none" 
+               placeholder="Search commands..." oninput="filterSlashMenu(this.value)" onkeydown="handleSlashMenuKeydown(event)"/>
+        <div id="slash-menu-content" class="max-h-72 overflow-y-auto p-1"></div>
+    </div>
+
+    <!-- AI Selection Menu (only appears on text selection) -->
+    <div id="ai-selection-menu" class="hidden ai-menu">
+        <input type="text" id="ai-menu-search" class="ai-menu-search" placeholder="Ask AI to transform this text..." 
+               oninput="filterAIMenu(this.value)" onkeydown="handleAIMenuKeydown(event)"/>
+        <div class="flex items-center gap-2 px-3 py-2 border-b border-border">
+            <button onclick="toggleSourceToggle('web')" id="toggle-web" class="source-toggle">Web</button>
+            <button onclick="toggleSourceToggle('library')" id="toggle-library" class="source-toggle active">Library</button>
+        </div>
+        <div id="ai-menu-content" class="ai-menu-content"></div>
+    </div>
+
+    <!-- AI Response Modal -->
+    <div id="ai-response-overlay" class="hidden fixed inset-0 z-[150] bg-black/30" onclick="closeAIResponse()"></div>
+    <div id="ai-response-container" class="hidden fixed z-[160] w-[500px] bg-surface border border-border rounded-lg shadow-2xl">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+            <span id="ai-response-status" class="text-sm text-text-secondary flex items-center gap-2">
+                <span class="typing-indicator"><span></span><span></span><span></span></span>
+                Thinking...
+            </span>
+            <div class="flex items-center gap-1">
+                <button class="p-1 hover:bg-surface-tertiary rounded">
+                    <span class="material-symbols-outlined text-sm text-text-tertiary">thumb_up</span>
+                </button>
+                <button class="p-1 hover:bg-surface-tertiary rounded">
+                    <span class="material-symbols-outlined text-sm text-text-tertiary">thumb_down</span>
+                </button>
+            </div>
+        </div>
+        <div id="ai-response-content" class="px-4 py-3 max-h-64 overflow-y-auto text-sm text-text-primary leading-relaxed"></div>
+        <div class="flex items-center gap-2 px-4 py-3 border-t border-border">
+            <button onclick="acceptAIResponse()" class="flex items-center gap-1 px-4 py-2 bg-primary text-white text-sm rounded hover:bg-primary-dark transition-colors">
+                <span class="material-symbols-outlined text-lg">check</span>
+                Accept
+            </button>
+            <button onclick="insertBelowAIResponse()" class="flex items-center gap-1 px-3 py-2 text-text-secondary text-sm rounded border border-border hover:bg-surface-tertiary transition-colors">
+                Insert Below
+            </button>
+            <button onclick="regenerateAI()" class="flex items-center gap-1 px-3 py-2 text-text-secondary text-sm rounded border border-border hover:bg-surface-tertiary transition-colors">
+                Try Again
+            </button>
+            <button onclick="closeAIResponse()" class="ml-auto px-3 py-2 text-text-tertiary text-sm hover:text-text-secondary transition-colors">
+                Discard
+            </button>
+        </div>
+    </div>
+
+    <!-- Image Generation Modal -->
+    <div id="image-gen-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-[500px] bg-surface rounded-lg shadow-xl flex flex-col">
+            <div class="p-4 border-b border-border flex items-center justify-between">
+                <h3 class="font-semibold text-text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined text-ai-accent">image</span>
+                    Generate Image
+                </h3>
+                <button onclick="closeImageGenModal()" class="p-1 rounded hover:bg-surface-tertiary">
+                    <span class="material-symbols-outlined text-text-tertiary">close</span>
+                </button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <div id="image-gen-input-area">
+                    <label class="block text-sm font-medium text-text-secondary mb-1">Image Description</label>
+                    <textarea id="image-prompt-input" rows="3" placeholder="Describe the image you want to generate..."
+                              class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary resize-none"></textarea>
+                </div>
+                
+                <div id="image-gen-loading" class="hidden flex flex-col items-center justify-center py-8">
+                    <span class="material-symbols-outlined text-ai-accent animate-spin text-4xl mb-4">progress_activity</span>
+                    <p class="text-sm text-text-secondary">Generating your image...</p>
+                </div>
+
+                <div id="image-gen-result" class="hidden mt-4">
+                    <div class="relative group border border-border rounded-lg p-2 bg-surface-tertiary">
+                        <img id="generated-image-preview" src="" class="w-full h-auto rounded object-contain max-h-[300px]" />
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-border flex justify-end gap-2">
+                <button id="image-gen-cancel-btn" onclick="closeImageGenModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
+                <button id="image-gen-generate-btn" onclick="generateImage()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">auto_awesome</span> Generate
+                </button>
+                <button id="image-gen-insert-btn" onclick="insertGeneratedImage()" class="hidden px-4 py-2 text-sm bg-success text-white rounded hover:bg-success/90 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">check</span> Insert Image
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-96 bg-surface rounded-lg shadow-xl">
+            <div class="p-4 border-b border-border flex items-center justify-between">
+                <h3 class="font-semibold text-text-primary">API Settings</h3>
+                <button onclick="closeSettings()" class="p-1 rounded hover:bg-surface-tertiary">
+                    <span class="material-symbols-outlined text-text-tertiary">close</span>
+                </button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-1">OpenAI API Key</label>
+                    <input type="password" id="api-key-input" placeholder="sk-..." 
+                           class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary"/>
+                    <p class="mt-1 text-xs text-text-tertiary">Your API key is stored locally only.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-1">Model</label>
+                    <select id="model-select" class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary">
+                        <option value="gpt-4o">GPT-4o (Recommended)</option>
+                        <option value="gpt-4o-mini">GPT-4o Mini (Faster)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="p-4 border-t border-border flex justify-end gap-2">
+                <button onclick="closeSettings()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
+                <button onclick="saveSettings()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Example Modal -->
+    <div id="example-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-96 bg-surface rounded-lg shadow-xl">
+            <div class="p-4 border-b border-border">
+                <h3 class="font-semibold text-text-primary">Add Custom Example</h3>
+                <p class="text-sm text-text-secondary mt-1">Describe the type of example or analogy</p>
+            </div>
+            <div class="p-4">
+                <textarea id="example-input" rows="3" placeholder="e.g., Use a cricket analogy..."
+                          class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary resize-none"></textarea>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <button onclick="setExampleHint('cricket analogy')" class="px-2 py-1 text-xs bg-surface-tertiary rounded hover:bg-border">Cricket</button>
+                    <button onclick="setExampleHint('cooking recipe')" class="px-2 py-1 text-xs bg-surface-tertiary rounded hover:bg-border">Cooking</button>
+                    <button onclick="setExampleHint('video game')" class="px-2 py-1 text-xs bg-surface-tertiary rounded hover:bg-border">Video game</button>
+                    <button onclick="setExampleHint('everyday life')" class="px-2 py-1 text-xs bg-surface-tertiary rounded hover:bg-border">Everyday life</button>
+                </div>
+            </div>
+            <div class="p-4 border-t border-border flex justify-end gap-2">
+                <button onclick="closeExampleModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
+                <button onclick="generateCustomExample()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedagogy Block Modal -->
+    <div id="pedagogy-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-[600px] bg-surface rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            <!-- Header -->
+            <div id="pedagogy-modal-header" class="p-5 border-b border-border">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div id="pedagogy-icon-container" class="w-10 h-10 rounded-lg flex items-center justify-center">
+                            <span id="pedagogy-icon" class="material-symbols-outlined text-xl text-white"></span>
+                        </div>
+                        <div>
+                            <h3 id="pedagogy-title" class="font-semibold text-text-primary text-lg"></h3>
+                            <p id="pedagogy-subtitle" class="text-sm text-text-tertiary"></p>
+                        </div>
+                    </div>
+                    <button onclick="closePedagogyModal()" class="p-2 rounded-lg hover:bg-surface-tertiary transition-colors">
+                        <span class="material-symbols-outlined text-text-tertiary">close</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="p-5 flex-1 overflow-y-auto space-y-5">
+                <!-- Step 1: Context Detection -->
+                <div id="pedagogy-context-section" class="bg-gradient-to-r from-indigo-500/5 to-purple-500/5 rounded-lg p-4 border border-indigo-200/30">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-indigo-500 text-lg mt-0.5 animate-shimmer">auto_awesome</span>
+                        <div class="flex-1">
+                            <h4 class="font-medium text-text-primary text-sm mb-1">AI is analyzing surrounding content...</h4>
+                            <p id="pedagogy-context-text" class="text-xs text-text-secondary">Scanning the current section to understand context and suggest learning goals.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Learning Goal -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-semibold text-text-primary">Learning Goal</label>
+                        <button id="pedagogy-suggest-goal-btn" onclick="suggestPedagogyGoal()" class="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1 px-2 py-1 rounded hover:bg-indigo-50 transition-colors">
+                            <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                            Suggest with AI
+                        </button>
+                    </div>
+                    <p id="pedagogy-goal-hint" class="text-xs text-text-tertiary mb-2"></p>
+                    <textarea id="pedagogy-goal-input" rows="2" placeholder="What should the student understand or realize?"
+                              class="w-full px-4 py-3 border border-border rounded-lg text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+                </div>
+
+                <!-- Step 3: Opening Prompt (AI Generated) -->
+                <div id="pedagogy-prompt-section" class="space-y-2 hidden">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-semibold text-text-primary">Opening Prompt</label>
+                        <button onclick="regeneratePedagogyPrompt()" class="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1 px-2 py-1 rounded hover:bg-indigo-50 transition-colors">
+                            <span class="material-symbols-outlined text-sm">refresh</span>
+                            Regenerate
+                        </button>
+                    </div>
+                    <p id="pedagogy-prompt-hint" class="text-xs text-text-tertiary mb-2"></p>
+                    <div id="pedagogy-prompt-loading" class="hidden flex items-center gap-2 p-4 bg-surface-tertiary rounded-lg">
+                        <span class="material-symbols-outlined text-ai-accent animate-spin">progress_activity</span>
+                        <span class="text-sm text-text-secondary">Crafting the perfect opening question...</span>
+                    </div>
+                    <textarea id="pedagogy-prompt-input" rows="3" placeholder="The question that will start the interactive dialogue..."
+                              class="w-full px-4 py-3 border border-border rounded-lg text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+                </div>
+
+                <!-- Step 4: Difficulty & Style Options -->
+                <div id="pedagogy-options-section" class="hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-text-secondary mb-2">Difficulty Level</label>
+                            <div class="flex gap-2">
+                                <button onclick="setPedagogyDifficulty('gentle')" data-difficulty="gentle" class="pedagogy-difficulty-btn flex-1 px-3 py-2 text-xs border border-border rounded-lg hover:border-primary transition-colors">Gentle</button>
+                                <button onclick="setPedagogyDifficulty('moderate')" data-difficulty="moderate" class="pedagogy-difficulty-btn flex-1 px-3 py-2 text-xs border border-primary bg-primary/5 text-primary rounded-lg">Moderate</button>
+                                <button onclick="setPedagogyDifficulty('rigorous')" data-difficulty="rigorous" class="pedagogy-difficulty-btn flex-1 px-3 py-2 text-xs border border-border rounded-lg hover:border-primary transition-colors">Rigorous</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-text-secondary mb-2">Max Turns</label>
+                            <select id="pedagogy-max-turns" class="w-full px-3 py-2 border border-border rounded-lg text-sm outline-none focus:border-primary">
+                                <option value="3">3 turns (Quick)</option>
+                                <option value="5" selected>5 turns (Standard)</option>
+                                <option value="7">7 turns (Deep)</option>
+                                <option value="unlimited">Unlimited</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div id="pedagogy-preview-section" class="hidden space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-semibold text-text-primary">Preview & Test</label>
+                        <span class="text-xs text-text-tertiary">See how students will experience this</span>
+                    </div>
+                    <div id="pedagogy-preview-container" class="border border-border rounded-xl overflow-hidden">
+                        <!-- Preview renders here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-border bg-surface-secondary flex items-center justify-between">
+                <button id="pedagogy-preview-btn" onclick="togglePedagogyPreview()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded-lg flex items-center gap-2 transition-colors">
+                    <span class="material-symbols-outlined text-sm">visibility</span>
+                    Preview
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closePedagogyModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded-lg transition-colors">Cancel</button>
+                    <button id="pedagogy-generate-btn" onclick="generatePedagogyPrompt()" class="px-5 py-2 text-sm bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all shadow-lg shadow-indigo-500/25">
+                        <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                        Generate Opening
+                    </button>
+                    <button id="pedagogy-insert-btn" onclick="insertPedagogyBlock()" class="hidden px-5 py-2 text-sm bg-success text-white rounded-lg hover:bg-success/90 flex items-center gap-2 transition-all">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        Insert Block
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ════════════════════════════════════════════════════════════════════════════
+    // STATE
+    // ════════════════════════════════════════════════════════════════════════════
+    const state = {
+        navExpanded: false,
+        chapterSidebarVisible: true,
+        copilotVisible: true,
+        selectedText: '',
+        selectedRange: null,
+        currentAIAction: null,
+        slashMenuVisible: false,
+        slashMenuPosition: null,
+        insertPosition: null,
+        apiKey: localStorage.getItem('openai_api_key') || '',
+        model: localStorage.getItem('openai_model') || 'gpt-4o',
+        sourceToggles: { web: false, library: true },
+        generatedContent: '',
+        copilotPending: false,
+    };
+
+    // Slash commands with pedagogy blocks for interactive learning
+    const slashCommands = [
+        { id: 'continue', icon: 'edit_note', label: 'Continue writing', desc: 'AI continues from here', category: 'ai' },
+        { id: 'outline', icon: 'list_alt', label: 'Generate outline', desc: 'Create section structure', category: 'ai' },
+        { id: 'intro', icon: 'start', label: 'Write introduction', desc: 'Generate intro paragraph', category: 'ai' },
+        { id: 'conclusion', icon: 'flag', label: 'Write conclusion', desc: 'Generate summary', category: 'ai' },
+        { id: 'expand', icon: 'expand', label: 'Expand this section', desc: 'Add more detail', category: 'ai' },
+        { id: 'simplify', icon: 'psychology', label: 'Simplify text', desc: 'Make easier to understand', category: 'ai' },
+        { id: 'example', icon: 'lightbulb', label: 'Add example', desc: 'Include real-world example', category: 'ai' },
+        { id: 'pullquote', icon: 'format_quote', label: 'Pull Quote', desc: 'Highlighted callout block', category: 'ai' },
+        { id: 'divider-pedagogy', category: 'divider', dividerLabel: 'Pedagogy Blocks' },
+        { id: 'socratic', icon: 'psychology_alt', label: 'Socratic Checkpoint', desc: 'Guide students through discovery', category: 'pedagogy', color: 'text-emerald-500' },
+        { id: 'debate', icon: 'forum', label: 'Devil\'s Advocate Debate', desc: 'Challenge assumptions & biases', category: 'pedagogy', color: 'text-amber-500' },
+        { id: 'firstprinciples', icon: 'account_tree', label: 'First Principles Deconstructor', desc: 'Break down to fundamentals', category: 'pedagogy', color: 'text-violet-500' },
+        { id: 'divider-media', category: 'divider', dividerLabel: 'Media' },
+        { id: 'image', icon: 'image', label: 'Insert image', desc: 'Upload or generate with AI', category: 'media' },
+        { id: 'youtube', icon: 'smart_display', label: 'YouTube video', desc: 'Embed a video', category: 'media' },
+    ];
+
+    // AI menu options for selected text
+    const aiMenuOptions = [
+        { id: 'simplify', label: 'Simplify', category: 'Strengthen' },
+        { id: 'paraphrase', label: 'Paraphrase', category: 'Strengthen' },
+        { id: 'expand', label: 'Expand', category: 'Strengthen' },
+        { id: 'formal', label: 'Make more formal', category: 'Style' },
+        { id: 'engaging', label: 'Make more engaging', category: 'Style' },
+        { id: 'grade-elem', label: 'Simplify for Elementary', category: 'Grade Level' },
+        { id: 'grade-high', label: 'Adjust for High School', category: 'Grade Level' },
+        { id: 'grade-undergrad', label: 'Adjust for Undergraduate', category: 'Grade Level' },
+        { id: 'add-example', label: 'Add real-world example', category: 'Enhance' },
+        { id: 'custom-analogy', label: 'Add custom analogy...', category: 'Enhance', action: 'openExampleModal' },
+        { id: 'bullet-list', label: 'Convert to bullet list', category: 'Transform' },
+        { id: 'numbered-list', label: 'Convert to numbered list', category: 'Transform' },
+    ];
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // INITIALIZATION
+    // ════════════════════════════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('api-key-input').value = state.apiKey;
+        document.getElementById('model-select').value = state.model;
+        updateWordCount();
+        
+        // Wait a tiny bit for layout to settle before checking placeholder
+        setTimeout(checkPlaceholder, 50);
+        
+        // Listen to selection changes to move the placeholder to the active empty line
+        document.addEventListener('selectionchange', () => {
+            if (document.activeElement === document.getElementById('editor')) {
+                checkPlaceholder();
+            }
+        });
+        
+        // Global click to close menus
+        document.addEventListener('click', (e) => {
+            // Close slash menu
+            if (state.slashMenuVisible && !e.target.closest('#slash-menu')) {
+                closeSlashMenu();
+            }
+            // Close block menu
+            if (!e.target.closest('#block-menu') && !e.target.closest('#block-type-btn')) {
+                document.getElementById('block-menu').classList.add('hidden');
+            }
+            // Close AI selection menu
+            if (!e.target.closest('#ai-selection-menu')) {
+                document.getElementById('ai-selection-menu').classList.add('hidden');
+            }
+        });
+
+        // Handle text selection for AI menu
+        document.addEventListener('mouseup', (e) => {
+            setTimeout(() => {
+                const selection = window.getSelection();
+                const text = selection.toString().trim();
+                
+                if (text.length > 10 && e.target.closest('#editor')) {
+                    state.selectedText = text;
+                    state.selectedRange = selection.getRangeAt(0).cloneRange();
+                    showAISelectionMenu(e.clientX, e.clientY);
+                }
+            }, 10);
+        });
+
+        // Focus editor
+        document.getElementById('editor').focus();
+    });
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // NAVIGATION
+    // ════════════════════════════════════════════════════════════════════════════
+    function toggleNav() {
+        const nav = document.getElementById('left-nav');
+        state.navExpanded = !state.navExpanded;
+        nav.classList.toggle('expanded', state.navExpanded);
+        nav.classList.toggle('collapsed', !state.navExpanded);
+    }
+
+    function toggleChapterSidebar() {
+        const sidebar = document.getElementById('chapter-sidebar');
+        state.chapterSidebarVisible = !state.chapterSidebarVisible;
+        sidebar.classList.toggle('collapsed', !state.chapterSidebarVisible);
+    }
+
+    function toggleChapterExpand(el) {
+        const arrow = el.querySelector('.material-symbols-outlined');
+        const sections = el.nextElementSibling;
+        
+        arrow.classList.toggle('rotate-90');
+        sections.classList.toggle('hidden');
+    }
+
+    function toggleCopilot() {
+        const panel = document.getElementById('copilot-panel');
+        const btn = document.getElementById('copilot-btn');
+        state.copilotVisible = !state.copilotVisible;
+        panel.classList.toggle('hidden', !state.copilotVisible);
+        btn.classList.toggle('bg-primary', state.copilotVisible);
+        btn.classList.toggle('text-white', state.copilotVisible);
+        btn.classList.toggle('bg-surface-tertiary', !state.copilotVisible);
+        btn.classList.toggle('text-text-secondary', !state.copilotVisible);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // TOOLBAR
+    // ════════════════════════════════════════════════════════════════════════════
+    function execCmd(command, value = null) {
+        document.execCommand(command, false, value);
+        document.getElementById('editor').focus();
+    }
+
+    function setBlockType(tag) {
+        document.execCommand('formatBlock', false, `<${tag}>`);
+        document.getElementById('block-menu').classList.add('hidden');
+        document.getElementById('current-block-type').textContent = 
+            tag === 'p' ? 'Paragraph' : tag.toUpperCase();
+        document.getElementById('editor').focus();
+    }
+
+    function toggleBlockMenu() {
+        const menu = document.getElementById('block-menu');
+        const btn = document.getElementById('block-type-btn');
+        const rect = btn.getBoundingClientRect();
+        menu.style.left = `${rect.left}px`;
+        menu.style.top = `${rect.bottom + 4}px`;
+        menu.classList.toggle('hidden');
+    }
+
+    function insertLink() {
+        const url = prompt('Enter URL:');
+        if (url) execCmd('createLink', url);
+    }
+
+    function insertCode() {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0 && selection.toString()) {
+            document.execCommand('insertHTML', false, `<code>${selection.toString()}</code>`);
+        }
+    }
+
+    function toggleHighlight() {
+        execCmd('hiliteColor', '#FEF08A');
+    }
+
+    function insertBlockquote() {
+        execCmd('formatBlock', '<blockquote>');
+    }
+
+    function insertImage() {
+        openImageGenModal();
+    }
+
+    function insertTable() {
+        const html = `<table class="w-full border-collapse my-4">
+            <tr class="bg-surface-tertiary"><th class="border border-border p-2">Header 1</th><th class="border border-border p-2">Header 2</th></tr>
+            <tr><td class="border border-border p-2">Cell 1</td><td class="border border-border p-2">Cell 2</td></tr>
+        </table>`;
+        document.execCommand('insertHTML', false, html);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // EDITOR EVENTS
+    // ════════════════════════════════════════════════════════════════════════════
+    function handleEditorKeydown(event) {
+        if (event.key === '/') {
+            // Get cursor position BEFORE the / is inserted
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                // Store position immediately - this is viewport-relative
+                state.slashMenuPosition = { 
+                    x: rect.left, 
+                    y: rect.bottom + 8 
+                };
+                // Store current range for insert position
+                state.insertPosition = range.cloneRange();
+            }
+        }
+        
+        if (event.key === 'Escape') {
+            closeSlashMenu();
+            document.getElementById('ai-selection-menu').classList.add('hidden');
+        }
+    }
+
+    function handleEditorKeyup(event) {
+        updateWordCount();
+        
+        // Check for slash command trigger
+        if (event.key === '/' && state.slashMenuPosition) {
+            // Use the stored position from keydown (before / was inserted)
+            showSlashMenu(state.slashMenuPosition.x, state.slashMenuPosition.y);
+        }
+    }
+
+    function handleEditorInput(event) {
+        checkPlaceholder();
+        
+        document.getElementById('save-status').innerHTML = `
+            <span class="material-symbols-outlined text-sm animate-spin">sync</span>
+            Saving...
+        `;
+        setTimeout(() => {
+            document.getElementById('save-status').innerHTML = `
+                <span class="material-symbols-outlined text-sm">check_circle</span>
+                Saved
+            `;
+        }, 800);
+    }
+
+    function checkPlaceholder() {
+        const editor = document.getElementById('editor');
+        const placeholder = document.getElementById('editor-placeholder');
+        
+        let show = false;
+        let topPos = 0; // Default top position
+
+        const selection = window.getSelection();
+        
+        if (document.activeElement === editor && selection.rangeCount > 0) {
+            let node = selection.getRangeAt(0).startContainer;
+            if (node.nodeType === 3) node = node.parentNode; // text node -> element
+            
+            // Find the block element
+            while (node && node !== editor && !['P', 'H1', 'H2', 'H3', 'H4', 'DIV', 'LI', 'BLOCKQUOTE'].includes(node.nodeName)) {
+                node = node.parentNode;
+            }
+            
+            if (node && node !== editor) {
+                // Check if empty (allow <br> which contenteditable inserts for empty lines)
+                // Also check if textContent is just zero-width spaces or empty
+                const text = node.textContent.trim().replace(/\u200B/g, '');
+                if (text === '') {
+                    show = true;
+                    // Calculate relative to the editor container
+                    topPos = node.offsetTop;
+                }
+            } else if (editor.innerText.trim() === '') {
+                show = true;
+                const firstChild = editor.firstElementChild;
+                if (firstChild) topPos = firstChild.offsetTop;
+            }
+        } else if (editor.innerText.trim() === '') {
+            // Editor is completely empty but not focused
+            show = true;
+            const firstChild = editor.firstElementChild;
+            if (firstChild) topPos = firstChild.offsetTop;
+        }
+
+        if (show) {
+            placeholder.style.transform = `translateY(${topPos}px)`;
+            placeholder.style.opacity = '1';
+            placeholder.style.visibility = 'visible';
+        } else {
+            placeholder.style.opacity = '0';
+            placeholder.style.visibility = 'hidden';
+        }
+    }
+
+    function updateWordCount() {
+        const editor = document.getElementById('editor');
+        const text = editor.innerText || '';
+        const words = text.split(/\s+/).filter(w => w.length > 0).length;
+        document.getElementById('word-count').textContent = `${words} words`;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // SLASH MENU
+    // ════════════════════════════════════════════════════════════════════════════
+    function showSlashMenu(x, y) {
+        const menu = document.getElementById('slash-menu');
+        
+        // Ensure menu stays within viewport
+        const menuWidth = 288;
+        const menuHeight = 320;
+        const safeX = Math.min(Math.max(10, x), window.innerWidth - menuWidth - 10);
+        const safeY = Math.min(y, window.innerHeight - menuHeight - 10);
+        
+        // Set position using fixed positioning (viewport-relative)
+        menu.style.left = `${safeX}px`;
+        menu.style.top = `${safeY}px`;
+        menu.classList.remove('hidden');
+        state.slashMenuVisible = true;
+        
+        renderSlashMenu();
+        document.getElementById('slash-search').value = '';
+        document.getElementById('slash-search').focus();
+    }
+
+    function closeSlashMenu() {
+        document.getElementById('slash-menu').classList.add('hidden');
+        state.slashMenuVisible = false;
+        state.slashMenuPosition = null;
+        
+        const editor = document.getElementById('editor');
+        editor.focus();
+    }
+
+    function renderSlashMenu(filter = '') {
+        const content = document.getElementById('slash-menu-content');
+        const filterLower = filter.toLowerCase();
+        
+        let html = '<div class="menu-header">AI Actions</div>';
+        
+        slashCommands.forEach(cmd => {
+            if (cmd.category === 'divider') {
+                html += `<div class="menu-divider"></div><div class="menu-header">${cmd.dividerLabel || 'More'}</div>`;
+                return;
+            }
+            
+            if (cmd.label.toLowerCase().includes(filterLower) || (cmd.desc && cmd.desc.toLowerCase().includes(filterLower))) {
+                let iconColor = 'text-text-tertiary';
+                if (cmd.category === 'ai') iconColor = 'text-ai-accent';
+                if (cmd.category === 'pedagogy') iconColor = cmd.color || 'text-indigo-500';
+                
+                const isPedagogy = cmd.category === 'pedagogy';
+                const badgeHtml = isPedagogy ? '<span class="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 font-medium">Interactive</span>' : '';
+                
+                html += `
+                    <div class="menu-item ${isPedagogy ? 'pedagogy-item' : ''}" onclick="executeSlashCommand('${cmd.id}')">
+                        <span class="icon ${iconColor}"><span class="material-symbols-outlined text-lg">${cmd.icon}</span></span>
+                        <div class="flex-1">
+                            <div class="font-medium text-text-primary flex items-center gap-2">${cmd.label}${badgeHtml}</div>
+                            <div class="text-xs text-text-tertiary">${cmd.desc || ''}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        content.innerHTML = html;
+    }
+
+    function filterSlashMenu(value) {
+        renderSlashMenu(value);
+    }
+
+    function handleSlashMenuKeydown(event) {
+        if (event.key === 'Escape') {
+            closeSlashMenu();
+        }
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const firstItem = document.querySelector('#slash-menu-content .menu-item');
+            if (firstItem) firstItem.click();
+        }
+    }
+
+    function executeSlashCommand(id) {
+        closeSlashMenu();
+        
+        // Remove the / character
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            range.setStart(range.startContainer, Math.max(0, range.startOffset - 1));
+            range.deleteContents();
+        }
+        
+        const cmd = slashCommands.find(c => c.id === id);
+        if (!cmd) return;
+        
+        if (id === 'pullquote') {
+            document.execCommand('formatBlock', false, 'blockquote');
+        } else if (cmd.category === 'ai') {
+            aiAction(id);
+        } else if (cmd.category === 'pedagogy') {
+            openPedagogyModal(id);
+        } else if (id === 'image') {
+            insertImage();
+        } else if (id === 'youtube') {
+            const url = prompt('Enter YouTube URL:');
+            if (url) {
+                const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/)?.[1];
+                if (videoId) {
+                    document.execCommand('insertHTML', false, 
+                        `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen class="my-4 rounded-lg"></iframe>`);
+                }
+            }
+        }
+        
+        document.getElementById('editor').focus();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // AI SELECTION MENU (only on text selection)
+    // ════════════════════════════════════════════════════════════════════════════
+    function showAISelectionMenu(x, y) {
+        const menu = document.getElementById('ai-selection-menu');
+        
+        // Position menu
+        menu.style.left = `${Math.min(x, window.innerWidth - 300)}px`;
+        menu.style.top = `${Math.min(y + 10, window.innerHeight - 400)}px`;
+        
+        menu.classList.remove('hidden');
+        renderAIMenu();
+        document.getElementById('ai-menu-search').value = '';
+        document.getElementById('ai-menu-search').focus();
+    }
+
+    function renderAIMenu(filter = '') {
+        const content = document.getElementById('ai-menu-content');
+        const filterLower = filter.toLowerCase();
+        
+        let html = '';
+        let currentCategory = '';
+        
+        aiMenuOptions.forEach(opt => {
+            if (!opt.label.toLowerCase().includes(filterLower)) return;
+            
+            if (opt.category !== currentCategory) {
+                currentCategory = opt.category;
+                html += `<div class="menu-header">${currentCategory}</div>`;
+            }
+            
+            const onclick = opt.action ? `${opt.action}()` : `executeAIMenuAction('${opt.id}')`;
+            html += `<div class="menu-item" onclick="${onclick}">${opt.label}</div>`;
+        });
+        
+        content.innerHTML = html || '<div class="px-3 py-2 text-sm text-text-tertiary">No matching options</div>';
+    }
+
+    function filterAIMenu(value) {
+        renderAIMenu(value);
+    }
+
+    function handleAIMenuKeydown(event) {
+        if (event.key === 'Escape') {
+            document.getElementById('ai-selection-menu').classList.add('hidden');
+        }
+        if (event.key === 'Enter' && event.target.value.trim()) {
+            event.preventDefault();
+            executeCustomAIPrompt(event.target.value.trim());
+        }
+    }
+
+    function toggleSourceToggle(source) {
+        state.sourceToggles[source] = !state.sourceToggles[source];
+        document.getElementById(`toggle-${source}`).classList.toggle('active', state.sourceToggles[source]);
+    }
+
+    function executeAIMenuAction(actionId) {
+        document.getElementById('ai-selection-menu').classList.add('hidden');
+        
+        const prompts = {
+            'simplify': 'Simplify this text to make it easier to understand',
+            'paraphrase': 'Paraphrase this text while keeping the same meaning',
+            'expand': 'Expand this text with more detail and explanation',
+            'formal': 'Rewrite this in a more formal academic tone',
+            'engaging': 'Make this more engaging and interesting to read',
+            'grade-elem': 'Simplify this text for elementary school students (ages 8-10)',
+            'grade-high': 'Adjust this text for high school students',
+            'grade-undergrad': 'Adjust this text for undergraduate college students',
+            'add-example': 'Add a real-world example to illustrate this concept',
+            'bullet-list': 'Convert this text into a clear bulleted list',
+            'numbered-list': 'Convert this text into a numbered list',
+        };
+        
+        const prompt = prompts[actionId] || `Transform: ${actionId}`;
+        generateAIResponse(prompt, state.selectedText);
+    }
+
+    function executeCustomAIPrompt(prompt) {
+        document.getElementById('ai-selection-menu').classList.add('hidden');
+        generateAIResponse(prompt, state.selectedText);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // AI ACTIONS
+    // ════════════════════════════════════════════════════════════════════════════
+    function aiAction(action) {
+        state.currentAIAction = action;
+        
+        const editor = document.getElementById('editor');
+        const content = editor.innerText;
+        const chapterTitle = document.getElementById('chapter-title').value;
+        const chapterSubtitle = document.getElementById('chapter-subtitle').value;
+        
+        const prompts = {
+            'outline': `Generate a detailed outline for a textbook chapter titled "${chapterTitle}" (${chapterSubtitle}). Include 4-5 main sections with 2-3 subsections each. Format as a structured list.`,
+            'continue': `Continue writing the following textbook content naturally:\n\n${content.slice(-500) || chapterTitle}`,
+            'intro': `Write an engaging introduction paragraph for a textbook chapter about "${chapterTitle}". ${chapterSubtitle}`,
+            'conclusion': `Write a conclusion that summarizes the key points from this chapter about "${chapterTitle}":\n\n${content.slice(0, 1000)}`,
+            'expand': `Expand and add more detail to explain this concept better:\n\n${state.selectedText || content.slice(-300) || chapterTitle}`,
+            'simplify': `Simplify this text to make it easier for students to understand:\n\n${state.selectedText || content}`,
+            'example': `Add a real-world example to help explain this concept:\n\n${state.selectedText || content.slice(-300) || chapterTitle}`
+        };
+        
+        const prompt = prompts[action] || `Help with: ${action}`;
+        
+        if (action === 'example' && !state.selectedText) {
+            openExampleModal();
+        } else {
+            generateAIResponse(prompt, state.selectedText);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // AI RESPONSE
+    // ════════════════════════════════════════════════════════════════════════════
+    async function generateAIResponse(prompt, selectedText = '') {
+        showAIResponseModal();
+        
+        const systemPrompt = `You are an expert textbook author. Create clear, educational content. When transforming text, return ONLY the transformed text.`;
+        const userPrompt = selectedText ? `${prompt}\n\nText:\n"${selectedText}"` : prompt;
+
+        try {
+            if (!state.apiKey) {
+                await mockAIResponse(prompt, selectedText);
+                return;
+            }
+            
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: state.model,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    stream: true
+                })
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let aiContent = '';
+
+            updateAIStatus('generating');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+
+                for (const line of lines) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') continue;
+                    try {
+                        const parsed = JSON.parse(data);
+                        const content = parsed.choices[0]?.delta?.content || '';
+                        aiContent += content;
+                        updateAIContent(aiContent);
+                    } catch (e) {}
+                }
+            }
+
+            updateAIStatus('complete');
+            state.generatedContent = aiContent;
+
+        } catch (error) {
+            await mockAIResponse(prompt, selectedText);
+        }
+    }
+
+    async function mockAIResponse(prompt, selectedText) {
+        updateAIStatus('thinking');
+        await new Promise(r => setTimeout(r, 1200));
+        updateAIStatus('generating');
+        
+        let mockContent = '';
+        
+        if (prompt.includes('outline')) {
+            mockContent = `## Chapter Outline: What is a Cell?\n\n### 1. Introduction to Cells\n- Definition and importance\n- Historical discovery by Robert Hooke\n- Why cells matter in biology\n\n### 2. The Cell Theory\n- Three fundamental principles\n- Key scientists: Schleiden, Schwann, Virchow\n- Modern understanding\n\n### 3. Types of Cells\n- Prokaryotic cells (bacteria)\n- Eukaryotic cells (plants, animals)\n- Key differences and similarities\n\n### 4. Cell Structure\n- Cell membrane\n- Nucleus and genetic material\n- Organelles and their functions\n\n### 5. Summary\n- Key takeaways\n- Review questions`;
+        } else if (prompt.includes('simplify') || prompt.includes('Elementary')) {
+            mockContent = `Cells are like tiny building blocks that make up every living thing! Just like LEGO pieces come together to build a castle, cells come together to build plants, animals, and even you!\n\nEvery cell is like a tiny city with different parts that each have special jobs. Some parts make energy, some store information, and some protect the cell from the outside world.`;
+        } else if (prompt.includes('intro')) {
+            mockContent = `Have you ever wondered what makes living things... alive? The answer lies in structures so small that they're invisible to the naked eye: cells.\n\nCells are the fundamental building blocks of all living organisms. From the tiniest bacterium to the largest whale, every living thing is made of cells. In this chapter, we'll explore what cells are, how they were discovered, and why understanding them is crucial to understanding life itself.`;
+        } else if (prompt.includes('continue')) {
+            mockContent = `\n\nThese fundamental principles have guided biological research for over 150 years. Today, we understand that cells are far more complex than early scientists imagined.\n\nEach cell contains billions of molecules working in precise coordination. These molecules carry out thousands of chemical reactions every second, allowing cells to grow, divide, and respond to their environment.`;
+        } else if (prompt.includes('example') || prompt.includes('analogy')) {
+            mockContent = `**Real-World Example:**\n\nThink of a cell like a busy factory. The cell membrane is like the factory walls and security gates, controlling what enters and leaves. The nucleus is the management office, containing all the blueprints (DNA) for making products. The mitochondria are the power generators, providing energy to run all the machinery. And the ribosomes are the assembly lines, building proteins according to the blueprints.`;
+        } else {
+            mockContent = selectedText 
+                ? `Here's the transformed text:\n\n${selectedText.split(' ').slice(0, 20).join(' ')}... [transformed content would appear here]`
+                : `I can help you with that! Try selecting some text first, or use the quick actions in the Copilot panel.`;
+        }
+        
+        // Simulate streaming
+        let displayed = '';
+        const words = mockContent.split(' ');
+        for (let i = 0; i < words.length; i++) {
+            displayed += (i > 0 ? ' ' : '') + words[i];
+            updateAIContent(displayed);
+            await new Promise(r => setTimeout(r, 25));
+        }
+        
+        updateAIStatus('complete');
+        state.generatedContent = mockContent;
+    }
+
+    function showAIResponseModal() {
+        document.getElementById('ai-response-overlay').classList.remove('hidden');
+        const container = document.getElementById('ai-response-container');
+        container.classList.remove('hidden');
+        container.style.left = '50%';
+        container.style.top = '50%';
+        container.style.transform = 'translate(-50%, -50%)';
+        
+        updateAIStatus('thinking');
+        document.getElementById('ai-response-content').innerHTML = '';
+    }
+
+    function updateAIStatus(status) {
+        const el = document.getElementById('ai-response-status');
+        if (status === 'thinking') {
+            el.innerHTML = `<span class="typing-indicator"><span></span><span></span><span></span></span> Thinking...`;
+        } else if (status === 'generating') {
+            el.innerHTML = `<span class="material-symbols-outlined text-ai-accent animate-spin text-sm">progress_activity</span> Generating...`;
+        } else {
+            el.innerHTML = `<span class="material-symbols-outlined text-success text-sm">check_circle</span> Complete`;
+        }
+    }
+
+    function updateAIContent(content) {
+        const el = document.getElementById('ai-response-content');
+        el.innerHTML = content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/^### (.*$)/gm, '<h3 class="font-semibold mt-3 mb-1">$1</h3>')
+            .replace(/^## (.*$)/gm, '<h2 class="font-bold mt-4 mb-2 text-lg">$1</h2>')
+            .replace(/^- (.*$)/gm, '<li class="ml-4">• $1</li>')
+            .replace(/\n\n/g, '</p><p class="mt-2">')
+            .replace(/\n/g, '<br>');
+    }
+
+    function acceptAIResponse() {
+        if (!state.generatedContent) {
+            closeAIResponse();
+            return;
+        }
+        
+        const editor = document.getElementById('editor');
+        editor.focus();
+        
+        if (state.selectedRange) {
+            // Replace selected text
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(state.selectedRange);
+            document.execCommand('insertHTML', false, formatAIContent(state.generatedContent));
+        } else if (state.insertPosition) {
+            // Insert at stored position
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(state.insertPosition);
+            document.execCommand('insertHTML', false, formatAIContent(state.generatedContent));
+        } else {
+            // Fallback: append to end
+            editor.innerHTML += `<div>${formatAIContent(state.generatedContent)}</div>`;
+        }
+        
+        closeAIResponse();
+        updateWordCount();
+        checkPlaceholder();
+    }
+
+    function insertBelowAIResponse() {
+        if (!state.generatedContent) {
+            closeAIResponse();
+            return;
+        }
+        
+        const editor = document.getElementById('editor');
+        editor.focus();
+        
+        // Find current paragraph/block and insert after it
+        const selection = window.getSelection();
+        let insertNode = null;
+        
+        if (state.insertPosition) {
+            selection.removeAllRanges();
+            selection.addRange(state.insertPosition);
+        }
+        
+        if (selection.rangeCount > 0) {
+            let node = selection.getRangeAt(0).commonAncestorContainer;
+            // Walk up to find block-level element
+            while (node && node !== editor && !['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'UL', 'OL'].includes(node.nodeName)) {
+                node = node.parentNode;
+            }
+            insertNode = node;
+        }
+        
+        // Create the new content block
+        const newBlock = document.createElement('div');
+        newBlock.className = 'ai-generated-block';
+        newBlock.innerHTML = formatAIContent(state.generatedContent);
+        
+        if (insertNode && insertNode !== editor) {
+            // Insert after the current block
+            insertNode.parentNode.insertBefore(newBlock, insertNode.nextSibling);
+        } else {
+            // Append to editor
+            editor.appendChild(newBlock);
+        }
+        
+        closeAIResponse();
+        updateWordCount();
+        checkPlaceholder();
+        
+        // Scroll to the new content
+        newBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    function formatAIContent(content) {
+        return content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+            .replace(/^- (.*$)/gm, '<li>$1</li>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+    }
+
+    function regenerateAI() {
+        if (state.currentAIAction) {
+            aiAction(state.currentAIAction);
+        }
+    }
+
+    function closeAIResponse() {
+        document.getElementById('ai-response-overlay').classList.add('hidden');
+        document.getElementById('ai-response-container').classList.add('hidden');
+        document.getElementById('editor').focus();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // COPILOT
+    // ════════════════════════════════════════════════════════════════════════════
+    function handleCopilotKeydown(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendCopilotMessage();
+        }
+    }
+
+    async function sendCopilotMessage() {
+        const input = document.getElementById('copilot-input');
+        const message = input.value.trim();
+        if (!message || state.copilotPending) return;
+        
+        state.copilotPending = true;
+        addCopilotMessage('user', message);
+        input.value = '';
+        input.style.height = 'auto';
+        
+        // Get context
+        const chapterTitle = document.getElementById('chapter-title').value;
+        const editorContent = document.getElementById('editor').innerText.slice(0, 1500);
+        
+        // Show typing indicator
+        const typingId = addCopilotTyping();
+        
+        try {
+            const response = await generateCopilotResponse(message, chapterTitle, editorContent);
+            removeCopilotTyping(typingId);
+            addCopilotMessage('ai', response);
+            state.generatedContent = response;
+        } catch (error) {
+            removeCopilotTyping(typingId);
+            addCopilotMessage('ai', `<span class="text-error">Error: ${error.message || 'Something went wrong. Please try again.'}</span>`);
+        }
+        
+        state.copilotPending = false;
+    }
+    
+    async function generateCopilotResponse(message, chapterTitle, editorContent) {
+        const systemPrompt = `You are an AI writing assistant for textbook authors. You help with:
+- Generating content, outlines, and explanations
+- Simplifying text for different grade levels
+- Adding examples and analogies
+- Improving writing style and clarity
+
+Current chapter: "${chapterTitle}"
+Be helpful, concise, and educational. Format responses with markdown when useful.`;
+
+        const userPrompt = editorContent 
+            ? `Context from the chapter:\n"""${editorContent}"""\n\nUser request: ${message}`
+            : message;
+
+        if (!state.apiKey) {
+            // Mock response
+            await new Promise(r => setTimeout(r, 1500));
+            return getMockCopilotResponse(message);
+        }
+        
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.apiKey}`
+            },
+            body: JSON.stringify({
+                model: state.model,
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ],
+                max_tokens: 1000
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || 'API request failed');
+        }
+
+        const data = await response.json();
+        return data.choices[0]?.message?.content || 'No response generated.';
+    }
+    
+    function getMockCopilotResponse(message) {
+        const lowerMsg = message.toLowerCase();
+        
+        if (lowerMsg.includes('outline') || lowerMsg.includes('structure')) {
+            return `Here's a suggested outline:\n\n**1. Introduction**\n- Hook and context\n- Learning objectives\n\n**2. Core Concepts**\n- Key terminology\n- Fundamental principles\n\n**3. Deep Dive**\n- Detailed explanations\n- Real-world examples\n\n**4. Summary**\n- Key takeaways\n- Review questions`;
+        }
+        
+        if (lowerMsg.includes('simplify') || lowerMsg.includes('easier')) {
+            return `To simplify this content, I would:\n\n1. **Use shorter sentences** - Break complex ideas into digestible pieces\n2. **Add analogies** - Compare new concepts to familiar things\n3. **Include visuals** - Diagrams can clarify abstract ideas\n4. **Define jargon** - Explain technical terms when first used\n\nWould you like me to simplify a specific section?`;
+        }
+        
+        if (lowerMsg.includes('example') || lowerMsg.includes('analogy')) {
+            return `Here's a helpful analogy:\n\nThink of a cell like a **tiny city**. The cell membrane is like the city walls – it protects what's inside and controls who enters and exits. The nucleus is like city hall, containing all the important plans and decisions. And the mitochondria are like power plants, generating the energy the city needs to function.\n\nWant me to create examples for a specific concept?`;
+        }
+        
+        return `I can help you with that! Here are some things I can do:\n\n• **Generate content** - Write introductions, conclusions, or expand sections\n• **Simplify text** - Adjust for different reading levels\n• **Add examples** - Create real-world analogies and illustrations\n• **Review & improve** - Check clarity, flow, and engagement\n\nJust tell me what you'd like to work on!`;
+    }
+
+    function addCopilotMessage(role, content) {
+        const container = document.getElementById('copilot-messages');
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 animate-fadeIn';
+        
+        if (role === 'user') {
+            div.innerHTML = `<div class="flex-1"></div><div class="bg-primary text-white text-sm px-3 py-2.5 rounded-lg rounded-br-sm max-w-[85%]">${escapeHtml(content)}</div>`;
+        } else {
+            // Format AI response with markdown
+            const formattedContent = formatCopilotContent(content);
+            div.innerHTML = `
+                <span class="material-symbols-outlined text-primary text-lg flex-shrink-0 mt-0.5">smart_toy</span>
+                <div class="flex-1">
+                    <div class="text-sm text-text-primary leading-relaxed">${formattedContent}</div>
+                    <div class="mt-2 flex items-center gap-2">
+                        <button onclick="insertFromCopilot(this)" class="text-xs text-primary hover:underline">Insert into editor</button>
+                        <button onclick="copyToClipboard(this)" class="text-xs text-text-tertiary hover:text-text-secondary">Copy</button>
+                    </div>
+                </div>`;
+        }
+        
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    function formatCopilotContent(content) {
+        return content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code class="px-1 py-0.5 bg-surface-tertiary rounded text-xs">$1</code>')
+            .replace(/^### (.*$)/gm, '<h4 class="font-semibold mt-3 mb-1 text-text-primary">$1</h4>')
+            .replace(/^## (.*$)/gm, '<h3 class="font-bold mt-3 mb-1 text-text-primary">$1</h3>')
+            .replace(/^• (.*$)/gm, '<li class="ml-4 text-text-secondary">$1</li>')
+            .replace(/^- (.*$)/gm, '<li class="ml-4 text-text-secondary">$1</li>')
+            .replace(/^\d+\. (.*$)/gm, '<li class="ml-4 text-text-secondary list-decimal">$1</li>')
+            .replace(/\n\n/g, '</p><p class="mt-2">')
+            .replace(/\n/g, '<br>');
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function addCopilotTyping() {
+        const container = document.getElementById('copilot-messages');
+        const div = document.createElement('div');
+        const id = 'typing-' + Date.now();
+        div.id = id;
+        div.className = 'flex gap-2';
+        div.innerHTML = `
+            <span class="material-symbols-outlined text-primary text-lg flex-shrink-0">smart_toy</span>
+            <div class="typing-indicator py-2">
+                <span></span><span></span><span></span>
+            </div>`;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return id;
+    }
+    
+    function removeCopilotTyping(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+    
+    function insertFromCopilot(btn) {
+        const messageDiv = btn.closest('.flex-1');
+        const content = messageDiv.querySelector('.text-sm').innerText;
+        const editor = document.getElementById('editor');
+        
+        editor.focus();
+        document.execCommand('insertHTML', false, `<div class="ai-generated-block">${content.replace(/\n/g, '<br>')}</div>`);
+        checkPlaceholder();
+        
+        btn.textContent = 'Inserted!';
+        setTimeout(() => btn.textContent = 'Insert into editor', 2000);
+    }
+    
+    function copyToClipboard(btn) {
+        const messageDiv = btn.closest('.flex-1');
+        const content = messageDiv.querySelector('.text-sm').innerText;
+        navigator.clipboard.writeText(content);
+        
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 2000);
+    }
+
+    function autoResizeTextarea(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+
+    let currentGeneratedImageUrl = '';
+
+    function openImageGenModal() {
+        document.getElementById('ai-selection-menu').classList.add('hidden');
+        const modal = document.getElementById('image-gen-modal');
+        modal.classList.remove('hidden');
+        
+        const input = document.getElementById('image-prompt-input');
+        input.value = state.selectedText || '';
+        input.focus();
+        
+        // Reset state
+        document.getElementById('image-gen-input-area').classList.remove('hidden');
+        document.getElementById('image-gen-loading').classList.add('hidden');
+        document.getElementById('image-gen-result').classList.add('hidden');
+        
+        const genBtn = document.getElementById('image-gen-generate-btn');
+        genBtn.classList.remove('hidden');
+        genBtn.innerHTML = '<span class="material-symbols-outlined text-sm">auto_awesome</span> Generate';
+        document.getElementById('image-gen-insert-btn').classList.add('hidden');
+        
+        currentGeneratedImageUrl = '';
+        
+        // Store selection so we can insert later
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            state.insertPosition = selection.getRangeAt(0).cloneRange();
+        }
+    }
+
+    function closeImageGenModal() {
+        document.getElementById('image-gen-modal').classList.add('hidden');
+        document.getElementById('editor').focus();
+    }
+
+    async function generateImage() {
+        const prompt = document.getElementById('image-prompt-input').value.trim();
+        if (!prompt) return;
+
+        const inputArea = document.getElementById('image-gen-input-area');
+        const loading = document.getElementById('image-gen-loading');
+        const result = document.getElementById('image-gen-result');
+        const genBtn = document.getElementById('image-gen-generate-btn');
+        const insertBtn = document.getElementById('image-gen-insert-btn');
+        const preview = document.getElementById('generated-image-preview');
+
+        inputArea.classList.add('hidden');
+        loading.classList.remove('hidden');
+        result.classList.add('hidden');
+        genBtn.classList.add('hidden');
+        insertBtn.classList.add('hidden');
+
+        try {
+            if (!state.apiKey) {
+                await new Promise(r => setTimeout(r, 1200));
+                currentGeneratedImageUrl = `https://placehold.co/1024x768/EEF1FB/2E4CB9?text=${encodeURIComponent(prompt.slice(0, 30) || 'AI image')}`;
+            } else {
+                // Try likely image models in order, then return detailed diagnostics.
+                const candidateModels = ['gpt-image-1', 'gpt-image-2', 'dall-e-3', 'dall-e-2'];
+                const modelErrors = [];
+                let imageSrc = '';
+
+                for (const modelName of candidateModels) {
+                    try {
+                        const generated = await requestImageWithModel(modelName, prompt);
+                        if (generated) {
+                            imageSrc = generated;
+                            break;
+                        }
+                    } catch (e) {
+                        modelErrors.push(`${modelName}: ${e.message}`);
+                    }
+                }
+
+                if (!imageSrc) {
+                    throw new Error(
+                        `No compatible image model available for this key/project.\n${modelErrors.join('\n')}`
+                    );
+                }
+
+                currentGeneratedImageUrl = imageSrc;
+            }
+
+            preview.src = currentGeneratedImageUrl;
+            preview.onerror = () => {
+                alert('Image was generated but could not be displayed. Please try regenerate.');
+            };
+
+            loading.classList.add('hidden');
+            result.classList.remove('hidden');
+            genBtn.classList.remove('hidden');
+            genBtn.innerHTML = '<span class="material-symbols-outlined text-sm">refresh</span> Regenerate';
+            insertBtn.classList.remove('hidden');
+        } catch (error) {
+            let errorMsg = error.message || 'Unknown error';
+            if (errorMsg.includes('Failed to fetch')) {
+                errorMsg = 'Network/CORS failure. If this file is opened as file://, API requests may be blocked by browser policy.';
+            } else if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+                errorMsg = 'Invalid API key or unauthorized project. Please verify key + project in OpenAI settings.';
+            }
+            // Demo-safe fallback: keep prototype flow unblocked even when API models are unavailable.
+            console.error('Image generation failed, using demo fallback:', errorMsg);
+            currentGeneratedImageUrl = `https://placehold.co/1024x768/EEF1FB/2E4CB9?text=${encodeURIComponent('Demo image: ' + prompt.slice(0, 28))}`;
+            preview.src = currentGeneratedImageUrl;
+            result.classList.remove('hidden');
+            insertBtn.classList.remove('hidden');
+            genBtn.innerHTML = '<span class="material-symbols-outlined text-sm">refresh</span> Regenerate';
+            alert('Image API unavailable for this key/project. Using demo image fallback so you can continue.\n\nDetails: ' + errorMsg);
+        } finally {
+            loading.classList.add('hidden');
+            genBtn.classList.remove('hidden');
+        }
+    }
+
+    async function requestImageWithModel(modelName, prompt) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+
+        try {
+            const response = await fetch('https://api.openai.com/v1/images/generations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: modelName,
+                    prompt: prompt,
+                    n: 1,
+                    size: '1024x1024'
+                }),
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error?.message || `API Error ${response.status}`);
+            }
+
+            const data = await response.json();
+            const item = data?.data?.[0];
+
+            if (item?.url) return item.url;
+            if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
+
+            throw new Error('Image response missing url/b64_json');
+        } catch (e) {
+            if (e.name === 'AbortError') {
+                throw new Error('Timed out after 30s');
+            }
+            throw e;
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+
+    function insertGeneratedImage() {
+        if (!currentGeneratedImageUrl) return;
+        
+        const editor = document.getElementById('editor');
+        editor.focus();
+        
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        if (state.insertPosition) {
+            selection.addRange(state.insertPosition);
+        }
+        
+        // Insert image with a wrapper that allows native resizing via browser or CSS
+        const html = `
+            <div class="resizable-image-wrapper" contenteditable="false" style="margin: 1.5rem auto; display: block; text-align: center;">
+                <img src="${currentGeneratedImageUrl}" alt="Generated Image" style="max-width: 100%; width: 500px; border-radius: 8px; resize: both; overflow: hidden; display: inline-block; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
+            </div><p><br></p>
+        `;
+        
+        document.execCommand('insertHTML', false, html);
+        closeImageGenModal();
+        checkPlaceholder();
+        updateWordCount();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // MODALS
+    // ════════════════════════════════════════════════════════════════════════════
+    function openSettings() {
+        document.getElementById('settings-modal').classList.remove('hidden');
+    }
+
+    function closeSettings() {
+        document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function saveSettings() {
+        state.apiKey = document.getElementById('api-key-input').value;
+        state.model = document.getElementById('model-select').value;
+        localStorage.setItem('openai_api_key', state.apiKey);
+        localStorage.setItem('openai_model', state.model);
+        closeSettings();
+        addCopilotMessage('ai', `Settings saved! Using model: <strong>${state.model}</strong>`);
+    }
+
+    function openExampleModal() {
+        document.getElementById('ai-selection-menu').classList.add('hidden');
+        document.getElementById('example-modal').classList.remove('hidden');
+        document.getElementById('example-input').focus();
+    }
+
+    function closeExampleModal() {
+        document.getElementById('example-modal').classList.add('hidden');
+    }
+
+    function setExampleHint(hint) {
+        document.getElementById('example-input').value = `Use a ${hint} to explain this concept`;
+    }
+
+    function generateCustomExample() {
+        const input = document.getElementById('example-input').value.trim();
+        closeExampleModal();
+        const prompt = `Add an example based on: "${input}"\n\nFor: ${state.selectedText || document.getElementById('chapter-title').value}`;
+        generateAIResponse(prompt, state.selectedText);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // READING VIEW
+    // ════════════════════════════════════════════════════════════════════════════
+
+    function enterReadingView() {
+        const title = document.getElementById('chapter-title').value || 'Untitled Chapter';
+        const subtitle = document.getElementById('chapter-subtitle').value || '';
+        const editorHTML = document.getElementById('editor').innerHTML;
+
+        // Build the reading page HTML
+        const chapterNum = document.querySelector('#chapter-sidebar .chapter-item.active span:last-child')?.textContent || 'Chapter 1';
+
+        const page = document.getElementById('reading-page');
+        page.innerHTML = `
+            <div class="rv-chapter-label">${chapterNum}</div>
+            <h1 class="rv-chapter-title">${title}</h1>
+            ${subtitle ? `<p style="font-family:'Merriweather',Georgia,serif;font-size:18px;color:#64748b;margin-bottom:40px;line-height:1.6;font-style:italic;">${subtitle}</p>` : ''}
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin-bottom:40px;"/>
+            <div class="rv-body">${transformEditorToReadingHTML(editorHTML)}</div>
+        `;
+
+        const rv = document.getElementById('reading-view');
+        rv.classList.add('active');
+        rv.scrollTop = 0;
+
+        // Animate page entry
+        page.style.opacity = '0';
+        page.style.transform = 'translateY(16px)';
+        requestAnimationFrame(() => {
+            page.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+            page.style.opacity = '1';
+            page.style.transform = 'translateY(0)';
+        });
+    }
+
+    function exitReadingView() {
+        const rv = document.getElementById('reading-view');
+        rv.classList.remove('active');
+    }
+
+    function transformEditorToReadingHTML(html) {
+        // Clean up the raw editor HTML for reading view rendering
+        // The editor uses div/p tags; we pass them through with reading-view styles applied via CSS
+        // Handle special patterns: lines starting with # for headings (from slash commands)
+        let result = html;
+
+        // Strip empty paragraphs at start/end
+        result = result.replace(/^(<p><br><\/p>)+/, '').replace(/(<p><br><\/p>)+$/, '');
+
+        // Wrap pedagogy blocks to keep them (they are already contenteditable=false)
+        // They carry their own styles, so just pass through
+        return result || '<p style="color:#9ca3af;font-family:\'Inter\',sans-serif;font-size:15px;">No content yet. Start writing in the editor to see your chapter here.</p>';
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // PEDAGOGY BLOCKS - Interactive Learning Elements
+    // ════════════════════════════════════════════════════════════════════════════
+    
+    const pedagogyConfig = {
+        socratic: {
+            title: 'Socratic Checkpoint',
+            subtitle: 'Guide students to discover answers through questioning',
+            icon: 'psychology_alt',
+            color: 'emerald',
+            bgClass: 'bg-emerald-500',
+            goalHint: 'What key insight or "aha moment" should students reach on their own?',
+            promptHint: 'This question will start the Socratic dialogue. It should be open-ended and thought-provoking.',
+            systemPrompt: `You are a Socratic teacher. Your goal is to guide students to discover the answer themselves through thoughtful questions. Never give the answer directly - instead, ask probing questions that lead them to insights. Be encouraging but challenging. Each response should be 1-2 sentences followed by a question.`
+        },
+        debate: {
+            title: "Devil's Advocate Debate",
+            subtitle: 'Challenge assumptions and explore opposing viewpoints',
+            icon: 'forum',
+            color: 'amber',
+            bgClass: 'bg-amber-500',
+            goalHint: 'What belief or assumption should students critically examine?',
+            promptHint: 'This provocative statement will challenge the student to defend or reconsider their position.',
+            systemPrompt: `You are a devil's advocate. Your role is to challenge the student's assumptions and push them to think critically. Present strong counterarguments, even to commonly accepted ideas. Be intellectually rigorous but respectful. Force the student to examine their reasoning deeply.`
+        },
+        firstprinciples: {
+            title: 'First Principles Deconstructor',
+            subtitle: 'Break down complex concepts to their fundamental truths',
+            icon: 'account_tree',
+            color: 'violet',
+            bgClass: 'bg-violet-500',
+            goalHint: 'What complex concept should be deconstructed to its basics?',
+            promptHint: 'This question will start breaking down the concept layer by layer.',
+            systemPrompt: `You are a first principles thinking coach. Help students break down complex concepts to their most fundamental truths. Ask "Why?" repeatedly, challenge assumptions, and guide them to rebuild understanding from the ground up. Use analogies to simpler domains when helpful.`
+        }
+    };
+
+    let currentPedagogyType = null;
+    let currentPedagogyDifficulty = 'moderate';
+    let pedagogyPreviewActive = false;
+    let pedagogyTestMessages = [];
+
+    function openPedagogyModal(type) {
+        currentPedagogyType = type;
+        const config = pedagogyConfig[type];
+        if (!config) return;
+
+        // Save cursor position for later insertion
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            state.insertPosition = selection.getRangeAt(0).cloneRange();
+        }
+
+        // Configure modal appearance
+        document.getElementById('pedagogy-icon').textContent = config.icon;
+        document.getElementById('pedagogy-icon-container').className = `w-10 h-10 rounded-lg flex items-center justify-center ${config.bgClass}`;
+        document.getElementById('pedagogy-title').textContent = config.title;
+        document.getElementById('pedagogy-subtitle').textContent = config.subtitle;
+        document.getElementById('pedagogy-goal-hint').textContent = config.goalHint;
+        document.getElementById('pedagogy-prompt-hint').textContent = config.promptHint;
+
+        // Reset state
+        document.getElementById('pedagogy-goal-input').value = '';
+        document.getElementById('pedagogy-prompt-input').value = '';
+        document.getElementById('pedagogy-prompt-section').classList.add('hidden');
+        document.getElementById('pedagogy-options-section').classList.add('hidden');
+        document.getElementById('pedagogy-preview-section').classList.add('hidden');
+        document.getElementById('pedagogy-generate-btn').classList.remove('hidden');
+        document.getElementById('pedagogy-insert-btn').classList.add('hidden');
+        pedagogyPreviewActive = false;
+        pedagogyTestMessages = [];
+
+        // Analyze context and auto-suggest
+        analyzePedagogyContext();
+
+        // Show modal
+        document.getElementById('pedagogy-modal').classList.remove('hidden');
+        document.getElementById('pedagogy-goal-input').focus();
+    }
+
+    function closePedagogyModal() {
+        document.getElementById('pedagogy-modal').classList.add('hidden');
+        currentPedagogyType = null;
+        pedagogyPreviewActive = false;
+    }
+
+    function analyzePedagogyContext() {
+        const editor = document.getElementById('editor');
+        const chapterTitle = document.getElementById('chapter-title').value || 'Introduction to the Topic';
+        const chapterSubtitle = document.getElementById('chapter-subtitle').value || '';
+        const editorContent = editor.innerText.slice(0, 500);
+        
+        const contextEl = document.getElementById('pedagogy-context-text');
+        contextEl.innerHTML = `Found context: <strong>"${chapterTitle}"</strong>${chapterSubtitle ? ` - ${chapterSubtitle}` : ''}`;
+        
+        // Store context for AI
+        state.pedagogyContext = {
+            title: chapterTitle,
+            subtitle: chapterSubtitle,
+            content: editorContent
+        };
+    }
+
+    async function suggestPedagogyGoal() {
+        const config = pedagogyConfig[currentPedagogyType];
+        const btn = document.getElementById('pedagogy-suggest-goal-btn');
+        const input = document.getElementById('pedagogy-goal-input');
+        
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">progress_activity</span> Thinking...';
+        btn.disabled = true;
+
+        const context = state.pedagogyContext || {};
+        const prompt = `You are helping an author create an interactive ${config.title} for their textbook.
+
+Chapter: "${context.title || 'Unknown Chapter'}"
+${context.subtitle ? `Subtitle: "${context.subtitle}"` : ''}
+${context.content ? `Content excerpt: "${context.content.slice(0, 300)}..."` : ''}
+
+Based on this context, suggest a single, specific learning goal for a ${config.title} block. The goal should describe what insight or understanding the student should achieve through this interactive element.
+
+Respond with ONLY the goal text (1-2 sentences), no explanation or quotes.`;
+
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: state.model,
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 150,
+                    temperature: 0.7
+                })
+            });
+            
+            const data = await response.json();
+            if (data.choices?.[0]?.message?.content) {
+                input.value = data.choices[0].message.content.trim();
+                input.classList.add('ring-2', 'ring-indigo-200');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-indigo-200'), 1000);
+            }
+        } catch (err) {
+            console.error('Error suggesting goal:', err);
+            input.placeholder = 'Could not generate suggestion. Please enter manually.';
+        } finally {
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm">auto_awesome</span> Suggest with AI';
+            btn.disabled = false;
+        }
+    }
+
+    async function generatePedagogyPrompt() {
+        const config = pedagogyConfig[currentPedagogyType];
+        const goal = document.getElementById('pedagogy-goal-input').value.trim();
+        
+        if (!goal) {
+            document.getElementById('pedagogy-goal-input').classList.add('ring-2', 'ring-red-300');
+            setTimeout(() => document.getElementById('pedagogy-goal-input').classList.remove('ring-2', 'ring-red-300'), 1000);
+            return;
+        }
+
+        // Show prompt section with loading
+        document.getElementById('pedagogy-prompt-section').classList.remove('hidden');
+        document.getElementById('pedagogy-prompt-loading').classList.remove('hidden');
+        document.getElementById('pedagogy-prompt-input').classList.add('hidden');
+        document.getElementById('pedagogy-generate-btn').innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">progress_activity</span> Generating...';
+        document.getElementById('pedagogy-generate-btn').disabled = true;
+
+        const context = state.pedagogyContext || {};
+        let prompt = '';
+        
+        if (currentPedagogyType === 'socratic') {
+            prompt = `Create an opening Socratic question for a textbook.
+
+Chapter: "${context.title}"
+Learning Goal: "${goal}"
+
+Generate ONE powerful opening question that:
+- Is open-ended and thought-provoking
+- Doesn't give away the answer
+- Encourages students to think deeply
+- Is appropriate for undergraduate level
+
+Respond with ONLY the question, no quotes or explanation.`;
+        } else if (currentPedagogyType === 'debate') {
+            prompt = `Create a provocative devil's advocate statement for a textbook debate exercise.
+
+Chapter: "${context.title}"
+Target Assumption to Challenge: "${goal}"
+
+Generate ONE thought-provoking counterargument or challenging statement that:
+- Presents a strong opposing viewpoint
+- Forces students to examine their assumptions
+- Is intellectually honest (not a straw man)
+- Includes a question to engage the student
+
+Respond with ONLY the statement and question, no quotes or explanation.`;
+        } else if (currentPedagogyType === 'firstprinciples') {
+            prompt = `Create an opening question for a first principles deconstruction exercise.
+
+Chapter: "${context.title}"
+Concept to Deconstruct: "${goal}"
+
+Generate ONE question that:
+- Begins breaking down this concept to fundamentals
+- Asks "what do we really know?" or "what's the most basic element?"
+- Helps students question underlying assumptions
+- Sets up a chain of deeper inquiry
+
+Respond with ONLY the question, no quotes or explanation.`;
+        }
+
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: state.model,
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 200,
+                    temperature: 0.8
+                })
+            });
+            
+            const data = await response.json();
+            if (data.choices?.[0]?.message?.content) {
+                document.getElementById('pedagogy-prompt-input').value = data.choices[0].message.content.trim();
+                
+                // Show options and enable insert
+                document.getElementById('pedagogy-options-section').classList.remove('hidden');
+                document.getElementById('pedagogy-generate-btn').classList.add('hidden');
+                document.getElementById('pedagogy-insert-btn').classList.remove('hidden');
+            }
+        } catch (err) {
+            console.error('Error generating prompt:', err);
+            document.getElementById('pedagogy-prompt-input').value = 'Error generating prompt. Please try again or write your own.';
+        } finally {
+            document.getElementById('pedagogy-prompt-loading').classList.add('hidden');
+            document.getElementById('pedagogy-prompt-input').classList.remove('hidden');
+            document.getElementById('pedagogy-generate-btn').innerHTML = '<span class="material-symbols-outlined text-sm">auto_awesome</span> Generate Opening';
+            document.getElementById('pedagogy-generate-btn').disabled = false;
+        }
+    }
+
+    async function regeneratePedagogyPrompt() {
+        await generatePedagogyPrompt();
+    }
+
+    function setPedagogyDifficulty(level) {
+        currentPedagogyDifficulty = level;
+        document.querySelectorAll('.pedagogy-difficulty-btn').forEach(btn => {
+            const isActive = btn.dataset.difficulty === level;
+            btn.classList.toggle('border-primary', isActive);
+            btn.classList.toggle('bg-primary/5', isActive);
+            btn.classList.toggle('text-primary', isActive);
+            btn.classList.toggle('border-border', !isActive);
+        });
+    }
+
+    function togglePedagogyPreview() {
+        pedagogyPreviewActive = !pedagogyPreviewActive;
+        const section = document.getElementById('pedagogy-preview-section');
+        const btn = document.getElementById('pedagogy-preview-btn');
+        
+        if (pedagogyPreviewActive) {
+            section.classList.remove('hidden');
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm">visibility_off</span> Hide Preview';
+            renderPedagogyPreview();
+        } else {
+            section.classList.add('hidden');
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm">visibility</span> Preview';
+        }
+    }
+
+    function renderPedagogyPreview() {
+        const config = pedagogyConfig[currentPedagogyType];
+        const goal = document.getElementById('pedagogy-goal-input').value || 'Learning goal not set';
+        const openingPrompt = document.getElementById('pedagogy-prompt-input').value || 'Opening question not generated yet';
+        const maxTurns = document.getElementById('pedagogy-max-turns').value;
+        
+        const container = document.getElementById('pedagogy-preview-container');
+        container.innerHTML = `
+            <div class="pedagogy-block ${currentPedagogyType}" style="margin: 0; border-radius: 12px;">
+                <div class="pedagogy-block-header">
+                    <div class="w-8 h-8 rounded-lg ${config.bgClass} flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-sm">${config.icon}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-semibold text-sm text-text-primary">${config.title}</div>
+                        <div class="text-xs text-text-tertiary">${currentPedagogyDifficulty} difficulty · ${maxTurns === 'unlimited' ? 'unlimited' : maxTurns} turns max</div>
+                    </div>
+                    <span class="pedagogy-tag bg-${config.color}-100 text-${config.color}-700">Interactive</span>
+                </div>
+                <div class="pedagogy-block-content">
+                    <div class="pedagogy-test-chat">
+                        <div id="pedagogy-test-messages" class="pedagogy-test-messages">
+                            <div class="flex gap-2">
+                                <div class="w-6 h-6 rounded-full ${config.bgClass} flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined text-white text-xs">${config.icon}</span>
+                                </div>
+                                <div class="flex-1 bg-surface-tertiary rounded-lg p-3 text-sm">${openingPrompt}</div>
+                            </div>
+                        </div>
+                        <div class="pedagogy-test-input">
+                            <input type="text" id="pedagogy-test-input-field" placeholder="Test your response..." 
+                                   class="flex-1 px-3 py-2 border border-border rounded-lg text-sm outline-none focus:border-primary"
+                                   onkeydown="if(event.key==='Enter')testPedagogyInteraction()"/>
+                            <button onclick="testPedagogyInteraction()" class="px-3 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary-dark">
+                                <span class="material-symbols-outlined text-sm">send</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-text-tertiary mt-2 text-center">This is a preview. Test how students will interact with this block.</p>
+                </div>
+            </div>
+        `;
+        
+        // Initialize test messages with opening
+        pedagogyTestMessages = [{ role: 'assistant', content: openingPrompt }];
+    }
+
+    async function testPedagogyInteraction() {
+        const input = document.getElementById('pedagogy-test-input-field');
+        const userMessage = input.value.trim();
+        if (!userMessage) return;
+        
+        const config = pedagogyConfig[currentPedagogyType];
+        const messagesContainer = document.getElementById('pedagogy-test-messages');
+        
+        // Add user message to UI
+        const userBubble = document.createElement('div');
+        userBubble.className = 'flex gap-2 justify-end';
+        userBubble.innerHTML = `
+            <div class="bg-primary text-white rounded-lg p-3 text-sm max-w-[80%]">${userMessage}</div>
+            <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-gray-600 text-xs">person</span>
+            </div>
+        `;
+        messagesContainer.appendChild(userBubble);
+        input.value = '';
+        
+        // Add to conversation history
+        pedagogyTestMessages.push({ role: 'user', content: userMessage });
+        
+        // Show typing indicator
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'flex gap-2 typing-indicator';
+        typingIndicator.innerHTML = `
+            <div class="w-6 h-6 rounded-full ${config.bgClass} flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-white text-xs">${config.icon}</span>
+            </div>
+            <div class="bg-surface-tertiary rounded-lg p-3 text-sm text-text-tertiary">
+                <span class="inline-block animate-pulse">Thinking...</span>
+            </div>
+        `;
+        messagesContainer.appendChild(typingIndicator);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        // Generate AI response
+        const goal = document.getElementById('pedagogy-goal-input').value;
+        const systemPrompt = `${config.systemPrompt}
+
+Learning Goal for this interaction: ${goal}
+Difficulty: ${currentPedagogyDifficulty}
+
+Keep responses concise (2-3 sentences max). Always end with a question unless the student has clearly achieved the learning goal.`;
+
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${state.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: state.model,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        ...pedagogyTestMessages
+                    ],
+                    max_tokens: 150,
+                    temperature: 0.7
+                })
+            });
+            
+            const data = await response.json();
+            messagesContainer.removeChild(typingIndicator);
+            
+            if (data.choices?.[0]?.message?.content) {
+                const aiMessage = data.choices[0].message.content;
+                pedagogyTestMessages.push({ role: 'assistant', content: aiMessage });
+                
+                const aiBubble = document.createElement('div');
+                aiBubble.className = 'flex gap-2';
+                aiBubble.innerHTML = `
+                    <div class="w-6 h-6 rounded-full ${config.bgClass} flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-white text-xs">${config.icon}</span>
+                    </div>
+                    <div class="flex-1 bg-surface-tertiary rounded-lg p-3 text-sm">${aiMessage}</div>
+                `;
+                messagesContainer.appendChild(aiBubble);
+            }
+        } catch (err) {
+            messagesContainer.removeChild(typingIndicator);
+            const errorBubble = document.createElement('div');
+            errorBubble.className = 'text-center text-xs text-error';
+            errorBubble.textContent = 'Error generating response. Check your API key.';
+            messagesContainer.appendChild(errorBubble);
+        }
+        
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function insertPedagogyBlock() {
+        const config = pedagogyConfig[currentPedagogyType];
+        const goal = document.getElementById('pedagogy-goal-input').value;
+        const openingPrompt = document.getElementById('pedagogy-prompt-input').value;
+        const maxTurns = document.getElementById('pedagogy-max-turns').value;
+        
+        const blockId = 'ped-' + Date.now();
+        const colorClasses = {
+            emerald: { bg: 'from-emerald-50 to-teal-50', border: 'border-emerald-200', header: 'bg-emerald-100/50', tag: 'bg-emerald-100 text-emerald-700', iconBg: 'bg-emerald-500' },
+            amber: { bg: 'from-amber-50 to-orange-50', border: 'border-amber-200', header: 'bg-amber-100/50', tag: 'bg-amber-100 text-amber-700', iconBg: 'bg-amber-500' },
+            violet: { bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', header: 'bg-violet-100/50', tag: 'bg-violet-100 text-violet-700', iconBg: 'bg-violet-500' }
+        };
+        const colors = colorClasses[config.color];
+        
+        const html = `
+<div id="${blockId}" class="pedagogy-block-inserted relative my-6 rounded-xl border-2 ${colors.border} bg-gradient-to-br ${colors.bg} overflow-hidden" contenteditable="false" data-type="${currentPedagogyType}" data-goal="${encodeURIComponent(goal)}" data-prompt="${encodeURIComponent(openingPrompt)}" data-difficulty="${currentPedagogyDifficulty}" data-max-turns="${maxTurns}">
+    <div class="p-4 flex items-center gap-3 ${colors.header}">
+        <div class="w-9 h-9 rounded-lg ${colors.iconBg} flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined text-white">${config.icon}</span>
+        </div>
+        <div class="flex-1">
+            <div class="font-semibold text-text-primary">${config.title}</div>
+            <div class="text-xs text-text-tertiary mt-0.5">${currentPedagogyDifficulty} difficulty · ${maxTurns === 'unlimited' ? 'Unlimited' : maxTurns + ' turns'}</div>
+        </div>
+        <span class="text-xs font-medium px-2 py-1 rounded-full ${colors.tag}">Interactive</span>
+    </div>
+    <div class="p-4 pt-3">
+        <div class="bg-white/80 rounded-lg p-4 border border-white/50 shadow-sm">
+            <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-full ${colors.iconBg} flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span class="material-symbols-outlined text-white text-sm">${config.icon}</span>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm text-text-primary leading-relaxed">${openingPrompt}</p>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-xs text-text-tertiary">
+            <span class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">target</span>
+                Goal: ${goal.slice(0, 60)}${goal.length > 60 ? '...' : ''}
+            </span>
+            <span class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">school</span>
+                Student interaction enabled
+            </span>
+        </div>
+    </div>
+</div>
+<p><br></p>
+`;
+
+        const editor = document.getElementById('editor');
+        editor.focus();
+        
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        if (state.insertPosition) {
+            selection.addRange(state.insertPosition);
+        }
+        
+        document.execCommand('insertHTML', false, html);
+        closePedagogyModal();
+        checkPlaceholder();
+        updateWordCount();
+        
+        // Notify copilot
+        addCopilotMessage('ai', `<span class="flex items-center gap-2"><span class="material-symbols-outlined text-${config.color}-500">${config.icon}</span> <strong>${config.title}</strong> block inserted!</span><br><span class="text-xs text-text-tertiary">Students will experience an interactive dialogue based on your configuration.</span>`);
+    }
+    </script>
+</body>
+</html>

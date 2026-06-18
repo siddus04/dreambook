@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DreamBook Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+    // Academic Precision Design System
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    // Primary: Deep Indigo for trust & authority
+                    'primary': '#2E4CB9',
+                    'primary-dark': '#1E3A8A',
+                    'primary-light': '#6B7FD7',
+                    'primary-bg': '#EEF1FB',
+                    
+                    // Surfaces: Cool grays & off-whites
+                    'surface': '#FFFFFF',
+                    'surface-secondary': '#F8F9FF',
+                    'surface-tertiary': '#F1F3F9',
+                    'surface-elevated': '#FFFFFF',
+                    
+                    // Borders: Thin, precise definition
+                    'border': '#E5E7EB',
+                    'border-strong': '#D1D5DB',
+                    'border-accent': '#2E4CB9',
+                    
+                    // Text hierarchy
+                    'text-primary': '#111827',
+                    'text-secondary': '#4B5563',
+                    'text-tertiary': '#9CA3AF',
+                    'text-inverse': '#FFFFFF',
+                    
+                    // Semantic colors
+                    'success': '#059669',
+                    'success-bg': '#ECFDF5',
+                    'warning': '#D97706',
+                    'warning-bg': '#FFFBEB',
+                    'error': '#DC2626',
+                    'error-bg': '#FEF2F2',
+                    
+                    // AI Signaling
+                    'ai-bg': '#EFF6FF',
+                    'ai-border': '#BFDBFE',
+                    'ai-text': '#1E40AF',
+                },
+                fontFamily: {
+                    'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                },
+                fontSize: {
+                    'xs': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.01em' }],
+                    'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+                    'base': ['1rem', { lineHeight: '1.625rem' }],
+                    'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+                    'xl': ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '-0.01em' }],
+                    '2xl': ['1.5rem', { lineHeight: '2rem', letterSpacing: '-0.02em' }],
+                    '3xl': ['1.875rem', { lineHeight: '2.25rem', letterSpacing: '-0.02em' }],
+                },
+                borderRadius: {
+                    'DEFAULT': '8px',
+                    'sm': '6px',
+                    'lg': '12px',
+                    'xl': '16px',
+                },
+                spacing: {
+                    '18': '4.5rem',
+                    '22': '5.5rem',
+                },
+            }
+        }
+    }
+</script>
+<style type="text/tailwindcss">
+    /* Base */
+    .material-symbols-outlined { 
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
+    }
+    .material-symbols-outlined.filled { 
+        font-variation-settings: 'FILL' 1; 
+    }
+    
+    /* Chip: Rounded pill selectors */
+    .chip { 
+        @apply px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer;
+        @apply border border-border bg-surface text-text-secondary;
+        @apply hover:border-primary hover:text-primary;
+    }
+    .chip.active { 
+        @apply bg-primary text-text-inverse border-primary; 
+    }
+    
+    /* Toggle Switch */
+    .toggle-switch {
+        @apply relative w-11 h-6 rounded-full cursor-pointer transition-colors;
+        @apply bg-border-strong;
+    }
+    .toggle-switch.active { @apply bg-primary; }
+    .toggle-switch .toggle-dot {
+        @apply absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .toggle-switch.active .toggle-dot { @apply translate-x-5; }
+    
+    /* Select Card */
+    .select-card {
+        @apply p-4 rounded border border-border bg-surface cursor-pointer transition-all;
+        @apply hover:border-primary/40 hover:bg-primary-bg/30;
+    }
+    .select-card.active { 
+        @apply border-primary bg-primary-bg/50; 
+    }
+    
+    /* Accordion Section */
+    .accordion-section { 
+        @apply bg-surface rounded-lg border border-border transition-all overflow-hidden; 
+    }
+    .accordion-section.completed { 
+        @apply border-success/40 bg-success-bg/30; 
+    }
+    .accordion-section.locked { 
+        @apply opacity-50 pointer-events-none; 
+    }
+    .accordion-body { 
+        max-height: 0; 
+        overflow: hidden; 
+        transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+    }
+    .accordion-body.open { 
+        max-height: 1200px; 
+        padding-bottom: 1.5rem; 
+    }
+    
+    /* Dropzone */
+    .dropzone {
+        @apply border-2 border-dashed border-border rounded-lg transition-all cursor-pointer bg-surface-secondary;
+        @apply hover:border-primary hover:bg-primary-bg/20;
+    }
+    .dropzone.active { 
+        @apply border-primary bg-primary-bg/30; 
+    }
+    
+    /* Source Chip */
+    .source-chip {
+        @apply inline-flex items-center gap-2 px-3 py-2 rounded border border-border bg-surface text-sm transition-all cursor-pointer;
+        @apply hover:border-primary;
+    }
+    .source-chip.active { 
+        @apply border-primary bg-primary-bg text-primary; 
+    }
+    
+    /* Log entry animation */
+    .log-entry { 
+        animation: slideIn 0.25s ease-out; 
+    }
+    @keyframes slideIn { 
+        from { opacity: 0; transform: translateY(4px); } 
+        to { opacity: 1; transform: translateY(0); } 
+    }
+    
+    /* Modal */
+    #create-modal { 
+        @apply fixed inset-0 z-50 pointer-events-none;
+    }
+    #create-modal.open { 
+        @apply pointer-events-auto; 
+    }
+    #create-modal.open #modal-backdrop { 
+        @apply opacity-100 pointer-events-auto; 
+    }
+    #create-modal.open #modal-sheet { 
+        transform: translateX(0); 
+    }
+    
+    /* Sidebar */
+    #sidebar { 
+        transition: width 0.2s ease; 
+    }
+    .sidebar-collapsed { 
+        width: 72px !important; 
+    }
+    .sidebar-collapsed .sidebar-text { 
+        display: none; 
+    }
+    .sidebar-collapsed .sidebar-collapsed-only { 
+        display: flex !important; 
+    }
+    .sidebar-collapsed .sidebar-expanded-only { 
+        display: none !important; 
+    }
+    
+    /* AI Content Indicator */
+    .ai-content {
+        @apply bg-ai-bg border-l-4 border-ai-border rounded-r;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+    
+    /* Focus states */
+    input:focus, textarea:focus, select:focus {
+        @apply outline-none ring-2 ring-primary/20 border-primary;
+    }
+</style>
+</head>
+
+<body class="bg-surface-secondary text-text-primary font-sans flex h-screen overflow-hidden antialiased">
+
+<!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+<aside id="sidebar" class="hidden md:flex flex-col h-full bg-surface border-r border-border w-64 shrink-0">
+    <!-- Logo & Profile -->
+    <div class="p-6 border-b border-border">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0 sidebar-expanded-only">
+                <span class="text-white font-bold text-lg">DB</span>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0 sidebar-collapsed-only hidden">
+                <span class="text-white font-bold text-sm">DB</span>
+            </div>
+            <div class="sidebar-text">
+                <h1 class="text-base font-bold text-text-primary tracking-tight">DreamBook Studio</h1>
+                <p class="text-xs text-text-tertiary">Academic Publisher</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-border">
+                <img alt="Dr. Chen" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAP3EN7nDOxMk9Dul-2-TSDpEnzmWgnkUVgiQLR9M8d6LfV8MNUmDFAnuVc3bKIh_oN6BEFySxlheQcDiIDyzMrTCHuDq6PbUzzo1PFuHc-4vNa2DLfrOhfma0SFdIpVpcPMogtuvxiJWWwlmH3oit6fgLmCAjZBwDULhBJ-_38lF1y_781KmtItxiLz0iwGDItAw0eYpoR2Tlhcs1HQRMYb0NFcntQimMh7uRJDdG5fO9mAeMQVsebg-XldlSMgdoeKLNmVMPt"/>
+            </div>
+            <div class="sidebar-text flex-1 min-w-0">
+                <p class="text-sm font-medium text-text-primary truncate">Dr. Sarah Chen</p>
+                <p class="text-xs text-text-tertiary truncate">Active</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Button -->
+    <div class="p-4">
+        <button onclick="openCreateModal()" class="w-full bg-primary text-text-inverse font-medium py-2.5 px-4 rounded flex items-center justify-center gap-2 hover:bg-primary-dark transition-colors sidebar-expanded-only">
+            <span class="material-symbols-outlined text-lg">add</span>
+            <span>New Project</span>
+        </button>
+        <button onclick="openCreateModal()" class="w-full bg-primary text-text-inverse font-medium py-2.5 rounded flex items-center justify-center hover:bg-primary-dark transition-colors sidebar-collapsed-only hidden">
+            <span class="material-symbols-outlined text-lg">add</span>
+        </button>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="flex-1 px-3 space-y-1 overflow-y-auto">
+        <a class="flex items-center gap-3 px-3 py-2.5 text-primary font-medium bg-primary-bg/50 rounded border-r-4 border-primary transition-colors" href="#">
+            <span class="material-symbols-outlined filled text-xl">auto_stories</span>
+            <span class="sidebar-text">Courses</span>
+        </a>
+        <a class="flex items-center gap-3 px-3 py-2.5 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary rounded transition-colors" href="#">
+            <span class="material-symbols-outlined text-xl">category</span>
+            <span class="sidebar-text">Catalog</span>
+        </a>
+        <a class="flex items-center gap-3 px-3 py-2.5 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary rounded transition-colors" href="#">
+            <span class="material-symbols-outlined text-xl">bar_chart</span>
+            <span class="sidebar-text">Analytics</span>
+        </a>
+    </nav>
+    
+    <!-- Bottom Actions -->
+    <div class="p-3 border-t border-border space-y-1">
+        <a class="flex items-center gap-3 px-3 py-2 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary rounded transition-colors" href="#">
+            <span class="material-symbols-outlined text-xl">settings</span>
+            <span class="sidebar-text">Settings</span>
+        </a>
+        <button onclick="toggleSidebar()" class="w-full flex items-center gap-3 px-3 py-2 text-text-tertiary hover:bg-surface-tertiary hover:text-text-secondary rounded transition-colors">
+            <span class="material-symbols-outlined text-xl sidebar-expanded-only">chevron_left</span>
+            <span class="material-symbols-outlined text-xl sidebar-collapsed-only hidden">chevron_right</span>
+            <span class="sidebar-text text-sm">Collapse</span>
+        </button>
+    </div>
+</aside>
+
+<!-- ═══════════════════════════════ MAIN CONTENT ═══════════════════════════════ -->
+<div id="main-content" class="flex-1 flex flex-col h-full overflow-hidden">
+    <!-- Top Bar -->
+    <header class="h-14 bg-surface border-b border-border shrink-0 flex items-center justify-between px-6">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" id="mobile-menu-btn" class="md:hidden p-2 -ml-2 rounded hover:bg-surface-tertiary text-text-secondary transition-colors">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <nav class="hidden sm:flex items-center gap-1 text-sm">
+                <span class="text-text-tertiary">Dashboard</span>
+                <span class="material-symbols-outlined text-text-tertiary text-base">chevron_right</span>
+                <span class="text-text-primary font-medium">My Courses</span>
+            </nav>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="p-2 rounded hover:bg-surface-tertiary text-text-secondary transition-colors relative">
+                <span class="material-symbols-outlined text-xl">notifications</span>
+                <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span>
+            </button>
+            <button class="p-2 rounded hover:bg-surface-tertiary text-text-secondary transition-colors">
+                <span class="material-symbols-outlined text-xl">help_outline</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="flex-1 overflow-y-auto">
+        <div class="max-w-6xl mx-auto px-8 py-8">
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-text-primary tracking-tight mb-2">My Courses</h1>
+                <p class="text-text-secondary">Transform static academic content into interactive simulations. Upload your PDF chapters to begin the semantic mapping process.</p>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-surface rounded-lg border border-border p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-medium text-text-tertiary uppercase tracking-wider">Total Courses</span>
+                        <span class="material-symbols-outlined text-primary text-xl">school</span>
+                    </div>
+                    <p class="text-3xl font-bold text-text-primary tracking-tight">12</p>
+                    <p class="text-xs text-success mt-1">+2 this month</p>
+                </div>
+                <div class="bg-surface rounded-lg border border-border p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-medium text-text-tertiary uppercase tracking-wider">Active Students</span>
+                        <span class="material-symbols-outlined text-primary text-xl">groups</span>
+                    </div>
+                    <p class="text-3xl font-bold text-text-primary tracking-tight">1,847</p>
+                    <p class="text-xs text-success mt-1">+124 this week</p>
+                </div>
+                <div class="bg-surface rounded-lg border border-border p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-medium text-text-tertiary uppercase tracking-wider">Completion Rate</span>
+                        <span class="material-symbols-outlined text-primary text-xl">trending_up</span>
+                    </div>
+                    <p class="text-3xl font-bold text-text-primary tracking-tight">89%</p>
+                    <p class="text-xs text-text-tertiary mt-1">Industry avg: 67%</p>
+                </div>
+            </div>
+
+            <!-- Courses Grid -->
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-semibold text-text-primary">Recent Projects</h2>
+                <div class="flex items-center gap-2">
+                    <button class="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-tertiary rounded transition-colors">All</button>
+                    <button class="px-3 py-1.5 text-sm text-primary font-medium bg-primary-bg/50 rounded">Published</button>
+                    <button class="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-tertiary rounded transition-colors">Drafts</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Published Course -->
+                <a href="editor.html" class="bg-surface rounded-lg border border-border p-6 hover:border-primary/30 transition-all cursor-pointer group block">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-bg text-success text-xs font-medium">
+                            <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                            Published
+                        </span>
+                        <button onclick="event.preventDefault(); event.stopPropagation();" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-tertiary transition-all">
+                            <span class="material-symbols-outlined text-text-tertiary text-lg">more_horiz</span>
+                        </button>
+                    </div>
+                    <h3 class="text-lg font-semibold text-text-primary mb-1 group-hover:text-primary transition-colors">Introduction to Cell Biology</h3>
+                    <p class="text-sm text-text-secondary mb-4">Undergraduate · 5 Chapters · 847 Students</p>
+                    <div class="flex items-center justify-between pt-4 border-t border-border">
+                        <div class="flex -space-x-2">
+                            <div class="w-7 h-7 rounded-full bg-primary-bg text-primary text-xs font-medium flex items-center justify-center border-2 border-surface">SC</div>
+                        </div>
+                        <span class="text-xs text-text-tertiary">Updated 2 days ago</span>
+                    </div>
+                </a>
+
+                <!-- Draft Course -->
+                <a href="editor.html" class="bg-surface rounded-lg border border-dashed border-border p-6 hover:border-warning/50 transition-all cursor-pointer group block">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-bg text-warning text-xs font-medium">
+                            <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+                            Draft
+                        </span>
+                        <button onclick="event.preventDefault(); event.stopPropagation();" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-tertiary transition-all">
+                            <span class="material-symbols-outlined text-text-tertiary text-lg">more_horiz</span>
+                        </button>
+                    </div>
+                    <h3 class="text-lg font-semibold text-text-primary mb-1 group-hover:text-warning transition-colors">Advanced Cell Biology</h3>
+                    <p class="text-sm text-text-secondary mb-4">Graduate · 8 Chapters planned</p>
+                    <div class="mb-2">
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-text-tertiary">Progress</span>
+                            <span class="font-medium text-warning">45%</span>
+                        </div>
+                        <div class="w-full bg-surface-tertiary rounded-full h-1.5">
+                            <div class="bg-warning h-1.5 rounded-full" style="width: 45%"></div>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Create New -->
+                <div onclick="openCreateModal()" class="bg-surface-secondary rounded-lg border-2 border-dashed border-border p-6 hover:border-primary hover:bg-primary-bg/20 transition-all cursor-pointer flex flex-col items-center justify-center text-center min-h-[220px] group">
+                    <div class="w-12 h-12 rounded-lg bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary group-hover:bg-primary-bg transition-all">
+                        <span class="material-symbols-outlined text-text-tertiary text-2xl group-hover:text-primary transition-colors">add</span>
+                    </div>
+                    <h3 class="font-semibold text-text-primary mb-1">Create New Project</h3>
+                    <p class="text-sm text-text-tertiary max-w-[180px]">Start a new textbook or import existing content</p>
+                </div>
+            </div>
+
+            <!-- Recent Uploads Ledger -->
+            <div class="mt-10">
+                <h2 class="text-sm font-semibold text-text-tertiary uppercase tracking-wider mb-4">Recent Uploads Ledger</h2>
+                <div class="bg-surface rounded-lg border border-border overflow-hidden">
+                    <div class="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-3 bg-surface-secondary border-b border-border text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                        <span></span>
+                        <span>File Name</span>
+                        <span>Size</span>
+                        <span>Status</span>
+                    </div>
+                    <div class="divide-y divide-border">
+                        <div class="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-4 items-center hover:bg-surface-secondary transition-colors">
+                            <span class="material-symbols-outlined text-error text-xl">picture_as_pdf</span>
+                            <div>
+                                <p class="text-sm font-medium text-text-primary">Econ_Ch3_Elasticity.pdf</p>
+                                <p class="text-xs text-text-tertiary">Oct 24, 2023</p>
+                            </div>
+                            <span class="text-sm text-text-secondary">4.2 MB</span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-bg text-success text-xs font-medium">
+                                <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                                Processed
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-4 items-center hover:bg-surface-secondary transition-colors">
+                            <span class="material-symbols-outlined text-error text-xl">picture_as_pdf</span>
+                            <div>
+                                <p class="text-sm font-medium text-text-primary">Psych_Intro_Cognition.pdf</p>
+                                <p class="text-xs text-text-tertiary">Oct 23, 2023</p>
+                            </div>
+                            <span class="text-sm text-text-secondary">8.1 MB</span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-bg text-success text-xs font-medium">
+                                <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                                Processed
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ═══════════════════════════════ CREATE MODAL ═══════════════════════════════ -->
+<div id="create-modal" class="fixed inset-0 z-50 flex items-stretch justify-end pointer-events-none">
+    <!-- Backdrop -->
+    <div id="modal-backdrop" onclick="closeCreateModal()" class="absolute inset-0 bg-text-primary/20 backdrop-blur-sm opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+
+    <!-- Sheet -->
+    <div id="modal-sheet" class="relative w-full max-w-[720px] bg-surface-secondary flex flex-col h-full translate-x-full transition-transform duration-300 ease-out pointer-events-auto border-l border-border">
+        
+        <!-- Screen 1: Setup -->
+        <div id="setup-screen" class="h-full flex flex-col">
+            <!-- Header -->
+            <header class="h-14 bg-surface border-b border-border shrink-0 flex items-center justify-between px-6">
+                <div class="flex items-center gap-4">
+                    <button onclick="closeCreateModal()" class="p-1.5 -ml-1.5 rounded hover:bg-surface-tertiary text-text-secondary transition-colors">
+                        <span class="material-symbols-outlined text-xl">close</span>
+                    </button>
+                    <h1 class="text-base font-semibold text-text-primary">Create New Textbook</h1>
+                </div>
+                <button onclick="closeCreateModal()" class="text-sm text-text-tertiary hover:text-text-secondary transition-colors">
+                    Skip setup
+                </button>
+            </header>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="max-w-xl mx-auto px-6 py-8 space-y-4">
+
+                    <!-- Step 1: Title & Authors -->
+                    <div id="acc-title" class="accordion-section" data-step="1">
+                        <div onclick="toggleAccordion('title')" class="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-secondary transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div id="acc-title-icon" class="w-9 h-9 rounded-full bg-primary text-text-inverse flex items-center justify-center text-sm font-semibold">1</div>
+                                <div>
+                                    <h3 class="font-semibold text-text-primary">Title & Authors</h3>
+                                    <p id="acc-title-summary" class="text-sm text-text-secondary mt-0.5 hidden"></p>
+                                </div>
+                            </div>
+                            <span id="acc-title-chevron" class="material-symbols-outlined text-text-tertiary transition-transform duration-200 rotate-180">expand_more</span>
+                        </div>
+                        <div id="acc-title-body" class="accordion-body open px-5">
+                            <div class="pl-13 space-y-5">
+                                <div>
+                                    <label class="block text-sm font-medium text-text-primary mb-2">Book Title</label>
+                                    <input id="book-title" type="text" placeholder="e.g. Principles of Cell Biology" 
+                                        class="w-full px-4 py-3 rounded border border-border bg-surface text-text-primary placeholder:text-text-tertiary transition-all"
+                                        oninput="handleTitleInput()"/>
+                                    <p class="text-xs text-text-tertiary mt-2">This will be the main title displayed on your textbook cover.</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-text-primary mb-2">Authors</label>
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <div class="flex items-center">
+                                            <div class="w-9 h-9 rounded-full border-2 border-surface overflow-hidden shadow-sm">
+                                                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAP3EN7nDOxMk9Dul-2-TSDpEnzmWgnkUVgiQLR9M8d6LfV8MNUmDFAnuVc3bKIh_oN6BEFySxlheQcDiIDyzMrTCHuDq6PbUzzo1PFuHc-4vNa2DLfrOhfma0SFdIpVpcPMogtuvxiJWWwlmH3oit6fgLmCAjZBwDULhBJ-_38lF1y_781KmtItxiLz0iwGDItAw0eYpoR2Tlhcs1HQRMYb0NFcntQimMh7uRJDdG5fO9mAeMQVsebg-XldlSMgdoeKLNmVMPt" alt="Dr. Chen" class="w-full h-full object-cover"/>
+                                            </div>
+                                            <div id="coauthor-avatars" class="flex"></div>
+                                            <button onclick="showInviteInput()" id="add-coauthor-btn" class="w-9 h-9 -ml-1 rounded-full border-2 border-dashed border-border bg-surface-secondary flex items-center justify-center text-text-tertiary hover:border-primary hover:text-primary hover:bg-primary-bg/30 transition-all">
+                                                <span class="material-symbols-outlined text-lg">add</span>
+                                            </button>
+                                        </div>
+                                        <div class="text-sm text-text-secondary">
+                                            <span class="font-medium text-text-primary">Dr. Sarah Chen</span> (you)
+                                            <span id="coauthor-names"></span>
+                                        </div>
+                                    </div>
+                                    <div id="invite-input" class="hidden">
+                                        <div class="flex gap-2">
+                                            <input type="email" id="coauthor-email" placeholder="Enter co-author email..." 
+                                                class="flex-1 px-3 py-2 rounded border border-border bg-surface text-sm placeholder:text-text-tertiary"/>
+                                            <button onclick="addCoauthor()" class="px-4 py-2 bg-primary text-text-inverse text-sm font-medium rounded hover:bg-primary-dark transition-colors">
+                                                Invite
+                                            </button>
+                                            <button onclick="hideInviteInput()" class="px-2 py-2 text-text-tertiary hover:bg-surface-tertiary rounded transition-colors">
+                                                <span class="material-symbols-outlined text-lg">close</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end pt-2">
+                                    <button onclick="completeStep('title')" id="btn-title-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        Continue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Source Library -->
+                    <div id="acc-sources" class="accordion-section locked" data-step="2">
+                        <div onclick="toggleAccordion('sources')" class="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-secondary transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div id="acc-sources-icon" class="w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center text-sm font-semibold">2</div>
+                                <div>
+                                    <h3 class="font-semibold text-text-primary">Source Library</h3>
+                                    <p id="acc-sources-summary" class="text-sm text-text-secondary mt-0.5 hidden"></p>
+                                </div>
+                            </div>
+                            <span id="acc-sources-chevron" class="material-symbols-outlined text-text-tertiary transition-transform duration-200">expand_more</span>
+                        </div>
+                        <div id="acc-sources-body" class="accordion-body px-5">
+                            <div class="pl-13 space-y-5">
+                                <p class="text-sm text-text-secondary">Upload your materials and connect to academic sources. AI will extract concepts and structure from these.</p>
+                                
+                                <!-- Dropzone -->
+                                <div id="source-dropzone" onclick="simulateUpload()" class="dropzone p-8 text-center">
+                                    <div class="w-12 h-12 rounded-lg bg-primary-bg flex items-center justify-center mx-auto mb-3">
+                                        <span class="material-symbols-outlined text-primary text-2xl">upload_file</span>
+                                    </div>
+                                    <p class="font-medium text-text-primary mb-1">Drag & Drop Textbook Chapter PDF here</p>
+                                    <p class="text-sm text-text-tertiary mb-4">Supported formats: PDF, DOCX, EPUB</p>
+                                    <button class="px-4 py-2 bg-primary text-text-inverse text-sm font-medium rounded hover:bg-primary-dark transition-colors">
+                                        Browse Local Files
+                                    </button>
+                                </div>
+
+                                <!-- Uploaded files -->
+                                <div id="uploaded-files" class="hidden space-y-2"></div>
+
+                                <!-- External Sources -->
+                                <div>
+                                    <label class="block text-sm font-medium text-text-primary mb-3">Connect External Sources</label>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button onclick="toggleSource(this)" class="source-chip" data-source="scholar">
+                                            <span class="w-5 h-5 rounded bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">G</span>
+                                            Google Scholar
+                                            <span class="material-symbols-outlined text-base check-icon hidden text-success">check_circle</span>
+                                        </button>
+                                        <button onclick="toggleSource(this)" class="source-chip" data-source="pubmed">
+                                            <span class="w-5 h-5 rounded bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold">P</span>
+                                            PubMed
+                                            <span class="material-symbols-outlined text-base check-icon hidden text-success">check_circle</span>
+                                        </button>
+                                        <button onclick="toggleSource(this)" class="source-chip" data-source="web">
+                                            <span class="material-symbols-outlined text-base text-text-tertiary">language</span>
+                                            Web Search
+                                            <span class="material-symbols-outlined text-base check-icon hidden text-success">check_circle</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-2">
+                                    <button onclick="skipStep('sources')" class="text-sm text-text-tertiary hover:text-text-secondary transition-colors">
+                                        Skip this step
+                                    </button>
+                                    <button onclick="completeStep('sources')" id="btn-sources-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        Continue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Book Details -->
+                    <div id="acc-details" class="accordion-section locked" data-step="3">
+                        <div onclick="toggleAccordion('details')" class="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-secondary transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div id="acc-details-icon" class="w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center text-sm font-semibold">3</div>
+                                <div>
+                                    <h3 class="font-semibold text-text-primary">Book Details</h3>
+                                    <p id="acc-details-summary" class="text-sm text-text-secondary mt-0.5 hidden"></p>
+                                </div>
+                            </div>
+                            <span id="acc-details-chevron" class="material-symbols-outlined text-text-tertiary transition-transform duration-200">expand_more</span>
+                        </div>
+                        <div id="acc-details-body" class="accordion-body px-5">
+                            <div class="pl-13 space-y-5">
+                                <!-- AI Notice -->
+                                <div id="ai-notice" class="hidden ai-content p-4">
+                                    <div class="flex items-center gap-2 text-ai-text">
+                                        <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                                        <span class="text-sm font-medium">Details generated from your sources. Edit as needed.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Classification (First) -->
+                                <div>
+                                    <label class="block text-sm font-medium text-text-primary mb-3">Classification</label>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Discipline</p>
+                                            <div class="flex flex-wrap gap-2" id="discipline-chips">
+                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Biology">Biology</button>
+                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Chemistry">Chemistry</button>
+                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Physics">Physics</button>
+                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Economics">Economics</button>
+                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Other">Other</button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Level</p>
+                                            <div class="flex flex-wrap gap-2" id="level-chips">
+                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="High School">High School</button>
+                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Undergrad">Undergrad</button>
+                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Graduate">Graduate</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Description (Second) -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <label class="text-sm font-medium text-text-primary">Description</label>
+                                        <button id="regenerate-btn" class="hidden text-xs text-primary hover:underline flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">refresh</span>
+                                            Regenerate
+                                        </button>
+                                    </div>
+                                    <textarea id="book-description" rows="3" placeholder="Describe your textbook's focus, target audience, and key topics..."
+                                        class="w-full px-4 py-3 rounded border border-border bg-surface text-sm placeholder:text-text-tertiary resize-none"></textarea>
+                                </div>
+
+                                <div class="flex justify-end pt-2">
+                                    <button onclick="completeStep('details')" id="btn-details-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
+                                        Continue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Settings -->
+                    <div id="acc-settings" class="accordion-section locked" data-step="4">
+                        <div onclick="toggleAccordion('settings')" class="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-secondary transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div id="acc-settings-icon" class="w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center text-sm font-semibold">4</div>
+                                <div>
+                                    <h3 class="font-semibold text-text-primary">Settings</h3>
+                                    <p id="acc-settings-summary" class="text-sm text-text-secondary mt-0.5 hidden"></p>
+                                </div>
+                            </div>
+                            <span id="acc-settings-chevron" class="material-symbols-outlined text-text-tertiary transition-transform duration-200">expand_more</span>
+                        </div>
+                        <div id="acc-settings-body" class="accordion-body px-5">
+                            <div class="pl-13 space-y-5">
+                                <!-- Source Scope (Toggles) -->
+                                <div>
+                                    <label class="block text-sm font-medium text-text-primary mb-1">AI Source Access</label>
+                                    <p class="text-xs text-text-tertiary mb-4">Enable the sources AI can use when generating content</p>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between p-3 rounded border border-border bg-surface">
+                                            <div>
+                                                <p class="text-sm font-medium text-text-primary">Uploaded Sources</p>
+                                                <p class="text-xs text-text-tertiary">Files from your Source Library</p>
+                                            </div>
+                                            <div onclick="toggleSwitch(this)" class="toggle-switch active" data-setting="uploaded">
+                                                <div class="toggle-dot"></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 rounded border border-border bg-surface">
+                                            <div>
+                                                <p class="text-sm font-medium text-text-primary">Academic Databases</p>
+                                                <p class="text-xs text-text-tertiary">Google Scholar, PubMed, arXiv</p>
+                                            </div>
+                                            <div onclick="toggleSwitch(this)" class="toggle-switch active" data-setting="academic">
+                                                <div class="toggle-dot"></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 rounded border border-border bg-surface">
+                                            <div>
+                                                <p class="text-sm font-medium text-text-primary">Web Sources</p>
+                                                <p class="text-xs text-text-tertiary">Curated educational content</p>
+                                            </div>
+                                            <div onclick="toggleSwitch(this)" class="toggle-switch" data-setting="web">
+                                                <div class="toggle-dot"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Citation Style -->
+                                <div>
+                                    <label class="block text-sm font-medium text-text-primary mb-3">Citation Style</label>
+                                    <div class="flex flex-wrap gap-2" id="citation-chips">
+                                        <button onclick="selectChip(this, 'citation')" class="chip active" data-value="APA">APA 7th</button>
+                                        <button onclick="selectChip(this, 'citation')" class="chip" data-value="MLA">MLA 9th</button>
+                                        <button onclick="selectChip(this, 'citation')" class="chip" data-value="Chicago">Chicago</button>
+                                        <button onclick="selectChip(this, 'citation')" class="chip" data-value="IEEE">IEEE</button>
+                                    </div>
+                                </div>
+
+                                <p class="text-xs text-text-tertiary pt-2">
+                                    You can adjust these settings anytime from the project panel.
+                                </p>
+
+                                <div class="flex justify-end pt-2">
+                                    <button onclick="completeStep('settings')" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
+                                        Continue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="h-16 bg-surface border-t border-border shrink-0 flex items-center justify-between px-6">
+                <span class="text-sm text-text-tertiary" id="progress-text">Step 1 of 4</span>
+                <div class="flex items-center gap-3">
+                    <button onclick="closeCreateModal()" class="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="goToGenerateScreen()" id="btn-generate" class="px-5 py-2.5 bg-surface-tertiary text-text-tertiary font-medium rounded cursor-not-allowed" disabled>
+                        Next: Generate Structure
+                    </button>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Screen 2: Generate Structure -->
+        <div id="generate-screen" class="hidden h-full flex flex-col">
+            <!-- Header -->
+            <header class="h-14 bg-surface border-b border-border shrink-0 flex items-center justify-between px-6">
+                <div class="flex items-center gap-4">
+                    <button onclick="goToSetupScreen()" class="p-1.5 -ml-1.5 rounded hover:bg-surface-tertiary text-text-secondary transition-colors">
+                        <span class="material-symbols-outlined text-xl">arrow_back</span>
+                    </button>
+                    <div>
+                        <h1 class="text-base font-semibold text-text-primary">Generate Structure</h1>
+                        <p id="generate-book-title" class="text-xs text-text-tertiary"></p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="max-w-xl mx-auto px-6 py-8 space-y-8">
+
+                    <!-- Analysis Log -->
+                    <div>
+                        <h3 class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3">Source Analysis</h3>
+                        <div id="analysis-log" class="bg-slate-900 text-slate-300 rounded p-4 font-mono text-xs max-h-48 overflow-y-auto">
+                            <div class="flex items-center gap-2 mb-3 text-primary-light">
+                                <span class="material-symbols-outlined text-sm animate-spin" id="log-spinner">sync</span>
+                                <span class="uppercase tracking-wider font-semibold">AI Analysis</span>
+                            </div>
+                            <div id="log-entries" class="space-y-1"></div>
+                        </div>
+                        <!-- Gap Alert -->
+                        <div id="gap-alert" class="hidden mt-3 p-4 rounded border border-warning/30 bg-warning-bg">
+                            <div class="flex items-start gap-3">
+                                <span class="material-symbols-outlined text-warning text-xl">warning</span>
+                                <div>
+                                    <p class="font-medium text-text-primary text-sm">Coverage Gap Detected</p>
+                                    <p class="text-xs text-text-secondary mt-1">Your syllabus references <strong>Photosynthesis</strong>, but no source materials were found for this topic.</p>
+                                    <div class="flex gap-2 mt-3">
+                                        <button class="px-3 py-1.5 text-xs bg-surface border border-border rounded hover:border-primary transition-colors">Search Databases</button>
+                                        <button class="px-3 py-1.5 text-xs text-text-tertiary hover:text-text-secondary transition-colors">Ignore</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Structure Type -->
+                    <div>
+                        <h3 class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-1">Structure Type</h3>
+                        <p class="text-sm text-text-secondary mb-4">Choose how much AI should generate. You can always adjust the AI involvement during drafting.</p>
+                        <div class="space-y-2">
+                            <label class="select-card flex items-start gap-4">
+                                <input type="radio" name="structure" value="full" class="accent-primary mt-1"/>
+                                <div>
+                                    <p class="font-medium text-text-primary text-sm">Full Draft</p>
+                                    <p class="text-xs text-text-secondary">Complete chapters with sections, objectives, and draft content</p>
+                                </div>
+                            </label>
+                            <label class="select-card active flex items-start gap-4">
+                                <input type="radio" name="structure" value="outline" checked class="accent-primary mt-1"/>
+                                <div>
+                                    <p class="font-medium text-primary text-sm">Chapter Outline</p>
+                                    <p class="text-xs text-text-secondary">Chapter titles, section headers, and brief descriptions</p>
+                                </div>
+                            </label>
+                            <label class="select-card flex items-start gap-4">
+                                <input type="radio" name="structure" value="toc" class="accent-primary mt-1"/>
+                                <div>
+                                    <p class="font-medium text-text-primary text-sm">Table of Contents</p>
+                                    <p class="text-xs text-text-secondary">Chapter titles with one-line summaries only</p>
+                                </div>
+                            </label>
+                            <label class="select-card flex items-start gap-4">
+                                <input type="radio" name="structure" value="blank" class="accent-primary mt-1"/>
+                                <div>
+                                    <p class="font-medium text-text-primary text-sm">Blank Book</p>
+                                    <p class="text-xs text-text-secondary">Start with an empty canvas — no AI scaffolding</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Chapter Components -->
+                    <div>
+                        <h3 class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-3">Include in Each Chapter</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center gap-3 p-3 rounded border border-border cursor-pointer hover:bg-surface-secondary transition-colors">
+                                <input type="checkbox" checked class="accent-primary rounded"/>
+                                <span class="text-sm text-text-primary">Learning Objectives</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded border border-border cursor-pointer hover:bg-surface-secondary transition-colors">
+                                <input type="checkbox" checked class="accent-primary rounded"/>
+                                <span class="text-sm text-text-primary">Key Terms</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded border border-border cursor-pointer hover:bg-surface-secondary transition-colors">
+                                <input type="checkbox" checked class="accent-primary rounded"/>
+                                <span class="text-sm text-text-primary">Chapter Summary</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded border border-border cursor-pointer hover:bg-surface-secondary transition-colors">
+                                <input type="checkbox" class="accent-primary rounded"/>
+                                <span class="text-sm text-text-primary">Review Questions</span>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="h-16 bg-surface border-t border-border shrink-0 flex items-center justify-between px-6">
+                <button onclick="goToSetupScreen()" class="text-sm text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-lg">arrow_back</span>
+                    Back
+                </button>
+                <button id="btn-create" onclick="createBook()" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                    Generate & Open
+                </button>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════════ -->
+<script>
+// State
+const state = {
+    currentStep: 'title',
+    completedSteps: new Set(),
+    title: '',
+    coauthors: [],
+    uploadedFiles: 0,
+    externalSources: new Set(),
+    discipline: '',
+    level: '',
+    description: '',
+    settings: {
+        uploaded: true,
+        academic: true,
+        web: false,
+        citation: 'APA',
+    }
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════════════════════════
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('sidebar-collapsed');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════════════════════
+function openCreateModal() {
+    document.getElementById('create-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCreateModal() {
+    document.getElementById('create-modal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ACCORDION
+// ══════════════════════════════════════════════════════════════════════
+function toggleAccordion(step) {
+    const section = document.getElementById(`acc-${step}`);
+    if (section.classList.contains('locked')) return;
+
+    const steps = ['title', 'sources', 'details', 'settings'];
+    
+    steps.forEach(s => {
+        const body = document.getElementById(`acc-${s}-body`);
+        const chevron = document.getElementById(`acc-${s}-chevron`);
+        if (s === step) {
+            body.classList.toggle('open');
+            chevron.classList.toggle('rotate-180');
+        } else {
+            body.classList.remove('open');
+            chevron.classList.remove('rotate-180');
+        }
+    });
+    
+    state.currentStep = step;
+}
+
+function completeStep(step) {
+    state.completedSteps.add(step);
+    
+    const section = document.getElementById(`acc-${step}`);
+    const icon = document.getElementById(`acc-${step}-icon`);
+    const summary = document.getElementById(`acc-${step}-summary`);
+    const body = document.getElementById(`acc-${step}-body`);
+    const chevron = document.getElementById(`acc-${step}-chevron`);
+    
+    section.classList.add('completed');
+    icon.innerHTML = '<span class="material-symbols-outlined text-base filled">check_circle</span>';
+    icon.className = 'w-9 h-9 rounded-full bg-success text-text-inverse flex items-center justify-center';
+    
+    summary.classList.remove('hidden');
+    if (step === 'title') {
+        const coauthorText = state.coauthors.length > 0 ? ` + ${state.coauthors.length} co-author(s)` : '';
+        summary.textContent = `"${state.title}"${coauthorText}`;
+    } else if (step === 'sources') {
+        const parts = [];
+        if (state.uploadedFiles > 0) parts.push(`${state.uploadedFiles} files`);
+        if (state.externalSources.size > 0) parts.push(`${state.externalSources.size} external sources`);
+        summary.textContent = parts.length > 0 ? parts.join(', ') : 'No sources added';
+    } else if (step === 'details') {
+        summary.textContent = `${state.discipline || 'Unclassified'} · ${state.level || 'Unspecified'}`;
+    } else if (step === 'settings') {
+        const sources = [];
+        if (state.settings.uploaded) sources.push('Uploaded');
+        if (state.settings.academic) sources.push('Academic');
+        if (state.settings.web) sources.push('Web');
+        summary.textContent = `${sources.join(' + ')} · ${state.settings.citation}`;
+    }
+    
+    body.classList.remove('open');
+    chevron.classList.remove('rotate-180');
+    
+    const steps = ['title', 'sources', 'details', 'settings'];
+    const idx = steps.indexOf(step);
+    if (idx < steps.length - 1) {
+        const next = steps[idx + 1];
+        const nextSection = document.getElementById(`acc-${next}`);
+        const nextIcon = document.getElementById(`acc-${next}-icon`);
+        nextSection.classList.remove('locked');
+        nextIcon.className = 'w-9 h-9 rounded-full bg-primary text-text-inverse flex items-center justify-center text-sm font-semibold';
+        
+        setTimeout(() => toggleAccordion(next), 200);
+        
+        if (step === 'sources' && state.uploadedFiles > 0) {
+            setTimeout(simulateAIGeneration, 500);
+        }
+    }
+    
+    updateProgress();
+}
+
+function skipStep(step) {
+    completeStep(step);
+}
+
+function updateProgress() {
+    const count = state.completedSteps.size;
+    document.getElementById('progress-text').textContent = `Step ${Math.min(count + 1, 4)} of 4`;
+    
+    if (state.completedSteps.has('settings')) {
+        const btn = document.getElementById('btn-generate');
+        btn.disabled = false;
+        btn.className = 'px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors';
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// TITLE & AUTHORS
+// ══════════════════════════════════════════════════════════════════════
+function handleTitleInput() {
+    const input = document.getElementById('book-title');
+    state.title = input.value.trim();
+    document.getElementById('btn-title-continue').disabled = state.title.length < 3;
+}
+
+function showInviteInput() {
+    document.getElementById('invite-input').classList.remove('hidden');
+    document.getElementById('add-coauthor-btn').classList.add('hidden');
+    document.getElementById('coauthor-email').focus();
+}
+
+function hideInviteInput() {
+    document.getElementById('invite-input').classList.add('hidden');
+    document.getElementById('add-coauthor-btn').classList.remove('hidden');
+    document.getElementById('coauthor-email').value = '';
+}
+
+function addCoauthor() {
+    const email = document.getElementById('coauthor-email').value.trim();
+    if (!email || !email.includes('@')) return;
+    
+    state.coauthors.push(email);
+    const name = email.split('@')[0];
+    const seed = email.replace(/[^a-z]/gi, '');
+    
+    const avatars = document.getElementById('coauthor-avatars');
+    const avatar = document.createElement('div');
+    avatar.className = 'w-9 h-9 -ml-2 rounded-full border-2 border-surface overflow-hidden shadow-sm';
+    avatar.innerHTML = `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}" alt="${name}" class="w-full h-full"/>`;
+    avatars.appendChild(avatar);
+    
+    const names = document.getElementById('coauthor-names');
+    names.textContent = state.coauthors.length === 1 ? `, ${name}` : ` + ${state.coauthors.length} others`;
+    
+    hideInviteInput();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SOURCE LIBRARY
+// ══════════════════════════════════════════════════════════════════════
+function simulateUpload() {
+    const dropzone = document.getElementById('source-dropzone');
+    const filesDiv = document.getElementById('uploaded-files');
+    
+    dropzone.classList.add('hidden');
+    filesDiv.classList.remove('hidden');
+    
+    const files = [
+        { name: 'Bio101_Syllabus_Fall2025.pdf', icon: 'picture_as_pdf', meta: '2 pages · 450 KB' },
+        { name: 'Lecture_04_Respiration.mp3', icon: 'mic', meta: '45 min · Audio' },
+        { name: 'Mitochondria_Paper_2024.pdf', icon: 'article', meta: '14 pages · 2.1 MB' }
+    ];
+    
+    state.uploadedFiles = files.length;
+    
+    files.forEach((file, i) => {
+        setTimeout(() => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-3 p-3 rounded border border-border bg-surface log-entry';
+            div.innerHTML = `
+                <div class="w-9 h-9 rounded bg-surface-tertiary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-text-tertiary text-lg">${file.icon}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-text-primary truncate">${file.name}</p>
+                    <p class="text-xs text-text-tertiary">${file.meta}</p>
+                </div>
+                <span class="material-symbols-outlined text-success text-lg">check_circle</span>
+            `;
+            filesDiv.appendChild(div);
+            
+            if (i === files.length - 1) {
+                document.getElementById('btn-sources-continue').disabled = false;
+            }
+        }, i * 400);
+    });
+}
+
+function toggleSource(btn) {
+    btn.classList.toggle('active');
+    const check = btn.querySelector('.check-icon');
+    check.classList.toggle('hidden');
+    
+    const source = btn.dataset.source;
+    if (btn.classList.contains('active')) {
+        state.externalSources.add(source);
+    } else {
+        state.externalSources.delete(source);
+    }
+    
+    const hasFiles = state.uploadedFiles > 0;
+    const hasExternal = state.externalSources.size > 0;
+    document.getElementById('btn-sources-continue').disabled = !hasFiles && !hasExternal;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// BOOK DETAILS
+// ══════════════════════════════════════════════════════════════════════
+function simulateAIGeneration() {
+    document.getElementById('ai-notice').classList.remove('hidden');
+    document.getElementById('regenerate-btn').classList.remove('hidden');
+    
+    document.querySelectorAll('#discipline-chips .chip')[0].classList.add('active');
+    document.querySelectorAll('#level-chips .chip')[1].classList.add('active');
+    state.discipline = 'Biology';
+    state.level = 'Undergrad';
+    
+    document.getElementById('book-description').value = 'A comprehensive textbook covering cellular metabolism, signaling pathways, and molecular genetics. Designed for second-year biology majors with emphasis on laboratory techniques and biomedical applications.';
+    state.description = document.getElementById('book-description').value;
+}
+
+function selectChip(btn, group) {
+    document.querySelectorAll(`#${group}-chips .chip`).forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const value = btn.dataset.value;
+    if (group === 'discipline') state.discipline = value;
+    else if (group === 'level') state.level = value;
+    else if (group === 'citation') state.settings.citation = value;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════════════════════
+function toggleSwitch(el) {
+    el.classList.toggle('active');
+    const setting = el.dataset.setting;
+    state.settings[setting] = el.classList.contains('active');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SCREEN NAVIGATION
+// ══════════════════════════════════════════════════════════════════════
+function goToGenerateScreen() {
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('generate-screen').classList.remove('hidden');
+    document.getElementById('generate-book-title').textContent = state.title;
+    runAnalysis();
+}
+
+function goToSetupScreen() {
+    document.getElementById('generate-screen').classList.add('hidden');
+    document.getElementById('setup-screen').classList.remove('hidden');
+}
+
+function runAnalysis() {
+    const entries = document.getElementById('log-entries');
+    const spinner = document.getElementById('log-spinner');
+    
+    const lines = [
+        'Indexing uploaded sources...',
+        '  Bio101_Syllabus_Fall2025.pdf → <span class="text-emerald-400">12 learning objectives extracted</span>',
+        '  Lecture_04_Respiration.mp3 → <span class="text-emerald-400">Transcribed (4,205 words)</span>',
+        '  Mitochondria_Paper_2024.pdf → <span class="text-emerald-400">14 key concepts identified</span>',
+        'Cross-referencing with syllabus modules...',
+        '  Module 1: Cell Structure → <span class="text-emerald-400">Covered</span>',
+        '  Module 2: Metabolism → <span class="text-emerald-400">Covered</span>',
+        '  Module 3: Genetics → <span class="text-emerald-400">Covered</span>',
+        '  Module 5: Photosynthesis → <span class="text-amber-400">Gap detected</span>',
+        'Building knowledge graph...',
+        '<span class="text-emerald-400 font-semibold">✓ Analysis complete: 47 concepts, 89 relationships</span>'
+    ];
+    
+    entries.innerHTML = '';
+    let i = 0;
+    
+    function tick() {
+        if (i < lines.length) {
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = `<span class="text-slate-500">›</span> ${lines[i]}`;
+            entries.appendChild(div);
+            entries.parentElement.scrollTop = entries.parentElement.scrollHeight;
+            
+            if (i === 8) {
+                setTimeout(() => document.getElementById('gap-alert').classList.remove('hidden'), 300);
+            }
+            
+            if (i === lines.length - 1) {
+                spinner.classList.remove('animate-spin');
+                document.getElementById('btn-create').disabled = false;
+            }
+            
+            i++;
+            setTimeout(tick, 250 + Math.random() * 150);
+        }
+    }
+    
+    setTimeout(tick, 500);
+}
+
+function createBook() {
+    // Show generating overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'generating-overlay';
+    overlay.className = 'fixed inset-0 z-[100] bg-surface flex items-center justify-center';
+    overlay.innerHTML = `
+        <div class="max-w-md w-full mx-4 text-center">
+            <div class="w-16 h-16 rounded-full bg-primary-bg flex items-center justify-center mx-auto mb-6">
+                <span class="material-symbols-outlined text-primary text-3xl animate-spin">progress_activity</span>
+            </div>
+            <h2 class="text-xl font-semibold text-text-primary mb-2">Building Your Textbook</h2>
+            <p class="text-text-secondary mb-8">Please wait while we generate your chapter structure...</p>
+            
+            <div class="bg-surface-secondary rounded-lg p-4 text-left space-y-3" id="gen-progress">
+                <div class="flex items-center gap-3 text-sm">
+                    <span class="material-symbols-outlined text-success text-lg">check_circle</span>
+                    <span class="text-text-secondary">Analyzing 4 source documents</span>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    // Simulate generation progress
+    const steps = [
+        { text: 'Extracting 23 key concepts', delay: 800 },
+        { text: 'Mapping learning objectives', delay: 1200 },
+        { text: 'Generating chapter structure', delay: 1000 },
+        { text: 'Creating initial scaffolding', delay: 1500 },
+    ];
+    
+    const progressEl = document.getElementById('gen-progress');
+    let stepIndex = 0;
+    
+    function addStep() {
+        if (stepIndex < steps.length) {
+            const step = steps[stepIndex];
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-3 text-sm';
+            div.innerHTML = `
+                <span class="material-symbols-outlined text-primary text-lg animate-spin">progress_activity</span>
+                <span class="text-text-secondary">${step.text}</span>
+            `;
+            progressEl.appendChild(div);
+            
+            setTimeout(() => {
+                div.innerHTML = `
+                    <span class="material-symbols-outlined text-success text-lg">check_circle</span>
+                    <span class="text-text-secondary">${step.text}</span>
+                `;
+                stepIndex++;
+                addStep();
+            }, step.delay);
+        } else {
+            // All done, redirect to editor
+            setTimeout(() => {
+                window.location.href = 'editor.html';
+            }, 500);
+        }
+    }
+    
+    setTimeout(addStep, 500);
+}
+
+// Structure type selection
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('input[name="structure"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            document.querySelectorAll('.select-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            radio.closest('.select-card').classList.add('active');
+        });
+    });
+});
+</script>
+
+</body>
+</html>
