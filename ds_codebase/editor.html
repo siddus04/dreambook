@@ -5,9 +5,18 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>DreamBook Studio - AI Editor</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Add base styles to reset any browser defaults that might be overriding Tailwind -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            color: #111827; /* Fallback text-primary */
+        }
+    </style>
     <script>
         tailwind.config = {
             theme: {
@@ -82,12 +91,29 @@
 
         /* Chapter Sidebar */
         #chapter-sidebar {
-            transition: width 0.2s ease, opacity 0.2s ease;
+            transition: opacity 0.2s ease;
+            position: relative;
         }
         #chapter-sidebar.collapsed {
-            width: 0;
+            width: 0 !important;
             opacity: 0;
             overflow: hidden;
+            border-right: none;
+        }
+        
+        .sidebar-resizer {
+            position: absolute;
+            top: 0;
+            right: -3px;
+            width: 6px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 10;
+            background-color: transparent;
+            transition: background-color 0.2s;
+        }
+        .sidebar-resizer:hover, .sidebar-resizer.dragging {
+            background-color: rgba(46, 76, 185, 0.2); /* Primary color with low opacity */
         }
 
         /* Toolbar */
@@ -143,18 +169,41 @@
 
         /* Chapter Tree - Improved spacing and alignment */
         .chapter-item {
-            @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors;
+            @apply flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm cursor-pointer transition-colors;
         }
         .chapter-item:hover { @apply bg-surface-tertiary; }
         .chapter-item.active { @apply bg-primary-bg text-primary font-medium; }
+        .chapter-item.active .active-indicator { @apply opacity-100; }
+        .chapter-item:not(.active) .active-indicator { @apply opacity-0; }
+        
         .chapter-sections {
-            @apply mt-1 mb-2 ml-5 pl-3 border-l-2 border-border space-y-0.5;
+            @apply mt-1 mb-2 ml-4 pl-3 border-l border-border space-y-0.5;
         }
         .section-item {
             @apply flex items-center gap-2.5 px-2.5 py-1.5 rounded text-sm text-text-secondary cursor-pointer transition-colors;
         }
         .section-item:hover { @apply bg-surface-tertiary text-text-primary; }
-        .section-item.active { @apply bg-primary-bg/50 text-primary font-medium; }
+        .section-item.active {
+            @apply text-primary font-medium;
+            background-color: rgba(238, 241, 251, 0.5);
+        }
+        .section-item.active .active-indicator { @apply opacity-100; }
+        .section-item:not(.active) .active-indicator { @apply opacity-0; }
+
+        .drag-handle {
+            @apply opacity-0 transition-opacity cursor-grab flex-shrink-0;
+            color: rgba(156, 163, 175, 0.5);
+        }
+        .drag-handle:hover {
+            color: #111827;
+        }
+        .group:hover .drag-handle {
+            opacity: 1;
+        }
+        
+        .nav-truncate {
+            @apply truncate flex-1;
+        }
 
         /* AI Selection Menu */
         .ai-menu {
@@ -208,19 +257,19 @@
             @apply border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50;
         }
         .pedagogy-block.socratic .pedagogy-block-header {
-            @apply bg-emerald-100/50;
+            background-color: rgba(209, 250, 229, 0.5);
         }
         .pedagogy-block.debate {
             @apply border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50;
         }
         .pedagogy-block.debate .pedagogy-block-header {
-            @apply bg-amber-100/50;
+            background-color: rgba(254, 243, 199, 0.5);
         }
         .pedagogy-block.firstprinciples {
             @apply border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50;
         }
         .pedagogy-block.firstprinciples .pedagogy-block-header {
-            @apply bg-violet-100/50;
+            background-color: rgba(237, 233, 254, 0.5);
         }
         .pedagogy-tag {
             @apply text-xs font-medium px-2 py-0.5 rounded-full;
@@ -301,48 +350,50 @@
 
         /* Chapter title */
         .rv-chapter-title {
-            font-family: 'Merriweather', Georgia, serif;
+            font-family: 'Inter', sans-serif;
             font-size: 48px;
             font-weight: 700;
             line-height: 1.12;
             color: #0f172a;
-            margin-bottom: 40px;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
         }
 
         /* Drop cap on first paragraph */
         .rv-body > p:first-of-type::first-letter {
-            font-family: 'Merriweather', Georgia, serif;
-            font-size: 4.5em;
+            font-family: 'Inter', sans-serif;
+            font-size: 3.8em;
             font-weight: 700;
             color: #1e3a8a;
             float: left;
-            line-height: 0.75;
+            line-height: 0.85;
             margin-right: 8px;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
         /* Body paragraphs */
         .rv-body p {
-            font-family: 'Merriweather', Georgia, serif;
+            font-family: 'Inter', sans-serif;
             font-size: 17px;
-            line-height: 1.85;
-            color: #1e293b;
+            line-height: 1.8;
+            color: #334155;
             margin-bottom: 24px;
         }
 
         /* Section heading (h2 equivalent) */
-        .rv-body h2 {
-            font-family: 'Merriweather', Georgia, serif;
-            font-size: 26px;
+        .rv-body h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
             font-weight: 700;
             color: #0f172a;
             margin-top: 56px;
             margin-bottom: 20px;
             line-height: 1.25;
+            letter-spacing: -0.01em;
         }
 
-        /* Sub-section label (h3 → small caps amber) */
-        .rv-body h3 {
+        /* Sub-section label (h2 → small caps amber) */
+        .rv-body h2 {
             font-family: 'Inter', sans-serif;
             font-size: 11px;
             font-weight: 700;
@@ -351,6 +402,16 @@
             color: #C17400;
             margin-top: 40px;
             margin-bottom: 12px;
+        }
+
+        /* Sub-section label (h3) */
+        .rv-body h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin-top: 24px;
+            margin-bottom: 8px;
         }
 
         /* Pull quote / callout block */
@@ -362,7 +423,7 @@
             border-radius: 0 8px 8px 0;
         }
         .rv-body blockquote p {
-            font-family: 'Merriweather', Georgia, serif;
+            font-family: 'Inter', sans-serif;
             font-size: 16px;
             line-height: 1.7;
             color: #334155;
@@ -415,7 +476,7 @@
         .rv-exit-btn:hover { background: #dde4f7; }
     </style>
 </head>
-<body class="bg-surface-secondary font-sans antialiased">
+<body class="bg-surface-secondary font-sans antialiased text-text-primary">
     <div class="h-screen flex overflow-hidden">
         
         <!-- Left Navigation -->
@@ -505,7 +566,7 @@
                     <div class="toolbar-divider"></div>
                     
                     <div class="relative">
-                        <button onclick="toggleBlockMenu()" id="block-type-btn" class="flex items-center gap-1 px-2 py-1.5 rounded hover:bg-surface-tertiary text-sm text-text-secondary">
+                        <button onmousedown="event.preventDefault()" onclick="toggleBlockMenu()" id="block-type-btn" class="flex items-center gap-1 px-2 py-1.5 rounded hover:bg-surface-tertiary text-sm text-text-secondary">
                             <span id="current-block-type">Paragraph</span>
                             <span class="material-symbols-outlined text-sm">expand_more</span>
                         </button>
@@ -583,78 +644,100 @@
                 </div>
 
                 <!-- Chapter Sidebar -->
-                <aside id="chapter-sidebar" class="w-56 bg-surface border-r border-border flex-shrink-0 flex flex-col">
+                <aside id="chapter-sidebar" class="w-72 bg-surface border-r border-border flex-shrink-0 flex flex-col relative">
+                    <div class="sidebar-resizer" id="sidebar-resizer"></div>
                     <div class="p-3 border-b border-border flex items-center justify-between">
                         <span class="text-sm font-semibold text-text-primary">Chapters</span>
                         <button onclick="toggleChapterSidebar()" class="p-1 rounded hover:bg-surface-tertiary" title="Collapse">
                             <span class="material-symbols-outlined text-sm text-text-tertiary">chevron_left</span>
                         </button>
                     </div>
-                    <div class="flex-1 overflow-y-auto p-3">
+                    <div id="chapter-list" class="flex-1 overflow-y-auto p-3">
                         <!-- Chapter 1 with sections -->
-                        <div class="mb-2">
-                            <div class="chapter-item active" onclick="toggleChapterExpand(this)">
+                        <div class="mb-2 chapter-group" data-chapter-id="chapter-1">
+                            <div class="chapter-item group active" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base drag-handle" title="Drag to reorder">drag_indicator</span>
                                 <span class="material-symbols-outlined text-base rotate-90 transition-transform text-text-tertiary">chevron_right</span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-warning flex-shrink-0"></span>
-                                <span class="truncate flex-1 font-medium">1. What is a Cell?</span>
+                                <span class="nav-truncate font-medium chapter-title-text" title="1. What is a Cell?">1. What is a Cell?</span>
+                                <button onclick="deleteChapter(this, event)" class="p-1 rounded hover:bg-surface-tertiary text-text-tertiary hover:text-error transition-colors opacity-0 group-hover:opacity-100" title="Delete Chapter">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
                             </div>
                             <div class="chapter-sections">
-                                <div class="section-item active">
+                                <div class="section-item group active">
+                                    <span class="material-symbols-outlined text-sm drag-handle" title="Drag to reorder">drag_indicator</span>
                                     <span class="w-2 h-2 rounded-full bg-success flex-shrink-0"></span>
-                                    <span>1.1 Introduction</span>
+                                    <span class="nav-truncate section-title-text" title="1.1 Introduction">1.1 Introduction</span>
                                 </div>
-                                <div class="section-item">
+                                <div class="section-item group">
+                                    <span class="material-symbols-outlined text-sm drag-handle" title="Drag to reorder">drag_indicator</span>
                                     <span class="w-2 h-2 rounded-full bg-text-tertiary flex-shrink-0"></span>
-                                    <span>1.2 Cell Theory</span>
+                                    <span class="nav-truncate section-title-text" title="1.2 Cell Theory">1.2 Cell Theory</span>
                                 </div>
-                                <div class="section-item">
+                                <div class="section-item group">
+                                    <span class="material-symbols-outlined text-sm drag-handle" title="Drag to reorder">drag_indicator</span>
                                     <span class="w-2 h-2 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
-                                    <span>1.3 Types of Cells</span>
+                                    <span class="nav-truncate section-title-text" title="1.3 Types of Cells">1.3 Types of Cells</span>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Chapter 2 -->
-                        <div class="mb-2">
-                            <div class="chapter-item" onclick="toggleChapterExpand(this)">
+                        <div class="mb-2 chapter-group" data-chapter-id="chapter-2">
+                            <div class="chapter-item group" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base drag-handle" title="Drag to reorder">drag_indicator</span>
                                 <span class="material-symbols-outlined text-base transition-transform text-text-tertiary">chevron_right</span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
-                                <span class="truncate flex-1">2. Cell Structure</span>
+                                <span class="nav-truncate chapter-title-text" title="2. Cell Structure">2. Cell Structure</span>
+                                <button onclick="deleteChapter(this, event)" class="p-1 rounded hover:bg-surface-tertiary text-text-tertiary hover:text-error transition-colors opacity-0 group-hover:opacity-100" title="Delete Chapter">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
                             </div>
                             <div class="chapter-sections hidden">
-                                <div class="section-item">
+                                <div class="section-item group">
+                                    <span class="material-symbols-outlined text-sm drag-handle" title="Drag to reorder">drag_indicator</span>
                                     <span class="w-2 h-2 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
-                                    <span>2.1 Cell Membrane</span>
+                                    <span class="nav-truncate section-title-text" title="2.1 Cell Membrane">2.1 Cell Membrane</span>
                                 </div>
-                                <div class="section-item">
+                                <div class="section-item group">
+                                    <span class="material-symbols-outlined text-sm drag-handle" title="Drag to reorder">drag_indicator</span>
                                     <span class="w-2 h-2 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
-                                    <span>2.2 Nucleus</span>
+                                    <span class="nav-truncate section-title-text" title="2.2 Nucleus">2.2 Nucleus</span>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Chapter 3 -->
-                        <div class="mb-2">
-                            <div class="chapter-item" onclick="toggleChapterExpand(this)">
+                        <div class="mb-2 chapter-group" data-chapter-id="chapter-3">
+                            <div class="chapter-item group" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base drag-handle" title="Drag to reorder">drag_indicator</span>
                                 <span class="material-symbols-outlined text-base transition-transform text-text-tertiary">chevron_right</span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
-                                <span class="truncate flex-1">3. Photosynthesis</span>
+                                <span class="nav-truncate chapter-title-text" title="3. Photosynthesis">3. Photosynthesis</span>
+                                <button onclick="deleteChapter(this, event)" class="p-1 rounded hover:bg-surface-tertiary text-text-tertiary hover:text-error transition-colors opacity-0 group-hover:opacity-100" title="Delete Chapter">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
                             </div>
                             <div class="chapter-sections hidden"></div>
                         </div>
                         
                         <!-- Chapter 4 -->
-                        <div class="mb-2">
-                            <div class="chapter-item" onclick="toggleChapterExpand(this)">
+                        <div class="mb-2 chapter-group" data-chapter-id="chapter-4">
+                            <div class="chapter-item group" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base drag-handle" title="Drag to reorder">drag_indicator</span>
                                 <span class="material-symbols-outlined text-base transition-transform text-text-tertiary">chevron_right</span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-text-tertiary/50 flex-shrink-0"></span>
-                                <span class="truncate flex-1">4. Cell Division</span>
+                                <span class="nav-truncate chapter-title-text" title="4. Cell Division">4. Cell Division</span>
+                                <button onclick="deleteChapter(this, event)" class="p-1 rounded hover:bg-surface-tertiary text-text-tertiary hover:text-error transition-colors opacity-0 group-hover:opacity-100" title="Delete Chapter">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
                             </div>
                             <div class="chapter-sections hidden"></div>
                         </div>
                     </div>
                     <div class="p-2 border-t border-border">
-                        <button class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-primary hover:bg-primary-bg rounded transition-colors">
+                        <button onclick="addBlankChapter()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-primary hover:bg-primary-bg rounded transition-colors">
                             <span class="material-symbols-outlined text-lg">add</span>
                             Add Chapter
                         </button>
@@ -666,9 +749,9 @@
                     <div class="max-w-3xl mx-auto py-10 px-8">
                         
                         <!-- Chapter Header -->
-                        <div class="mb-10">
-                            <span class="inline-block text-xs font-semibold text-primary uppercase tracking-wider mb-3">Chapter 1</span>
-                            <div class="space-y-2">
+                        <div class="mb-6">
+                            <span id="editor-chapter-label" class="inline-block text-xs font-semibold text-primary uppercase tracking-wider mb-2">Chapter 1</span>
+                            <div class="space-y-1">
                                 <input type="text" id="chapter-title" value="What is a Cell?" 
                                        class="block w-full p-0 text-4xl font-bold text-text-primary bg-transparent outline-none border-0 placeholder-text-tertiary leading-tight focus:ring-0"
                                        placeholder="Chapter Title"/>
@@ -691,10 +774,10 @@
                                  onkeyup="handleEditorKeyup(event)"
                                  oninput="handleEditorInput(event)">
                                 <p>Life requires energy. In most ecosystems, energy enters as sunlight and exits as heat. The chemical elements essential to life are recycled. Photosynthesis generates oxygen and organic molecules, which are used by the mitochondria of eukaryotes as fuel for cellular respiration.</p>
-                                <h2>1.1 Catabolic pathways yield energy by oxidizing organic fuels</h2>
+                                <h1>Catabolic pathways yield energy by oxidizing organic fuels</h1>
                                 <p>Metabolic pathways that release stored energy by breaking down complex molecules are called catabolic pathways. Electron transfer plays a major role in these pathways. In this section, we consider these processes, which are central to cellular respiration.</p>
                                 <blockquote><p>The breakdown of organic molecules is exergonic. Fermentation is a partial degradation of sugars that occurs without O2. Aerobic respiration consumes organic molecules and O2 and yields ATP.</p></blockquote>
-                                <h3>Redox Reactions</h3>
+                                <h2>Redox Reactions</h2>
                                 <p>The transfer of electrons during chemical reactions releases energy stored in organic molecules. This released energy is ultimately used to synthesize ATP. Chemical reactions that transfer electrons between reactants are called oxidation-reduction reactions, or redox reactions.</p>
                             </div>
                         </div>
@@ -785,19 +868,19 @@
 
     <!-- Block Type Menu -->
     <div id="block-menu" class="hidden fixed z-50 w-48 bg-surface border border-border rounded-lg shadow-xl p-1">
-        <div class="menu-item" onclick="setBlockType('p')">
+        <div class="menu-item" onmousedown="event.preventDefault()" onclick="setBlockType('p')">
             <span class="icon">T</span>
             <span>Paragraph</span>
         </div>
-        <div class="menu-item" onclick="setBlockType('h1')">
+        <div class="menu-item" onmousedown="event.preventDefault()" onclick="setBlockType('h1')">
             <span class="icon font-bold text-lg">H1</span>
             <span>Heading 1</span>
         </div>
-        <div class="menu-item" onclick="setBlockType('h2')">
+        <div class="menu-item" onmousedown="event.preventDefault()" onclick="setBlockType('h2')">
             <span class="icon font-bold">H2</span>
             <span>Heading 2</span>
         </div>
-        <div class="menu-item" onclick="setBlockType('h3')">
+        <div class="menu-item" onmousedown="event.preventDefault()" onclick="setBlockType('h3')">
             <span class="icon font-semibold text-sm">H3</span>
             <span>Heading 3</span>
         </div>
@@ -1096,6 +1179,411 @@
         copilotPending: false,
     };
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // STATE MANAGEMENT
+    // ════════════════════════════════════════════════════════════════════════════
+    const appState = {
+        chapters: {
+            'chapter-1': {
+                title: 'What is a Cell?',
+                subtitle: 'The fundamental unit of life',
+                content: document.getElementById('editor').innerHTML
+            }
+        },
+        activeChapterId: 'chapter-1'
+    };
+
+    function loadGeneratedStructure() {
+        const generatedData = sessionStorage.getItem('generated_structure');
+        const bookTitle = sessionStorage.getItem('book_title');
+        
+        if (!generatedData) return; // Use default HTML structure
+        
+        try {
+            const structure = JSON.parse(generatedData);
+            
+            // Clear existing default chapters
+            appState.chapters = {};
+            const chapterList = document.getElementById('chapter-list');
+            chapterList.innerHTML = '';
+            
+            if (structure.chapters && structure.chapters.length > 0) {
+                structure.chapters.forEach((chapter, index) => {
+                    const chapterId = `chapter-${Date.now()}-${index}`;
+                    const chapterNum = index + 1;
+                    
+                    // Build editor content from sections
+                    let editorContent = '';
+                    if (chapter.sections && chapter.sections.length > 0) {
+                        chapter.sections.forEach((section, sIndex) => {
+                            const sectionNum = `${chapterNum}.${sIndex + 1}`;
+                            editorContent += `<h1>${sectionNum} ${section.title}</h1>`;
+                            if (section.content) {
+                                editorContent += `<p>${section.content}</p>`;
+                            }
+                        });
+                    } else {
+                        editorContent = '<p><br></p>';
+                    }
+                    
+                    // Save to state
+                    appState.chapters[chapterId] = {
+                        title: chapter.title || 'Untitled Chapter',
+                        subtitle: chapter.subtitle || '',
+                        content: editorContent
+                    };
+                    
+                    // Create sidebar HTML
+                    const chapterHTML = `
+                        <div class="mb-2 chapter-group" data-chapter-id="${chapterId}">
+                            <div class="chapter-item group ${index === 0 ? 'active' : ''}" onclick="toggleChapterExpand(this)">
+                                <span class="material-symbols-outlined text-base drag-handle" title="Drag to reorder">drag_indicator</span>
+                                <span class="material-symbols-outlined text-base ${index === 0 ? 'rotate-90' : ''} transition-transform text-text-tertiary">chevron_right</span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-warning flex-shrink-0"></span>
+                                <span class="nav-truncate font-medium chapter-title-text" title="${chapterNum}. ${chapter.title}">${chapterNum}. ${chapter.title}</span>
+                                <button onclick="deleteChapter(this, event)" class="p-1 rounded hover:bg-surface-tertiary text-text-tertiary hover:text-error transition-colors opacity-0 group-hover:opacity-100" title="Delete Chapter">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                </button>
+                            </div>
+                            <div class="chapter-sections ${index === 0 ? '' : 'hidden'}"></div>
+                        </div>
+                    `;
+                    chapterList.insertAdjacentHTML('beforeend', chapterHTML);
+                    
+                    if (index === 0) {
+                        appState.activeChapterId = chapterId;
+                    }
+                });
+                
+                // Load the first chapter into the editor
+                loadChapterState(appState.activeChapterId);
+                
+                // Update the top left title if available
+                if (bookTitle) {
+                    const topTitle = document.querySelector('header h1');
+                    if (topTitle) topTitle.textContent = bookTitle;
+                }
+            } else {
+                // Blank book scenario
+                addBlankChapter();
+            }
+            
+            // Clean up session storage so it doesn't persist forever
+            sessionStorage.removeItem('generated_structure');
+            sessionStorage.removeItem('book_title');
+            
+        } catch (e) {
+            console.error("Error loading generated structure:", e);
+        }
+    }
+
+    function saveCurrentChapterState() {
+        const title = document.getElementById('chapter-title').value;
+        const subtitle = document.getElementById('chapter-subtitle').value;
+        const content = document.getElementById('editor').innerHTML;
+        
+        appState.chapters[appState.activeChapterId] = { title, subtitle, content };
+    }
+
+    function loadChapterState(chapterId) {
+        const chapterData = appState.chapters[chapterId] || { title: '', subtitle: '', content: '<p><br></p>' };
+        
+        document.getElementById('chapter-title').value = chapterData.title;
+        document.getElementById('chapter-subtitle').value = chapterData.subtitle;
+        document.getElementById('editor').innerHTML = chapterData.content;
+        
+        appState.activeChapterId = chapterId;
+        checkPlaceholder();
+        
+        // Update dynamic navigation when loading a chapter
+        updateChapterSections();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // DYNAMIC NAVIGATION STRUCTURE
+    // ════════════════════════════════════════════════════════════════════════════
+    function updateEditorHeadings() {
+        // Auto-numbering logic removed as per user request.
+        // We leave the numbering to the author.
+        return false;
+    }
+
+    function updateChapterSections() {
+        const editor = document.getElementById('editor');
+        if (!editor) return;
+
+        // Find the active chapter group by looking at the DOM, not trusting state
+        const activeChapterItem = document.querySelector('#chapter-list .chapter-item.active');
+        if (!activeChapterItem) return;
+
+        const activeChapterGroup = activeChapterItem.closest('.chapter-group');
+        if (!activeChapterGroup) return;
+
+        const sectionsContainer = activeChapterGroup.querySelector('.chapter-sections');
+        if (!sectionsContainer) return;
+
+        // Always ensure the container is visible for the active chapter
+        sectionsContainer.classList.remove('hidden');
+
+        // Ensure chevron is rotated (expanded)
+        const arrow = activeChapterItem.querySelector('.material-symbols-outlined:nth-child(2)');
+        if (arrow) arrow.classList.add('rotate-90');
+
+        // Find all H1 elements in the editor
+        const headings = editor.querySelectorAll('h1');
+
+        // Clear and re-render
+        sectionsContainer.innerHTML = '';
+
+        if (headings.length === 0) return;
+
+        const chapterId = activeChapterGroup.getAttribute('data-chapter-id') || 'ch';
+
+        headings.forEach((heading, index) => {
+            if (!heading.id) {
+                heading.id = `sec-${chapterId}-${index}`;
+            }
+            const title = heading.textContent.trim() || 'Untitled Section';
+            sectionsContainer.insertAdjacentHTML('beforeend', `
+                <div class="section-item group" data-heading-id="${heading.id}" onclick="scrollToSection('${heading.id}')">
+                    <span class="w-2 h-2 rounded-full bg-success flex-shrink-0 ml-1"></span>
+                    <span class="nav-truncate section-title-text" title="${title}">${title}</span>
+                </div>
+            `);
+        });
+
+        setupIntersectionObserver();
+    }
+
+    // Nav updates are driven by handleEditorInput (see below)
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // SCROLL & HIGHLIGHT
+    // ════════════════════════════════════════════════════════════════════════════
+    function scrollToSection(headingId) {
+        const heading = document.getElementById(headingId);
+        if (heading) {
+            heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function setupIntersectionObserver() {
+        // Disconnect existing observer if any
+        if (window.sectionObserver) {
+            window.sectionObserver.disconnect();
+        }
+        
+        const headings = document.getElementById('editor').querySelectorAll('h1');
+        if (headings.length === 0) return;
+        
+        const options = {
+            root: document.getElementById('editor-container'), // Assuming editor is scrollable, or null for viewport
+            rootMargin: '0px 0px -80% 0px', // Trigger when heading is near the top
+            threshold: 0
+        };
+        
+        window.sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Highlight the corresponding section in the sidebar
+                    const headingId = entry.target.id;
+                    
+                    // Remove active class from all sections
+                    document.querySelectorAll('.section-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // Add active class to the current section
+                    const activeSection = document.querySelector(`.section-item[data-heading-id="${headingId}"]`);
+                    if (activeSection) {
+                        activeSection.classList.add('active');
+                    }
+                }
+            });
+        }, options);
+        
+        headings.forEach(heading => {
+            window.sectionObserver.observe(heading);
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // SIDEBAR RESIZING
+    // ════════════════════════════════════════════════════════════════════════════
+    function initSidebarResizer() {
+        const resizer = document.getElementById('sidebar-resizer');
+        const sidebar = document.getElementById('chapter-sidebar');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizer.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            // Disable text selection while dragging
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            // Calculate new width based on mouse position
+            // We need to account for the left nav width (56px when collapsed, 200px when expanded)
+            const leftNavWidth = document.getElementById('left-nav').offsetWidth;
+            let newWidth = e.clientX - leftNavWidth;
+            
+            // Apply constraints
+            if (newWidth < 200) newWidth = 200;
+            if (newWidth > 500) newWidth = 500;
+            
+            sidebar.style.width = `${newWidth}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizer.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // CHAPTER MANAGEMENT & DRAG AND DROP
+    // ════════════════════════════════════════════════════════════════════════════
+    
+    function addBlankChapter() {
+        // Save current state before adding new chapter
+        saveCurrentChapterState();
+        
+        const chapterList = document.getElementById('chapter-list');
+        const chapterCount = chapterList.querySelectorAll('.chapter-group').length + 1;
+        const newChapterId = `chapter-${Date.now()}`; // Unique ID
+        
+        const newChapterHTML = `
+            <div class="mb-2 chapter-group" data-chapter-id="${newChapterId}">
+                <div class="chapter-item group active" onclick="toggleChapterExpand(this)">
+                    <span class="material-symbols-outlined text-base drag-handle" title="Drag to reorder">drag_indicator</span>
+                    <span class="material-symbols-outlined text-base transition-transform text-text-tertiary">chevron_right</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-warning flex-shrink-0"></span>
+                    <span class="nav-truncate font-medium chapter-title-text" title="${chapterCount}. Untitled Chapter">${chapterCount}. Untitled Chapter</span>
+                    <button onclick="deleteChapter(this, event)" class="p-1 rounded hover:bg-surface-tertiary text-text-tertiary hover:text-error transition-colors opacity-0 group-hover:opacity-100" title="Delete Chapter">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                </div>
+                <div class="chapter-sections hidden"></div>
+            </div>
+        `;
+        
+        document.querySelectorAll('.chapter-item').forEach(item => item.classList.remove('active'));
+        chapterList.insertAdjacentHTML('beforeend', newChapterHTML);
+        
+        // Initialize state for new chapter
+        appState.chapters[newChapterId] = {
+            title: '',
+            subtitle: '',
+            content: '<p><br></p>'
+        };
+        appState.activeChapterId = newChapterId;
+        
+        document.getElementById('chapter-title').value = '';
+        document.getElementById('chapter-subtitle').value = '';
+        document.getElementById('editor').innerHTML = '<p><br></p>';
+        
+        document.getElementById('chapter-title').focus();
+        checkPlaceholder();
+        
+        // Re-initialize sortable for the new chapter's sections container
+        const newSectionList = chapterList.lastElementChild.querySelector('.chapter-sections');
+        initSortableForSections(newSectionList);
+    }
+
+    function renumberChapters() {
+        const chapters = document.querySelectorAll('#chapter-list > .chapter-group');
+        
+        chapters.forEach((chapterBlock, chapterIndex) => {
+            const chapterNum = chapterIndex + 1;
+            
+            // Update Chapter Title Text
+            const titleSpan = chapterBlock.querySelector('.chapter-title-text');
+            if (titleSpan) {
+                const currentTitle = titleSpan.textContent.replace(/^\d+\.\s*/, ''); // Strip old number
+                const newFullTitle = `${chapterNum}. ${currentTitle}`;
+                titleSpan.textContent = newFullTitle;
+                titleSpan.setAttribute('title', newFullTitle); // Update tooltip
+                
+                // If this is the active chapter, update the editor's title input too
+                if (chapterBlock.getAttribute('data-chapter-id') === appState.activeChapterId) {
+                     // Update state
+                     if(appState.chapters[appState.activeChapterId]) {
+                         appState.chapters[appState.activeChapterId].title = currentTitle;
+                     }
+                     // Update the "Chapter N" label above the editor title
+                     const editorChapterLabel = document.getElementById('editor-chapter-label');
+                     if (editorChapterLabel) {
+                         editorChapterLabel.textContent = `Chapter ${chapterNum}`;
+                     }
+                }
+            }
+            
+            // Update Subchapters (Sections) within this chapter
+            const sections = chapterBlock.querySelectorAll('.section-title-text');
+            sections.forEach((sectionSpan, sectionIndex) => {
+                const sectionNum = sectionIndex + 1;
+                const currentSectionTitle = sectionSpan.textContent.replace(/^\d+\.\d+\s*/, ''); // Strip old number
+                const newFullSectionTitle = `${chapterNum}.${sectionNum} ${currentSectionTitle}`;
+                sectionSpan.textContent = newFullSectionTitle;
+                sectionSpan.setAttribute('title', newFullSectionTitle); // Update tooltip
+            });
+        });
+        
+        // Re-run dynamic nav update for the active chapter to ensure headers match
+        updateChapterSections();
+    }
+
+    function initSortableForSections(sectionList) {
+        new Sortable(sectionList, {
+            animation: 150,
+            ghostClass: 'bg-surface-tertiary',
+            handle: '.drag-handle',
+            onEnd: function () {
+                renumberChapters();
+            }
+        });
+    }
+
+    function deleteChapter(btn, event) {
+        event.stopPropagation(); // Prevent toggling the expand/collapse
+        if (confirm('Are you sure you want to delete this chapter?')) {
+            const chapterGroup = btn.closest('.chapter-group');
+            const chapterId = chapterGroup.getAttribute('data-chapter-id');
+            
+            chapterGroup.remove();
+            
+            // Remove from state
+            if (chapterId) {
+                delete appState.chapters[chapterId];
+            }
+            
+            renumberChapters();
+            
+            // If we deleted the active chapter, clear the editor or load the first available
+            if (appState.activeChapterId === chapterId) {
+                const firstAvailableGroup = document.querySelector('.chapter-group');
+                if (firstAvailableGroup) {
+                    const firstChapterItem = firstAvailableGroup.querySelector('.chapter-item');
+                    toggleChapterExpand(firstChapterItem);
+                } else {
+                    document.getElementById('chapter-title').value = '';
+                    document.getElementById('chapter-subtitle').value = '';
+                    document.getElementById('editor').innerHTML = '<p><br></p>';
+                    appState.activeChapterId = null;
+                    checkPlaceholder();
+                }
+            }
+        }
+    }
+
     // Slash commands with pedagogy blocks for interactive learning
     const slashCommands = [
         { id: 'continue', icon: 'edit_note', label: 'Continue writing', desc: 'AI continues from here', category: 'ai' },
@@ -1137,15 +1625,54 @@
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('api-key-input').value = state.apiKey;
         document.getElementById('model-select').value = state.model;
+        
+        // Load generated structure if it exists
+        loadGeneratedStructure();
+        
         updateWordCount();
         
         // Wait a tiny bit for layout to settle before checking placeholder
         setTimeout(checkPlaceholder, 50);
         
-        // Listen to selection changes to move the placeholder to the active empty line
+        // Initialize Sidebar Resizer
+        initSidebarResizer();
+        
+        // Initialize Drag and Drop for Chapters
+        const chapterList = document.getElementById('chapter-list');
+        if (chapterList) {
+            new Sortable(chapterList, {
+                animation: 150,
+                ghostClass: 'bg-surface-tertiary',
+                handle: '.drag-handle',
+                onEnd: function () {
+                    renumberChapters();
+                }
+            });
+        }
+
+        // Setup initial dynamic nav
+        setTimeout(updateChapterSections, 100);
+        
+        // Add event listener to chapter title input to update sidebar
+        document.getElementById('chapter-title').addEventListener('input', (e) => {
+            const activeGroup = document.querySelector('.chapter-group[data-chapter-id="' + appState.activeChapterId + '"]');
+            if (activeGroup) {
+                const titleSpan = activeGroup.querySelector('.chapter-title-text');
+                if (titleSpan) {
+                    const chapterNum = titleSpan.textContent.split('.')[0];
+                    const newTitle = e.target.value || 'Untitled Chapter';
+                    const newFullTitle = `${chapterNum}. ${newTitle}`;
+                    titleSpan.textContent = newFullTitle;
+                    titleSpan.setAttribute('title', newFullTitle);
+                }
+            }
+        });
+        
+        // Listen to selection changes to move the placeholder to the active empty line and update block type dropdown
         document.addEventListener('selectionchange', () => {
             if (document.activeElement === document.getElementById('editor')) {
                 checkPlaceholder();
+                updateBlockTypeDropdown();
             }
         });
         
@@ -1200,11 +1727,32 @@
     }
 
     function toggleChapterExpand(el) {
-        const arrow = el.querySelector('.material-symbols-outlined');
-        const sections = el.nextElementSibling;
+        // Save current chapter state before switching
+        saveCurrentChapterState();
         
-        arrow.classList.toggle('rotate-90');
-        sections.classList.toggle('hidden');
+        const group = el.closest('.chapter-group');
+        const chapterId = group.getAttribute('data-chapter-id');
+        
+        // Collapse all chapters first (hide sections, reset arrows)
+        document.querySelectorAll('#chapter-list .chapter-group').forEach(g => {
+            g.querySelector('.chapter-item').classList.remove('active');
+            const arrow = g.querySelector('.chapter-item .material-symbols-outlined:nth-child(2)');
+            if (arrow) arrow.classList.remove('rotate-90');
+            const secs = g.querySelector('.chapter-sections');
+            if (secs) secs.classList.add('hidden');
+        });
+        
+        // Expand the clicked chapter
+        el.classList.add('active');
+        const arrow = el.querySelector('.material-symbols-outlined:nth-child(2)');
+        if (arrow) arrow.classList.add('rotate-90');
+        const sections = el.nextElementSibling;
+        if (sections) sections.classList.remove('hidden');
+        
+        // Load the new chapter's state
+        if (chapterId) {
+            loadChapterState(chapterId);
+        }
     }
 
     function toggleCopilot() {
@@ -1232,6 +1780,9 @@
         document.getElementById('current-block-type').textContent = 
             tag === 'p' ? 'Paragraph' : tag.toUpperCase();
         document.getElementById('editor').focus();
+        
+        // Update nav after block type change — 200ms gives the DOM time to settle
+        setTimeout(updateChapterSections, 200);
     }
 
     function toggleBlockMenu() {
@@ -1241,6 +1792,32 @@
         menu.style.left = `${rect.left}px`;
         menu.style.top = `${rect.bottom + 4}px`;
         menu.classList.toggle('hidden');
+    }
+
+    function updateBlockTypeDropdown() {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        
+        let node = selection.anchorNode;
+        if (!node) return;
+        
+        // Traverse up to find the block level element
+        while (node && node.id !== 'editor') {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                const tag = node.tagName.toLowerCase();
+                if (['p', 'h1', 'h2', 'h3', 'blockquote'].includes(tag)) {
+                    const btnText = document.getElementById('current-block-type');
+                    if (tag === 'p') btnText.textContent = 'Paragraph';
+                    else if (tag === 'blockquote') btnText.textContent = 'Quote';
+                    else btnText.textContent = tag.toUpperCase();
+                    return;
+                }
+            }
+            node = node.parentNode;
+        }
+        
+        // Default to paragraph if nothing found
+        document.getElementById('current-block-type').textContent = 'Paragraph';
     }
 
     function insertLink() {
@@ -1324,6 +1901,10 @@
                 Saved
             `;
         }, 800);
+
+        // Debounced nav update — runs after user pauses typing
+        clearTimeout(window.navUpdateTimeout);
+        window.navUpdateTimeout = setTimeout(updateChapterSections, 600);
     }
 
     function checkPlaceholder() {
@@ -2281,8 +2862,8 @@ Be helpful, concise, and educational. Format responses with markdown when useful
         const page = document.getElementById('reading-page');
         page.innerHTML = `
             <div class="rv-chapter-label">${chapterNum}</div>
-            <h1 class="rv-chapter-title">${title}</h1>
-            ${subtitle ? `<p style="font-family:'Merriweather',Georgia,serif;font-size:18px;color:#64748b;margin-bottom:40px;line-height:1.6;font-style:italic;">${subtitle}</p>` : ''}
+            <h1 class="rv-chapter-title" style="margin-bottom: 16px;">${title}</h1>
+            ${subtitle ? `<p style="font-family:'Inter',sans-serif;font-size:18px;color:#64748b;margin-bottom:40px;line-height:1.6;">${subtitle}</p>` : ''}
             <hr style="border:none;border-top:1px solid #e5e7eb;margin-bottom:40px;"/>
             <div class="rv-body">${transformEditorToReadingHTML(editorHTML)}</div>
         `;
