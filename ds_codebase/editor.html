@@ -365,10 +365,10 @@
             background-color: rgba(209, 250, 229, 0.5);
         }
         .pedagogy-block.debate {
-            @apply border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50;
+            @apply border-rose-200 bg-gradient-to-br from-rose-50 to-rose-50;
         }
         .pedagogy-block.debate .pedagogy-block-header {
-            background-color: rgba(254, 243, 199, 0.5);
+            background-color: rgba(255, 228, 230, 0.5);
         }
         .pedagogy-block.firstprinciples {
             @apply border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50;
@@ -414,6 +414,18 @@
         .bg-emerald-100\/50 { background-color: rgba(209, 250, 229, 0.5); }
         .bg-amber-100\/50 { background-color: rgba(254, 243, 199, 0.5); }
         .bg-violet-100\/50 { background-color: rgba(237, 233, 254, 0.5); }
+        
+        .bg-rose-500 { background-color: #f43f5e; }
+        .bg-rose-100 { background-color: #ffe4e6; }
+        .text-rose-500 { color: #f43f5e; }
+        .text-rose-700 { color: #be123c; }
+        .text-rose-800 { color: #9f1239; }
+        .from-rose-50 { --tw-gradient-from: #fff1f2; }
+        .to-rose-50 { --tw-gradient-to: #fff1f2; }
+        .border-rose-200 { border-color: #fecdd3; }
+        .border-rose-500 { border-color: #f43f5e; }
+        .bg-rose-100\/50 { background-color: rgba(255, 228, 230, 0.5); }
+        .bg-rose-50\/50 { background-color: rgba(255, 241, 242, 0.5); }
         
         .typing-indicator span {
             @apply inline-block w-2 h-2 bg-primary rounded-full mx-0.5;
@@ -590,6 +602,7 @@
         }
         .pw-icon.emerald { background: #10b981; color: #fff; }
         .pw-icon.amber { background: #f59e0b; color: #fff; }
+        .pw-icon.rose { background: #f43f5e; color: #fff; }
         .pw-icon.violet { background: #8b5cf6; color: #fff; }
         .pw-icon.blue { background: #3b82f6; color: #fff; }
         .pw-icon .material-symbols-outlined { font-size: 20px; }
@@ -2227,7 +2240,7 @@
         { id: 'pullquote', icon: 'format_quote', label: 'Pull Quote', desc: 'Highlighted callout block', category: 'ai' },
         { id: 'divider-pedagogy', category: 'divider', dividerLabel: 'Pedagogy Blocks' },
         { id: 'socratic', icon: 'psychology_alt', label: 'Socratic Checkpoint', desc: 'Guide students through discovery', category: 'pedagogy', color: 'text-emerald-500' },
-        { id: 'debate', icon: 'forum', label: 'Devil\'s Advocate Debate', desc: 'Challenge assumptions & biases', category: 'pedagogy', color: 'text-amber-500' },
+        { id: 'debate', icon: 'forum', label: 'Devil\'s Advocate Debate', desc: 'Challenge assumptions & biases', category: 'pedagogy', color: 'text-rose-500' },
         { id: 'firstprinciples', icon: 'account_tree', label: 'First Principles Deconstructor', desc: 'Break down to fundamentals', category: 'pedagogy', color: 'text-violet-500' },
         { id: 'divider-media', category: 'divider', dividerLabel: 'Media' },
         { id: 'image', icon: 'image', label: 'Insert image', desc: 'Upload or generate with AI', category: 'media' },
@@ -2243,7 +2256,7 @@
         { id: 'custom-analogy', label: 'Add an analogy...', category: 'Engage and Illustrate', action: 'openExampleModal' },
         { id: 'insert-image', label: 'Insert AI image...', category: 'Engage and Illustrate', action: 'openImageGenModal' },
         { id: 'insert-video', label: 'Insert YouTube video...', category: 'Engage and Illustrate', action: 'openVideoModal' },
-        { id: 'opposing-view', label: 'Add opposing viewpoint', category: 'Foster Critical Thinking' },
+        { id: 'opposing-view', label: 'Challenge thinking', category: 'Foster Critical Thinking' },
         { id: 'socratic-question', label: 'Generate Socratic question', category: 'Foster Critical Thinking' },
         { id: 'real-world-implications', label: 'Explain real-world implications', category: 'Foster Critical Thinking' },
         { id: 'mini-case-study', label: 'Create mini case-study', category: 'Foster Critical Thinking' },
@@ -3165,17 +3178,21 @@
             icon: 'psychology_alt',
             color: 'emerald',
             goalPrompt: 'Guide students to discover deeper understanding through questioning.',
-            prompt: `Formulate 2–3 open-ended, thought-provoking discussion questions based on this text. The questions must NOT have simple yes/no answers. They should force students to analyze underlying assumptions, evaluate evidence, or consider implications. Return ONLY the numbered questions.`,
-            openingPromptGen: `From these Socratic questions, select the MOST thought-provoking one that will spark dialogue. Return ONLY that single question.`
+            prompt: `You are a Socratic tutor. Based on this text, formulate 3 sequential, open-ended questions that guide a student from basic understanding to deep critical analysis:
+1. A 'Clarification' question that asks the student to explain the core mechanism in their own words.
+2. A 'Probing Assumptions' question that challenges why this mechanism works this way and not another way.
+3. An 'Examining Consequences' question that asks what would happen if a key variable in this concept changed.
+Return ONLY the 3 numbered questions. Do not include labels like 'Clarification:'.`,
+            openingPromptGen: `From these 3 Socratic questions, select the FIRST question (the clarification/entry-point question) to serve as the opening hook for a dialogue. It should invite the student to start explaining their reasoning. Return ONLY that single question.`
         },
         'opposing-view': {
             type: 'debate',
             title: 'Challenge Your Thinking',
             icon: 'forum',
-            color: 'amber',
+            color: 'rose',
             goalPrompt: 'Examine this concept from an opposing perspective.',
-            prompt: `Present a credible counter-argument or alternative perspective to the following text. The goal is to help students understand that this topic has multiple viewpoints and encourage critical analysis. Do NOT dismiss the original view — present the alternative fairly and academically. Return ONLY the opposing viewpoint text (2–4 paragraphs).`,
-            openingPromptGen: `Turn this opposing viewpoint into a challenging opening question that forces the student to defend the original position OR acknowledge the merit of this alternative view. Return ONLY the question.`
+            prompt: `Present a credible counter-argument or alternative perspective to the following text. The goal is to help students understand that this topic has multiple viewpoints and encourage critical analysis. Do NOT dismiss the original view — present the alternative fairly and academically. If possible, provide a specific, concrete counter-example or edge case (e.g. environments without sunlight, historical exceptions, or rare phenomena) that challenges the premise of the main text. Return ONLY the opposing viewpoint text (2–4 paragraphs).`,
+            openingPromptGen: `Turn this opposing viewpoint into a challenging opening question that forces the student to defend the original position OR acknowledge the merit of this alternative view. If possible, explicitly include a specific, concrete counter-example or edge case (e.g. environments without sunlight, rare exceptions, or contrasting scenarios) in the question to ground the challenge. Return ONLY the question.`
         },
         'real-world-implications': {
             type: 'firstprinciples',
@@ -3183,8 +3200,13 @@
             icon: 'public',
             color: 'violet',
             goalPrompt: 'Understand why this concept matters beyond the classroom.',
-            prompt: `Explain the ethical, societal, economic, or environmental implications of the concept described in this text. Help students understand why this matters outside the classroom. Use 2–3 short paragraphs. Return ONLY the implications text.`,
-            openingPromptGen: `Based on these implications, generate ONE question that asks the student to consider how this concept affects their own life or community. Return ONLY the question.`
+            prompt: `Analyze the text and explain its most critical real-world implication. 
+CRITICAL RULES:
+1. Connect the abstract concept in the text to a common, everyday real-world example that a student can easily relate to (e.g., smartphones, cooking, sports, daily habits, or local community).
+2. Explain exactly how this concept makes that everyday technology, system, or phenomenon work.
+3. Help the student realize that this "academic" concept is actually powering their daily life.
+Return ONLY the implications text (2–3 short paragraphs).`,
+            openingPromptGen: `Based on these implications, generate ONE engaging question that asks the student to look around their own life, home, or community and identify another everyday example of this concept in action, or asks how they might apply this knowledge practically. Return ONLY the question.`
         },
         'mini-case-study': {
             type: 'firstprinciples',
@@ -3203,6 +3225,8 @@
         
         hideAIPanel();
         
+        state.currentAIAction = actionId;
+        
         if (pedagogyWidgetActions[actionId]) {
             generatePedagogyWidget(actionId, capturedText, capturedRange);
             return;
@@ -3211,7 +3235,7 @@
         const prompts = {
             'polish-flow': `Improve the academic flow and transitions in this text. Fix passive voice where it weakens clarity, ensure consistent tone, and improve paragraph cohesion. Return ONLY the improved text without commentary or preamble.`,
 
-            'add-example': `Add a concrete real-world example (2–4 sentences) that illustrates the concept in the selected text. Place it naturally after the concept. Return the original text with the example woven in, or the example block alone if the selection is a single phrase.`,
+            'add-example': `Fetch a relevant real-world example from recent news to illustrate the concept in the selected text, and summarize it concisely (2-4 sentences). If a recent news example is not applicable or available, fall back to a general real-world example. Return ONLY the example text, without repeating the original text.`,
         };
         
         const prompt = prompts[actionId] || `Transform: ${actionId}`;
@@ -3242,7 +3266,7 @@
             generatedContent: ''
         };
 
-        const colorBgMap = { emerald: 'bg-emerald-500', amber: 'bg-amber-500', violet: 'bg-violet-500' };
+        const colorBgMap = { emerald: 'bg-emerald-500', amber: 'bg-amber-500', violet: 'bg-violet-500', rose: 'bg-rose-500' };
         document.getElementById('wcm-icon-wrap').className = `w-10 h-10 rounded-lg flex items-center justify-center ${colorBgMap[config.color] || 'bg-emerald-500'}`;
         document.getElementById('wcm-icon').textContent = config.icon;
         document.getElementById('wcm-title').textContent = config.title;
@@ -3340,7 +3364,8 @@
         const colorClasses = {
             emerald: { bg: 'from-emerald-50 to-teal-50', border: 'border-emerald-200', header: 'bg-emerald-100/50', tag: 'bg-emerald-100 text-emerald-700', iconBg: 'bg-emerald-500' },
             amber: { bg: 'from-amber-50 to-orange-50', border: 'border-amber-200', header: 'bg-amber-100/50', tag: 'bg-amber-100 text-amber-700', iconBg: 'bg-amber-500' },
-            violet: { bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', header: 'bg-violet-100/50', tag: 'bg-violet-100 text-violet-700', iconBg: 'bg-violet-500' }
+            violet: { bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', header: 'bg-violet-100/50', tag: 'bg-violet-100 text-violet-700', iconBg: 'bg-violet-500' },
+            rose: { bg: 'from-rose-50 to-rose-50', border: 'border-rose-200', header: 'bg-rose-100/50', tag: 'bg-rose-100/50 text-rose-700', iconBg: 'bg-rose-500' }
         };
         const colors = colorClasses[config.color] || colorClasses.emerald;
         const goal = config.goalPrompt;
@@ -3785,6 +3810,7 @@
         const capturedText = state.selectedText || '';
         const capturedRange = state.insertPosition || (state.selectedRange ? state.selectedRange.cloneRange() : null);
         closeReadingLevelModal();
+        state.currentAIAction = 'reading-level-' + level;
 
         const prompts = {
             'elementary': `Rewrite this text for elementary school readers (ages 8–10). Target ELIX ~600 (very easy readability). Use short sentences, simple everyday vocabulary, and concrete examples. Avoid jargon unless you define it inline. Return ONLY the rewritten text.`,
@@ -3939,7 +3965,7 @@
             'conclusion': `Write a conclusion that summarizes the key points from this chapter about "${chapterTitle}":\n\n${content.slice(0, 1000)}`,
             'expand': `Expand and add more detail to explain this concept better:\n\n${capturedText || content.slice(-300) || chapterTitle}`,
             'simplify': `Simplify this text to make it easier for students to understand:\n\n${capturedText || content}`,
-            'example': `Add a real-world example to help explain this concept:\n\n${capturedText || content.slice(-300) || chapterTitle}`
+            'example': `Fetch a relevant real-world example from recent news to illustrate this concept, and summarize it concisely (2-4 sentences). If a recent news example is not applicable or available, fall back to a general real-world example. Return ONLY the example text, without repeating the original text:\n\n${capturedText || content.slice(-300) || chapterTitle}`
         };
         
         const prompt = prompts[action] || `Help with: ${action}`;
@@ -4050,8 +4076,10 @@
             mockContent = `Have you ever wondered what makes living things... alive? The answer lies in structures so small that they're invisible to the naked eye: cells.\n\nCells are the fundamental building blocks of all living organisms. From the tiniest bacterium to the largest whale, every living thing is made of cells. In this chapter, we'll explore what cells are, how they were discovered, and why understanding them is crucial to understanding life itself.`;
         } else if (prompt.includes('continue')) {
             mockContent = `\n\nThese fundamental principles have guided biological research for over 150 years. Today, we understand that cells are far more complex than early scientists imagined.\n\nEach cell contains billions of molecules working in precise coordination. These molecules carry out thousands of chemical reactions every second, allowing cells to grow, divide, and respond to their environment.`;
-        } else if (prompt.includes('example') || prompt.includes('analogy')) {
-            mockContent = `**Real-World Example:**\n\nThink of a cell like a busy factory. The cell membrane is like the factory walls and security gates, controlling what enters and leaves. The nucleus is the management office, containing all the blueprints (DNA) for making products. The mitochondria are the power generators, providing energy to run all the machinery. And the ribosomes are the assembly lines, building proteins according to the blueprints.`;
+        } else if (prompt.includes('example')) {
+            mockContent = `**Real-World Example:**\n\nRecent news highlights how the new electric vehicle battery factory from Tesla mirrors cellular mitochondria, converting raw lithium into usable electrical energy to power modern society.`;
+        } else if (prompt.includes('analogy')) {
+            mockContent = `**Analogy:**\n\nThink of a cell like the video game Minecraft or a busy cricket match starring Virat Kohli. The cell membrane is like the boundary ropes, controlling who enters and leaves. The nucleus is the captain making decisions, and mitochondria are the energetic players running between wickets.`;
         } else {
             mockContent = selectedText 
                 ? `Here's the transformed text:\n\n${selectedText.split(' ').slice(0, 20).join(' ')}... [transformed content would appear here]`
@@ -4133,27 +4161,64 @@
         const editor = document.getElementById('editor');
         editor.focus();
         
+        let htmlToInsert = formatAIContent(state.generatedContent);
+        const templateConfig = getAITemplateConfig(state.currentAIAction);
+        
+        if (templateConfig) {
+            const { title, icon, color } = templateConfig;
+            htmlToInsert = `
+                <div class="my-4">
+                    <div class="border-l-4 border-${color}-500 bg-${color}-50/50 p-4 rounded-r-lg">
+                        <div class="flex items-center gap-2 font-semibold text-${color}-800 mb-2">
+                            <span class="material-symbols-outlined text-${color}-500 text-sm">${icon}</span>
+                            ${title}
+                        </div>
+                        <div class="text-text-primary text-sm leading-relaxed">
+                            ${htmlToInsert}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
         if (state.selectedRange) {
             // Replace selected text
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(state.selectedRange);
-            document.execCommand('insertHTML', false, formatAIContent(state.generatedContent));
+            document.execCommand('insertHTML', false, htmlToInsert);
         } else if (state.insertPosition) {
             // Insert at stored position
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(state.insertPosition);
-            document.execCommand('insertHTML', false, formatAIContent(state.generatedContent));
+            document.execCommand('insertHTML', false, htmlToInsert);
         } else {
             // Fallback: append to end
-            editor.innerHTML += `<div>${formatAIContent(state.generatedContent)}</div>`;
+            editor.innerHTML += `<div>${htmlToInsert}</div>`;
         }
         
         closeAIResponse();
         clearSelectionUI();
         updateWordCount();
         checkPlaceholder();
+    }
+
+    function getAITemplateConfig(action) {
+        const configs = {
+            'add-example': { title: 'Real-World Example', icon: 'public', color: 'blue' },
+            'example': { title: 'Real-World Example', icon: 'public', color: 'blue' },
+            'custom-analogy': { title: 'Analogy', icon: 'compare_arrows', color: 'rose' },
+            'simplify': { title: 'Simplified Explanation', icon: 'school', color: 'emerald' },
+            'elementary': { title: 'Simplified for Elementary', icon: 'child_care', color: 'emerald' },
+            'high-school': { title: 'Simplified for High School', icon: 'backpack', color: 'emerald' },
+            'undergraduate': { title: 'Undergraduate Explanation', icon: 'school', color: 'emerald' }
+        };
+        // Also map 'reading-level-elementary' etc.
+        if (action && action.startsWith('reading-level-')) {
+            return configs[action.replace('reading-level-', '')] || null;
+        }
+        return configs[action] || null;
     }
 
     function insertBelowAIResponse() {
@@ -4168,8 +4233,28 @@
         const anchorRange = state.insertPosition || state.selectedRange;
         
         const newBlock = document.createElement('div');
-        newBlock.className = 'ai-generated-block';
-        newBlock.innerHTML = formatAIContent(state.generatedContent);
+        newBlock.className = 'ai-generated-block my-4';
+        
+        const formattedContent = formatAIContent(state.generatedContent);
+        const templateConfig = getAITemplateConfig(state.currentAIAction);
+        
+        if (templateConfig) {
+            const { title, icon, color } = templateConfig;
+            newBlock.className = 'my-4'; // Remove ai-generated-block to avoid the nested green background
+            newBlock.innerHTML = `
+                <div class="border-l-4 border-${color}-500 bg-${color}-50/50 p-4 rounded-r-lg">
+                    <div class="flex items-center gap-2 font-semibold text-${color}-800 mb-2">
+                        <span class="material-symbols-outlined text-${color}-500 text-sm">${icon}</span>
+                        ${title}
+                    </div>
+                    <div class="text-text-primary text-sm leading-relaxed">
+                        ${formattedContent}
+                    </div>
+                </div>
+            `;
+        } else {
+            newBlock.innerHTML = formattedContent;
+        }
         
         let inserted = false;
         
@@ -4815,7 +4900,16 @@ You receive the full text of the author's current chapter plus an outline of all
         const capturedText = state.selectedText || '';
         const capturedRange = state.insertPosition || (state.selectedRange ? state.selectedRange.cloneRange() : null);
         closeExampleModal();
-        const prompt = `Add an analogy based on the author's request: "${input}". Explain the selected concept using this analogy style. Make it vivid, accurate, and appropriate for a textbook audience. Return ONLY the analogy text (2–4 sentences).`;
+        state.currentAIAction = 'custom-analogy';
+        const prompt = `You are a textbook author. Read the provided text about a specific educational concept.
+Author's analogy request: "${input}"
+
+Create a vivid analogy based on the author's request to explain the educational concept from the text. 
+CRITICAL RULES:
+1. You MUST accurately explain the specific scientific/academic mechanisms described in the text.
+2. Map the specific entities in the text (e.g., electrons, energy, specific molecules) directly to elements of the analogy (e.g., players, actions, objects).
+3. Incorporate real-world names or entities (e.g. real video game titles, sports teams, cricketer names, etc.) to make it relatable.
+4. Return ONLY the analogy text (2–4 sentences), without repeating the original text.`;
         generateAIResponse(prompt, capturedText, capturedRange);
     }
 
@@ -4912,7 +5006,7 @@ You receive the full text of the author's current chapter plus an outline of all
 
     const widgetVisualStyles = {
         reflect: { themeClass: 'pw-reflect', iconColor: 'emerald', categoryLabel: 'Pause and Reflect' },
-        challenge: { themeClass: 'pw-challenge', iconColor: 'amber', categoryLabel: 'Challenge Your Thinking' },
+        challenge: { themeClass: 'pw-challenge', iconColor: 'rose', categoryLabel: 'Challenge Your Thinking' },
         apply: { themeClass: 'pw-apply', iconColor: 'violet', categoryLabel: 'Apply the Concept' },
         explain: { themeClass: 'pw-explain', iconColor: 'blue', categoryLabel: 'Explain to a Peer' }
     };
@@ -5461,8 +5555,8 @@ Keep responses concise (2-3 sentences). End with a question unless the student h
             title: "Devil's Advocate Debate",
             subtitle: 'Challenge assumptions and explore opposing viewpoints',
             icon: 'forum',
-            color: 'amber',
-            bgClass: 'bg-amber-500',
+            color: 'rose',
+            bgClass: 'bg-rose-500',
             goalHint: 'What belief or assumption should students critically examine?',
             promptHint: 'This provocative statement will challenge the student to defend or reconsider their position.',
             systemPrompt: `You are a devil's advocate. Your role is to challenge the student's assumptions and push them to think critically. Present strong counterarguments, even to commonly accepted ideas. Be intellectually rigorous but respectful. Force the student to examine their reasoning deeply.`
@@ -5869,7 +5963,8 @@ Keep responses concise (2-3 sentences max). Always end with a question unless th
         const colorClasses = {
             emerald: { bg: 'from-emerald-50 to-teal-50', border: 'border-emerald-200', header: 'bg-emerald-100/50', tag: 'bg-emerald-100 text-emerald-700', iconBg: 'bg-emerald-500' },
             amber: { bg: 'from-amber-50 to-orange-50', border: 'border-amber-200', header: 'bg-amber-100/50', tag: 'bg-amber-100 text-amber-700', iconBg: 'bg-amber-500' },
-            violet: { bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', header: 'bg-violet-100/50', tag: 'bg-violet-100 text-violet-700', iconBg: 'bg-violet-500' }
+            violet: { bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', header: 'bg-violet-100/50', tag: 'bg-violet-100 text-violet-700', iconBg: 'bg-violet-500' },
+            rose: { bg: 'from-rose-50 to-rose-50', border: 'border-rose-200', header: 'bg-rose-100/50', tag: 'bg-rose-100/50 text-rose-700', iconBg: 'bg-rose-500' }
         };
         const colors = colorClasses[config.color];
         const turnsLabel = maxTurns === 'unlimited' ? 'Unlimited turns' : `${maxTurns} turns`;
