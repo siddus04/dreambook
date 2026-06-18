@@ -207,21 +207,70 @@
 
         /* AI Selection Menu */
         .ai-menu {
-            @apply fixed z-[100] w-72 bg-surface border border-border rounded-lg shadow-xl overflow-hidden flex flex-col;
+            @apply fixed z-[200] w-80 bg-surface border border-border rounded-lg shadow-xl overflow-hidden flex flex-col;
         }
         .ai-menu.hidden { display: none; }
         .ai-menu-search {
-            @apply w-full px-3 py-2.5 border-b border-border text-sm outline-none shrink-0;
-            @apply placeholder-text-tertiary focus:bg-surface-secondary;
+            @apply w-full px-3.5 py-3 border-b border-border text-sm shrink-0 rounded-t-lg bg-surface;
+            @apply placeholder-text-tertiary;
+        }
+        .ai-menu-search:focus {
+            outline: none;
+            box-shadow: none;
+            @apply border-border bg-surface-secondary;
         }
         .ai-menu-content {
-            @apply max-h-80 overflow-y-auto p-1 flex-1 min-h-0;
+            @apply max-h-80 overflow-y-auto p-1.5 flex-1 min-h-0;
         }
+        /* Rich AI menu items */
+        .ai-menu-cat {
+            @apply px-2 pt-2.5 pb-1 text-[11px] font-semibold text-text-tertiary uppercase tracking-wider;
+        }
+        .ai-menu-cat:first-child { @apply pt-1; }
+        .ai-menu-item {
+            @apply flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer transition-colors;
+        }
+        .ai-menu-item:hover, .ai-menu-item.active {
+            @apply bg-surface-tertiary;
+        }
+        .ai-menu-item-icon {
+            @apply w-7 h-7 rounded-md flex items-center justify-center shrink-0;
+        }
+        .ai-menu-item-icon .material-symbols-outlined { font-size: 18px; }
+        .ai-menu-item-body { @apply flex-1 min-w-0; }
+        .ai-menu-item-label {
+            @apply flex items-center gap-1.5 text-sm font-medium text-text-primary leading-tight;
+        }
+        .ai-menu-item-desc {
+            @apply text-xs text-text-tertiary leading-tight truncate mt-0.5;
+        }
+        .ai-menu-badge {
+            @apply text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary-bg text-primary shrink-0;
+        }
+        /* Category accent colors */
+        .ai-accent-sky { @apply bg-sky-50 text-sky-600; }
+        .ai-accent-amber { @apply bg-amber-50 text-amber-600; }
+        .ai-accent-violet { @apply bg-violet-50 text-violet-600; }
+        .ai-accent-slate { @apply bg-slate-100 text-slate-600; }
+        .ai-menu-custom {
+            @apply flex items-center gap-2.5 px-2 py-2 rounded-md cursor-pointer transition-colors bg-primary-bg/40 mb-1;
+        }
+        .ai-menu-custom:hover, .ai-menu-custom.active { @apply bg-primary-bg; }
         .source-toggle {
             @apply flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer;
         }
         .source-toggle.active { @apply bg-primary text-white; }
         .source-toggle:not(.active) { @apply bg-surface-tertiary text-text-secondary hover:bg-border; }
+
+        /* Settings toggle switch */
+        .setting-switch {
+            @apply relative inline-flex items-center w-9 h-5 rounded-full bg-border transition-colors shrink-0;
+        }
+        .setting-switch.active { @apply bg-primary; }
+        .setting-switch-dot {
+            @apply absolute left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform;
+        }
+        .setting-switch.active .setting-switch-dot { transform: translateX(16px); }
 
         /* Selection Toolbar (Stage 1 bubble) */
         .selection-toolbar {
@@ -281,6 +330,12 @@
         .jargon-popover-read { pointer-events: none; }
         .reading-level-btn {
             @apply w-full flex flex-col items-start gap-0.5 px-4 py-3 text-left rounded-lg hover:bg-surface-tertiary transition-colors;
+        }
+        .continue-word-btn {
+            @apply px-3 py-1.5 text-sm border border-border rounded-lg hover:border-primary hover:bg-primary-bg transition-colors;
+        }
+        .continue-word-btn.active {
+            @apply border-primary bg-primary-bg text-primary font-medium;
         }
 
         /* Widget config modal */
@@ -842,6 +897,7 @@
                             <a href="code.html" class="text-text-tertiary hover:text-primary">Home</a>
                             <span class="material-symbols-outlined text-text-tertiary text-base">chevron_right</span>
                             <span id="book-title-display" class="text-text-secondary">Introduction to Cell Biology</span>
+                            <span id="book-grade-badge" class="ml-1 px-2 py-0.5 text-xs bg-primary-bg text-primary rounded-full">Undergrad Intro</span>
                             <span class="material-symbols-outlined text-text-tertiary text-base">chevron_right</span>
                             <span id="header-chapter-title" class="text-text-primary font-medium">Chapter 1</span>
                         </nav>
@@ -1227,22 +1283,11 @@
         </button>
     </div>
 
-    <!-- Slash Command Menu -->
-    <div id="slash-menu" class="hidden fixed z-[200] w-72 bg-surface border border-border rounded-lg shadow-2xl overflow-hidden">
-        <input type="text" id="slash-search" class="w-full px-3 py-2.5 border-b border-border text-sm outline-none" 
-               placeholder="Search commands..." oninput="filterSlashMenu(this.value)" onkeydown="handleSlashMenuKeydown(event)"/>
-        <div id="slash-menu-content" class="max-h-72 overflow-y-auto p-1"></div>
-    </div>
-
-    <!-- AI Selection Menu (only appears on text selection) -->
-    <div id="ai-selection-menu" class="hidden ai-menu">
-        <input type="text" id="ai-menu-search" class="ai-menu-search" placeholder="Ask writing copilot..." 
-               oninput="filterAIMenu(this.value)" onkeydown="handleAIMenuKeydown(event)"/>
-        <div class="flex items-center gap-2 px-3 py-2 border-b border-border shrink-0">
-            <button onclick="toggleSourceToggle('web')" id="toggle-web" class="source-toggle">Web</button>
-            <button onclick="toggleSourceToggle('library')" id="toggle-library" class="source-toggle active">Library</button>
-        </div>
-        <div id="ai-menu-content" class="ai-menu-content"></div>
+    <!-- Unified Command Menu (slash + selection) -->
+    <div id="command-menu" class="hidden ai-menu">
+        <input type="text" id="command-menu-search" class="ai-menu-search" placeholder="Search commands or ask AI..."
+               oninput="filterCommandMenu(this.value)" onkeydown="handleCommandMenuKeydown(event)"/>
+        <div id="command-menu-content" class="ai-menu-content"></div>
     </div>
 
     <!-- AI Response Modal -->
@@ -1345,6 +1390,32 @@
                         <option value="gpt-4o-mini">GPT-4o Mini (Faster)</option>
                     </select>
                 </div>
+                <div class="pt-2 border-t border-border">
+                    <label class="block text-sm font-medium text-text-secondary mb-1">AI Source Access</label>
+                    <p class="text-xs text-text-tertiary mb-3">Choose which sources the AI can draw on when generating content.</p>
+                    <div class="space-y-2">
+                        <button onclick="toggleSourceToggle('library')" class="w-full flex items-center justify-between p-3 rounded border border-border hover:bg-surface-secondary transition-colors text-left">
+                            <span class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-text-tertiary text-xl">menu_book</span>
+                                <span>
+                                    <span class="block text-sm font-medium text-text-primary">Knowledge Library</span>
+                                    <span class="block text-xs text-text-tertiary">Your uploaded & approved sources</span>
+                                </span>
+                            </span>
+                            <span id="setting-toggle-library" class="setting-switch active"><span class="setting-switch-dot"></span></span>
+                        </button>
+                        <button onclick="toggleSourceToggle('web')" class="w-full flex items-center justify-between p-3 rounded border border-border hover:bg-surface-secondary transition-colors text-left">
+                            <span class="flex items-center gap-2.5">
+                                <span class="material-symbols-outlined text-text-tertiary text-xl">language</span>
+                                <span>
+                                    <span class="block text-sm font-medium text-text-primary">Web Search</span>
+                                    <span class="block text-xs text-text-tertiary">Current information from the web</span>
+                                </span>
+                            </span>
+                            <span id="setting-toggle-web" class="setting-switch"><span class="setting-switch-dot"></span></span>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="p-4 border-t border-border flex justify-end gap-2">
                 <button onclick="closeSettings()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
@@ -1440,6 +1511,41 @@
             </div>
             <div class="p-3 border-t border-border flex justify-end">
                 <button onclick="closeReadingLevelModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Continue Writing Modal -->
+    <div id="continue-writing-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-[400px] bg-surface rounded-lg shadow-xl">
+            <div class="p-4 border-b border-border">
+                <h3 class="font-semibold text-text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sky-500">edit_note</span>
+                    Continue Writing
+                </h3>
+                <p class="text-sm text-text-secondary mt-1">How much should the AI write to help you past writer's block?</p>
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="setContinueWordCount(75)" class="continue-word-btn" data-value="75">~75 words</button>
+                    <button type="button" onclick="setContinueWordCount(150)" class="continue-word-btn active" data-value="150">~150 words</button>
+                    <button type="button" onclick="setContinueWordCount(250)" class="continue-word-btn" data-value="250">~250 words</button>
+                    <button type="button" onclick="setContinueWordCount(400)" class="continue-word-btn" data-value="400">~400 words</button>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-text-primary mb-1.5" for="continue-word-count">Custom target</label>
+                    <input type="number" id="continue-word-count" min="25" max="800" value="150"
+                        class="w-full px-3 py-2 text-sm border border-border rounded-lg outline-none focus:border-primary"
+                        oninput="syncContinueWordButtons(this.value)"/>
+                    <p class="text-xs text-text-tertiary mt-1">Between 25 and 800 words</p>
+                </div>
+            </div>
+            <div class="p-3 border-t border-border flex justify-end gap-2">
+                <button onclick="closeContinueWritingModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
+                <button onclick="startContinueWriting()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">auto_awesome</span>
+                    Generate
+                </button>
             </div>
         </div>
     </div>
@@ -1682,17 +1788,23 @@
         selectedText: '',
         selectedRange: null,
         currentAIAction: null,
-        slashMenuVisible: false,
         slashMenuPosition: null,
+        commandMenuMode: null,
+        commandMenuVisible: false,
+        commandMenuActiveIndex: -1,
         insertPosition: null,
         apiKey: localStorage.getItem('openai_api_key') || '',
         model: localStorage.getItem('openai_model') || 'gpt-4o',
-        sourceToggles: { web: false, library: true },
+        sourceToggles: JSON.parse(localStorage.getItem('ai_source_toggles') || '{"web":false,"library":true}'),
         generatedContent: '',
+        aiInsertRange: null,
+        aiInsertAnchorBlock: null,
+        continueWordTarget: 150,
+        aiResponsePrompt: '',
         copilotPending: false,
         copilotHistory: [],
         selectionToolbarVisible: false,
-        aiPanelOpen: false,
+        pendingCopilotQuote: null,
         preserveSelectionUI: false,
         isMouseSelecting: false,
         jargonTerms: [],
@@ -1822,7 +1934,9 @@
                 content: document.getElementById('editor').innerHTML
             }
         },
-        activeChapterId: 'chapter-1'
+        activeChapterId: 'chapter-1',
+        gradeLevel: 'Undergrad Intro',
+        description: ''
     };
 
     let currentBookId = new URLSearchParams(window.location.search).get('id') || sessionStorage.getItem('book_id');
@@ -1832,11 +1946,35 @@
     }
     sessionStorage.removeItem('book_id');
 
+    function getGradeContext(gradeLevel) {
+        const gradeContextMap = {
+            'Class 6-8': 'Use simple vocabulary, short sentences, and relatable everyday examples. Avoid jargon. Focus on building foundational understanding with concrete, visual explanations. Target reading level: 6th-8th grade.',
+            'Class 9-10': 'Use clear language with some technical terms (defined when first introduced). Include real-world applications and relatable examples. Balance conceptual understanding with factual knowledge. Target reading level: 9th-10th grade.',
+            'Class 11-12': 'Use standard academic vocabulary with technical terms. Include more complex concepts and their interconnections. Prepare students for higher education with rigorous but accessible content. Target reading level: 11th-12th grade.',
+            'Undergrad Intro': 'Use academic language appropriate for first-year college students. Introduce discipline-specific terminology systematically. Include foundational theories and their applications. Target reading level: introductory undergraduate.',
+            'Undergrad Advanced': 'Use sophisticated academic language and assume familiarity with foundational concepts. Include nuanced discussions, current research references, and complex problem-solving. Target reading level: advanced undergraduate.',
+            'Graduate': 'Use specialized academic language and assume strong disciplinary background. Include cutting-edge research, theoretical frameworks, and critical analysis. Target reading level: graduate/professional.'
+        };
+        return gradeContextMap[gradeLevel] || gradeContextMap['Undergrad Intro'];
+    }
+
+    function getGradeDifficultyContext(gradeLevel, difficulty) {
+        const gradeBase = getGradeContext(gradeLevel);
+        const difficultyModifiers = {
+            'easy': 'For this exercise, use the simplest possible language and most straightforward questions appropriate for this grade level. Focus on recognition and recall.',
+            'moderate': 'For this exercise, use grade-appropriate language and questions that require some application of concepts.',
+            'challenging': 'For this exercise, push the boundaries of what\'s appropriate for this grade level. Use more complex reasoning, nuanced questions, and expect synthesis of multiple concepts.'
+        };
+        return `${gradeBase}\n\n${difficultyModifiers[difficulty] || difficultyModifiers['moderate']}`;
+    }
+
     function saveBook() {
         const bookTitle = document.getElementById('book-title-display')?.textContent || 'Untitled Book';
         const data = {
             id: currentBookId,
             title: bookTitle,
+            gradeLevel: appState.gradeLevel,
+            description: appState.description,
             appState: appState,
             copilotHistory: state.copilotHistory,
             updatedAt: Date.now()
@@ -1858,11 +1996,21 @@
     function loadGeneratedStructure() {
         const generatedData = sessionStorage.getItem('generated_structure');
         const bookTitle = sessionStorage.getItem('book_title');
+        const bookGrade = sessionStorage.getItem('book_grade');
+        const bookDescription = sessionStorage.getItem('book_description');
         
         if (!generatedData) return; // Use default HTML structure
         
         try {
             const structure = JSON.parse(generatedData);
+            
+            // Set grade level and description from sessionStorage
+            if (bookGrade) {
+                appState.gradeLevel = bookGrade;
+            }
+            if (bookDescription) {
+                appState.description = bookDescription;
+            }
             
             // Clear existing default chapters
             appState.chapters = {};
@@ -1919,11 +2067,13 @@
                 // Load the first chapter into the editor
                 loadChapterState(appState.activeChapterId);
                 
-                // Update the top left title if available
+                // Update the top left title and grade badge if available
                 if (bookTitle) {
                     const topTitle = document.getElementById('book-title-display');
                     if (topTitle) topTitle.textContent = bookTitle;
                 }
+                const gradeBadge = document.getElementById('book-grade-badge');
+                if (gradeBadge) gradeBadge.textContent = appState.gradeLevel;
             } else {
                 // Blank book scenario
                 addBlankChapter();
@@ -1932,6 +2082,8 @@
             // Clean up session storage so it doesn't persist forever
             sessionStorage.removeItem('generated_structure');
             sessionStorage.removeItem('book_title');
+            sessionStorage.removeItem('book_grade');
+            sessionStorage.removeItem('book_description');
             
             saveBook(); // Persist the newly generated structure
             
@@ -2263,40 +2415,30 @@
         }
     }
 
-    // Slash commands with pedagogy blocks for interactive learning
-    const slashCommands = [
-        { id: 'continue', icon: 'edit_note', label: 'Continue writing', desc: 'AI continues from here', category: 'ai' },
-        { id: 'outline', icon: 'list_alt', label: 'Generate outline', desc: 'Create section structure', category: 'ai' },
-        { id: 'intro', icon: 'start', label: 'Write introduction', desc: 'Generate intro paragraph', category: 'ai' },
-        { id: 'conclusion', icon: 'flag', label: 'Write conclusion', desc: 'Generate summary', category: 'ai' },
-        { id: 'expand', icon: 'expand', label: 'Expand this section', desc: 'Add more detail', category: 'ai' },
-        { id: 'simplify', icon: 'psychology', label: 'Simplify text', desc: 'Make easier to understand', category: 'ai' },
-        { id: 'example', icon: 'lightbulb', label: 'Add example', desc: 'Include real-world example', category: 'ai' },
-        { id: 'pullquote', icon: 'format_quote', label: 'Pull Quote', desc: 'Highlighted callout block', category: 'ai' },
-        { id: 'divider-pedagogy', category: 'divider', dividerLabel: 'Pedagogy Blocks' },
-        { id: 'socratic', icon: 'psychology_alt', label: 'Socratic Checkpoint', desc: 'Guide students through discovery', category: 'pedagogy', color: 'text-emerald-500' },
-        { id: 'debate', icon: 'forum', label: 'Devil\'s Advocate Debate', desc: 'Challenge assumptions & biases', category: 'pedagogy', color: 'text-rose-500' },
-        { id: 'firstprinciples', icon: 'account_tree', label: 'First Principles Deconstructor', desc: 'Break down to fundamentals', category: 'pedagogy', color: 'text-violet-500' },
-        { id: 'divider-media', category: 'divider', dividerLabel: 'Media' },
-        { id: 'image', icon: 'image', label: 'Insert image', desc: 'Upload or generate with AI', category: 'media' },
-        { id: 'youtube', icon: 'smart_display', label: 'YouTube video', desc: 'Embed a video', category: 'media' },
+    // Unified command menu options — context: 'slash' | 'selection' | 'both'
+    const commandMenuOptions = [
+        { id: 'continue', label: 'Continue writing', desc: 'Beat writer\'s block — pick word count', icon: 'edit_note', accent: 'sky', category: 'Writing', context: 'slash' },
+        { id: 'intro', label: 'Write introduction', desc: 'Generate intro paragraph', icon: 'start', accent: 'sky', category: 'Writing', context: 'slash' },
+        { id: 'conclusion', label: 'Write conclusion', desc: 'Generate summary', icon: 'flag', accent: 'sky', category: 'Writing', context: 'slash' },
+        { id: 'outline', label: 'Generate outline', desc: 'Create section structure', icon: 'list_alt', accent: 'sky', category: 'Writing', context: 'slash' },
+        { id: 'polish-flow', label: 'Polish academic flow', desc: 'Improve tone, clarity & flow', icon: 'auto_fix_high', accent: 'sky', category: 'Transform', context: 'selection' },
+        { id: 'check-jargon', label: 'Check for jargon', desc: 'Find & define confusing terms', icon: 'spellcheck', accent: 'sky', category: 'Transform', context: 'selection', action: 'openJargonModal' },
+        { id: 'adjust-reading-level', label: 'Adjust reading level', desc: 'Change text complexity', icon: 'tune', accent: 'sky', category: 'Transform', context: 'selection', action: 'openReadingLevelModal' },
+        { id: 'add-example', label: 'Real-world example', desc: 'Ground the concept in reality', icon: 'public', accent: 'amber', category: 'Enhance', context: 'both' },
+        { id: 'custom-analogy', label: 'Analogy', desc: 'Explain via a relatable comparison', icon: 'compare_arrows', accent: 'amber', category: 'Enhance', context: 'both', action: 'openExampleModal' },
+        { id: 'key-takeaways', label: 'Key takeaways', desc: 'Summarize the must-know points', icon: 'lightbulb', accent: 'amber', category: 'Enhance', context: 'both', widget: true },
+        { id: 'socratic-question', label: 'Socratic checkpoint', desc: 'Guide discovery via questions', icon: 'psychology_alt', accent: 'violet', category: 'Engage', context: 'both', widget: true },
+        { id: 'opposing-view', label: 'Challenge thinking', desc: 'Add a fair counter-argument', icon: 'forum', accent: 'violet', category: 'Engage', context: 'both', widget: true },
+        { id: 'real-world-implications', label: 'Real-world implications', desc: 'Show why this matters', icon: 'travel_explore', accent: 'violet', category: 'Engage', context: 'both', widget: true },
+        { id: 'mini-case-study', label: 'Mini case-study', desc: 'Apply it to a scenario', icon: 'cases', accent: 'violet', category: 'Engage', context: 'both', widget: true },
+        { id: 'insert-image', label: 'AI image', desc: 'Generate a visual with AI', icon: 'image', accent: 'slate', category: 'Media', context: 'both', action: 'openImageGenModal' },
+        { id: 'insert-video', label: 'YouTube video', desc: 'Embed a relevant video', icon: 'smart_display', accent: 'slate', category: 'Media', context: 'both', action: 'openVideoModal' },
     ];
 
-    // AI menu options for selected text
-    const aiMenuOptions = [
-        { id: 'polish-flow', label: 'Polish academic flow', category: 'Strengthen and Clarify' },
-        { id: 'check-jargon', label: 'Check for confusing jargon', category: 'Strengthen and Clarify', action: 'openJargonModal' },
-        { id: 'key-takeaways', label: 'Extract key takeaways', category: 'Strengthen and Clarify' },
-        { id: 'add-example', label: 'Add real-world example', category: 'Engage and Illustrate' },
-        { id: 'custom-analogy', label: 'Add an analogy...', category: 'Engage and Illustrate', action: 'openExampleModal' },
-        { id: 'insert-image', label: 'Insert AI image...', category: 'Engage and Illustrate', action: 'openImageGenModal' },
-        { id: 'insert-video', label: 'Insert YouTube video...', category: 'Engage and Illustrate', action: 'openVideoModal' },
-        { id: 'opposing-view', label: 'Challenge thinking', category: 'Foster Critical Thinking' },
-        { id: 'socratic-question', label: 'Generate Socratic question', category: 'Foster Critical Thinking' },
-        { id: 'real-world-implications', label: 'Explain real-world implications', category: 'Foster Critical Thinking' },
-        { id: 'mini-case-study', label: 'Create mini case-study', category: 'Foster Critical Thinking' },
-        { id: 'adjust-reading-level', label: 'Adjust reading level...', category: 'Format', action: 'openReadingLevelModal' },
-    ];
+    const commandMenuCategoryOrder = {
+        slash: ['Writing', 'Enhance', 'Engage', 'Media'],
+        selection: ['Transform', 'Enhance', 'Engage', 'Media']
+    };
 
     function loadSavedBook() {
         const saved = localStorage.getItem('dreambook_data_' + currentBookId);
@@ -2307,12 +2449,20 @@
                 // Restore appState
                 Object.assign(appState, data.appState);
                 
+                // Restore grade level (for backwards compatibility, check both locations)
+                appState.gradeLevel = data.gradeLevel || data.appState?.gradeLevel || 'Undergrad Intro';
+                
+                // Restore description (for backwards compatibility)
+                appState.description = data.description || data.appState?.description || '';
+                
                 // Restore copilot history
                 state.copilotHistory = data.copilotHistory || [];
                 
-                // Update top title
+                // Update top title and grade badge
                 const topTitle = document.getElementById('book-title-display');
                 if (topTitle && data.title) topTitle.textContent = data.title;
+                const gradeBadge = document.getElementById('book-grade-badge');
+                if (gradeBadge) gradeBadge.textContent = appState.gradeLevel;
                 
                 // Re-render chapter list
                 const chapterList = document.getElementById('chapter-list');
@@ -2401,7 +2551,10 @@
         if (!loadSavedBook()) {
             loadGeneratedStructure();
         }
-
+        
+        // Update grade badge for default case
+        const gradeBadge = document.getElementById('book-grade-badge');
+        if (gradeBadge) gradeBadge.textContent = appState.gradeLevel;
         
         updateWordCount();
         
@@ -2461,12 +2614,12 @@
                 updateBlockTypeDropdown();
             }
 
-            // Don't react mid-drag (wait for mouseup) or while the AI panel owns focus
-            if (state.isMouseSelecting || state.aiPanelOpen) return;
+            // Don't react mid-drag (wait for mouseup) or while the command menu owns focus
+            if (state.isMouseSelecting || state.commandMenuVisible) return;
 
             clearTimeout(selectionChangeTimer);
             selectionChangeTimer = setTimeout(() => {
-                if (state.isMouseSelecting || state.aiPanelOpen) return;
+                if (state.isMouseSelecting || state.commandMenuVisible) return;
                 const range = getEditorSelectionRange();
                 if (range && document.activeElement === document.getElementById('editor')) {
                     showSelectionToolbar();
@@ -2480,6 +2633,7 @@
         document.addEventListener('click', (e) => {
             if (e.target.closest('#jargon-modal') || e.target.closest('#video-modal') ||
                 e.target.closest('#reading-level-modal') || e.target.closest('#example-modal') ||
+                e.target.closest('#continue-writing-modal') ||
                 e.target.closest('#image-gen-modal') || e.target.closest('#jargon-popover') ||
                 e.target.closest('#widget-config-modal') || e.target.closest('#widget-delete-modal')) {
                 return;
@@ -2487,9 +2641,15 @@
             if (state.jargonEditTarget && !e.target.closest('.jargon-term')) {
                 hideJargonPopover();
             }
-            // Close slash menu
-            if (state.slashMenuVisible && !e.target.closest('#slash-menu')) {
-                closeSlashMenu();
+            // Close command menu (ignore clicks that open it via toolbar)
+            if (state.commandMenuVisible &&
+                !e.target.closest('#command-menu') &&
+                !e.target.closest('#selection-toolbar')) {
+                if (state.commandMenuMode === 'slash') {
+                    dismissSlashMenu();
+                } else {
+                    closeCommandMenu();
+                }
             }
             // Close block menu
             if (!e.target.closest('#block-menu') && !e.target.closest('#block-type-btn') && !e.target.closest('#bubble-block-type-btn')) {
@@ -2497,10 +2657,10 @@
             }
             // Dismiss selection UI when clicking outside the editor and selection menus
             const inSelectionUI = e.target.closest('#selection-toolbar') ||
-                e.target.closest('#ai-selection-menu') ||
+                e.target.closest('#command-menu') ||
                 e.target.closest('#block-menu');
             if (!inSelectionUI && !e.target.closest('#editor') &&
-                (state.selectedRange || state.selectionToolbarVisible || state.aiPanelOpen)) {
+                (state.selectedRange || state.selectionToolbarVisible || isSelectionCommandMenuOpen())) {
                 clearSelectionUI();
             }
         });
@@ -2523,14 +2683,22 @@
                     closeJargonModal();
                 } else if (!document.getElementById('video-modal').classList.contains('hidden')) {
                     closeVideoModal();
+                } else if (!document.getElementById('continue-writing-modal').classList.contains('hidden')) {
+                    closeContinueWritingModal();
                 } else if (!document.getElementById('reading-level-modal').classList.contains('hidden')) {
                     closeReadingLevelModal();
                 } else if (!document.getElementById('example-modal').classList.contains('hidden')) {
                     closeExampleModal();
                 } else if (!document.getElementById('image-gen-modal').classList.contains('hidden')) {
                     closeImageGenModal();
-                } else if (state.selectionToolbarVisible || state.aiPanelOpen || state.selectedRange) {
+                } else if (state.selectionToolbarVisible || isSelectionCommandMenuOpen() || state.selectedRange) {
                     clearSelectionUI({ collapse: true });
+                } else if (state.commandMenuVisible) {
+                    if (state.commandMenuMode === 'slash') {
+                        dismissSlashMenu();
+                    } else {
+                        closeCommandMenu();
+                    }
                 }
             }
         });
@@ -2547,7 +2715,7 @@
             if (!state.isMouseSelecting) return;
             state.isMouseSelecting = false;
             setTimeout(() => {
-                if (state.aiPanelOpen) return;
+                if (state.commandMenuVisible) return;
                 if (getEditorSelectionRange()) {
                     showSelectionToolbar();
                 } else {
@@ -2742,13 +2910,15 @@
                     x: rect.left, 
                     y: rect.bottom + 8 
                 };
-                // Store current range for insert position
-                state.insertPosition = range.cloneRange();
             }
         }
         
         if (event.key === 'Escape') {
-            closeSlashMenu();
+            if (state.commandMenuMode === 'slash') {
+                dismissSlashMenu();
+            } else if (state.commandMenuVisible) {
+                closeCommandMenu();
+            }
             clearSelectionUI({ collapse: true });
         }
     }
@@ -2756,15 +2926,19 @@
     function handleEditorKeyup(event) {
         updateWordCount();
         
-        // Check for slash command trigger
-        if (event.key === '/' && state.slashMenuPosition) {
-            // Use the stored position from keydown (before / was inserted)
-            showSlashMenu(state.slashMenuPosition.x, state.slashMenuPosition.y);
+        // Open slash menu after / is inserted (do not rely on slashMenuPosition — input may clear it)
+        if (event.key === '/') {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                state.insertPosition = range.cloneRange();
+                showCommandMenu('slash', range.getBoundingClientRect());
+            }
         }
     }
 
     function handleEditorInput(event) {
-        if (!state.preserveSelectionUI) {
+        if (!state.preserveSelectionUI && !state.commandMenuVisible) {
             clearSelectionUI();
         }
         checkPlaceholder();
@@ -2845,120 +3019,275 @@
     }
 
     // ════════════════════════════════════════════════════════════════════════════
-    // SLASH MENU
+    // UNIFIED COMMAND MENU (slash + selection)
     // ════════════════════════════════════════════════════════════════════════════
-    function showSlashMenu(x, y) {
-        const menu = document.getElementById('slash-menu');
-        
-        // Ensure menu stays within viewport
-        const menuWidth = 288;
-        const menuHeight = 320;
-        const safeX = Math.min(Math.max(10, x), window.innerWidth - menuWidth - 10);
-        const safeY = Math.min(y, window.innerHeight - menuHeight - 10);
-        
-        // Set position using fixed positioning (viewport-relative)
-        menu.style.left = `${safeX}px`;
-        menu.style.top = `${safeY}px`;
+    function isSelectionCommandMenuOpen() {
+        return state.commandMenuVisible && state.commandMenuMode === 'selection';
+    }
+
+    function showCommandMenu(mode, anchorRect) {
+        if (!anchorRect) return;
+        state.commandMenuMode = mode;
+        state.commandMenuVisible = true;
+
+        const menu = document.getElementById('command-menu');
         menu.classList.remove('hidden');
-        state.slashMenuVisible = true;
-        
-        renderSlashMenu();
-        document.getElementById('slash-search').value = '';
-        document.getElementById('slash-search').focus();
-    }
 
-    function closeSlashMenu() {
-        document.getElementById('slash-menu').classList.add('hidden');
-        state.slashMenuVisible = false;
-        state.slashMenuPosition = null;
-        
-        const editor = document.getElementById('editor');
-        editor.focus();
-    }
+        renderCommandMenu('', mode);
+        const search = document.getElementById('command-menu-search');
+        search.value = '';
+        search.placeholder = mode === 'slash'
+            ? 'Search writing commands or ask AI...'
+            : 'Search actions or ask AI...';
 
-    function renderSlashMenu(filter = '') {
-        const content = document.getElementById('slash-menu-content');
-        const filterLower = filter.toLowerCase();
-        
-        let html = '<div class="menu-header">AI Actions</div>';
-        
-        slashCommands.forEach(cmd => {
-            if (cmd.category === 'divider') {
-                html += `<div class="menu-divider"></div><div class="menu-header">${cmd.dividerLabel || 'More'}</div>`;
-                return;
-            }
-            
-            if (cmd.label.toLowerCase().includes(filterLower) || (cmd.desc && cmd.desc.toLowerCase().includes(filterLower))) {
-                let iconColor = 'text-text-tertiary';
-                if (cmd.category === 'ai') iconColor = 'text-ai-accent';
-                if (cmd.category === 'pedagogy') iconColor = cmd.color || 'text-indigo-500';
-                
-                const isPedagogy = cmd.category === 'pedagogy';
-                const badgeHtml = isPedagogy ? '<span class="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 font-medium">Interactive</span>' : '';
-                
-                html += `
-                    <div class="menu-item ${isPedagogy ? 'pedagogy-item' : ''}" onclick="executeSlashCommand('${cmd.id}')">
-                        <span class="icon ${iconColor}"><span class="material-symbols-outlined text-lg">${cmd.icon}</span></span>
-                        <div class="flex-1">
-                            <div class="font-medium text-text-primary flex items-center gap-2">${cmd.label}${badgeHtml}</div>
-                            <div class="text-xs text-text-tertiary">${cmd.desc || ''}</div>
-                        </div>
-                    </div>
-                `;
-            }
+        positionFloatingUI(menu, anchorRect, {
+            width: 320,
+            height: 400,
+            preferAbove: mode === 'selection'
         });
+        search.focus();
+    }
+
+    function closeCommandMenu() {
+        const menu = document.getElementById('command-menu');
+        if (menu) menu.classList.add('hidden');
+        state.commandMenuVisible = false;
+        state.commandMenuMode = null;
+        state.commandMenuActiveIndex = -1;
+        state.slashMenuPosition = null;
+    }
+
+    function dismissSlashMenu() {
+        // Remove the / character and restore cursor to where it was typed
+        const savedRange = state.insertPosition ? state.insertPosition.cloneRange() : null;
+        const wasSlashMode = state.commandMenuMode === 'slash';
+        closeCommandMenu();
         
+        if (wasSlashMode) {
+            const editor = document.getElementById('editor');
+            editor.focus({ preventScroll: true });
+            
+            // Restore selection to where cursor was AFTER typing / (i.e., right after the /)
+            if (savedRange) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(savedRange);
+                
+                // Now cursor is right after /, use backspace to delete it
+                // This leaves cursor exactly where / was (the desired position)
+                document.execCommand('delete', false, null);
+            }
+        }
+    }
+
+    function removeSlashCharacter() {
+        // Restore selection to where cursor was AFTER typing / then use backspace
+        const savedRange = state.insertPosition ? state.insertPosition.cloneRange() : null;
+        
+        if (savedRange) {
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(savedRange);
+            // Delete the / character (cursor is right after it)
+            document.execCommand('delete', false, null);
+        }
+    }
+
+    function captureSlashInsertPosition() {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            state.insertPosition = selection.getRangeAt(0).cloneRange();
+        }
+    }
+
+    function getSlashContextText() {
+        const editor = document.getElementById('editor');
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            let node = selection.getRangeAt(0).startContainer;
+            if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+            while (node && node !== editor) {
+                if (['P', 'H1', 'H2', 'H3', 'H4', 'LI', 'BLOCKQUOTE'].includes(node.nodeName)) {
+                    const text = node.textContent.trim().replace(/^\//, '');
+                    if (text) return text;
+                }
+                node = node.parentNode;
+            }
+        }
+        return (editor.innerText || '').slice(-500).trim();
+    }
+
+    function renderCommandMenu(filter = '', mode = state.commandMenuMode) {
+        const content = document.getElementById('command-menu-content');
+        const filterLower = filter.trim().toLowerCase();
+        state.commandMenuActiveIndex = -1;
+
+        let html = '';
+
+        if (filterLower) {
+            const safe = escapeHtml(filter.trim());
+            const desc = mode === 'slash'
+                ? 'Send your instruction to Writing Copilot'
+                : 'Run your own instruction on the selection';
+            html += `<div class="ai-menu-custom ai-menu-selectable" data-custom="1" onclick="runCustomAIFromInput()">
+                <span class="ai-menu-item-icon ai-accent-violet"><span class="material-symbols-outlined">auto_awesome</span></span>
+                <div class="ai-menu-item-body">
+                    <div class="ai-menu-item-label">Ask AI: “${safe}”</div>
+                    <div class="ai-menu-item-desc">${desc}</div>
+                </div>
+                <span class="material-symbols-outlined text-text-tertiary text-base">keyboard_return</span>
+            </div>`;
+        }
+
+        const matches = commandMenuOptions.filter(opt =>
+            (opt.context === mode || opt.context === 'both') &&
+            (opt.label.toLowerCase().includes(filterLower) || (opt.desc || '').toLowerCase().includes(filterLower))
+        );
+
+        const order = commandMenuCategoryOrder[mode] || [];
+        order.forEach(category => {
+            const categoryItems = matches.filter(opt => opt.category === category);
+            if (!categoryItems.length) return;
+            html += `<div class="ai-menu-cat">${category}</div>`;
+            categoryItems.forEach(opt => {
+                const onclick = opt.action
+                    ? `handleCommandMenuModalAction('${opt.action}')`
+                    : `executeCommandAction('${opt.id}')`;
+                const badge = opt.widget ? '<span class="ai-menu-badge">Interactive</span>' : '';
+                html += `<div class="ai-menu-item ai-menu-selectable" onclick="${onclick}">
+                    <span class="ai-menu-item-icon ai-accent-${opt.accent || 'slate'}"><span class="material-symbols-outlined">${opt.icon || 'auto_awesome'}</span></span>
+                    <div class="ai-menu-item-body">
+                        <div class="ai-menu-item-label">${opt.label}${badge}</div>
+                        <div class="ai-menu-item-desc">${opt.desc || ''}</div>
+                    </div>
+                </div>`;
+            });
+        });
+
+        if (!html) {
+            html = '<div class="px-3 py-3 text-sm text-text-tertiary text-center">No matching actions</div>';
+        }
         content.innerHTML = html;
     }
 
-    function filterSlashMenu(value) {
-        renderSlashMenu(value);
+    function filterCommandMenu(value) {
+        renderCommandMenu(value, state.commandMenuMode);
     }
 
-    function handleSlashMenuKeydown(event) {
+    function runCustomAIFromInput() {
+        const val = document.getElementById('command-menu-search').value.trim();
+        if (val) executeCustomAIPrompt(val);
+    }
+
+    function moveCommandMenuSelection(direction) {
+        const items = Array.from(document.querySelectorAll('#command-menu-content .ai-menu-selectable'));
+        if (!items.length) return;
+        items.forEach(el => el.classList.remove('active'));
+        let idx = state.commandMenuActiveIndex + direction;
+        if (idx < 0) idx = items.length - 1;
+        if (idx >= items.length) idx = 0;
+        state.commandMenuActiveIndex = idx;
+        const active = items[idx];
+        active.classList.add('active');
+        active.scrollIntoView({ block: 'nearest' });
+    }
+
+    function handleCommandMenuKeydown(event) {
         if (event.key === 'Escape') {
-            closeSlashMenu();
+            if (state.commandMenuMode === 'selection') {
+                clearSelectionUI({ collapse: true });
+            } else {
+                dismissSlashMenu();
+            }
+            return;
+        }
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            moveCommandMenuSelection(1);
+            return;
+        }
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            moveCommandMenuSelection(-1);
+            return;
         }
         if (event.key === 'Enter') {
             event.preventDefault();
-            const firstItem = document.querySelector('#slash-menu-content .menu-item');
-            if (firstItem) firstItem.click();
+            const items = Array.from(document.querySelectorAll('#command-menu-content .ai-menu-selectable'));
+            const active = items[state.commandMenuActiveIndex];
+            if (active) {
+                active.click();
+            } else if (event.target.value.trim()) {
+                executeCustomAIPrompt(event.target.value.trim());
+            }
         }
     }
 
-    function executeSlashCommand(id) {
-        closeSlashMenu();
-        
-        // Remove the / character
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            range.setStart(range.startContainer, Math.max(0, range.startOffset - 1));
-            range.deleteContents();
+    function handleCommandMenuModalAction(actionName) {
+        const mode = state.commandMenuMode;
+        closeCommandMenu();
+        if (mode === 'slash') {
+            removeSlashCharacter();
+            captureSlashInsertPosition();
         }
-        
-        const cmd = slashCommands.find(c => c.id === id);
-        if (!cmd) return;
-        
-        if (id === 'pullquote') {
-            document.execCommand('formatBlock', false, 'blockquote');
-        } else if (cmd.category === 'ai') {
+        const actions = {
+            openJargonModal,
+            openReadingLevelModal,
+            openExampleModal,
+            openImageGenModal,
+            openVideoModal
+        };
+        if (actions[actionName]) actions[actionName]();
+    }
+
+    function executeCommandAction(id) {
+        const mode = state.commandMenuMode;
+        const opt = commandMenuOptions.find(o => o.id === id);
+        if (!opt) return;
+
+        closeCommandMenu();
+
+        if (mode === 'slash') {
+            // CRITICAL: Capture block element BEFORE removing slash (ranges become stale after DOM changes)
+            state.aiInsertAnchorBlock = getBlockElementForRange(state.insertPosition);
+            removeSlashCharacter();
+            captureSlashInsertPosition();
+        }
+
+        const writingIds = ['intro', 'conclusion', 'outline'];
+        if (id === 'continue' && mode === 'slash') {
+            openContinueWritingModal();
+            document.getElementById('editor').focus();
+            return;
+        }
+        if (writingIds.includes(id) && mode === 'slash') {
             aiAction(id);
-        } else if (cmd.category === 'pedagogy') {
-            openPedagogyModal(id);
-        } else if (id === 'image') {
-            insertImage();
-        } else if (id === 'youtube') {
-            const url = prompt('Enter YouTube URL:');
-            if (url) {
-                const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/)?.[1];
-                if (videoId) {
-                    document.execCommand('insertHTML', false, 
-                        `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen class="my-4 rounded-lg"></iframe>`);
-                }
-            }
+            document.getElementById('editor').focus();
+            return;
         }
-        
+
+        if (mode === 'selection') {
+            executeAIMenuAction(id);
+            return;
+        }
+
+        // Slash mode: enhance / engage / shared actions
+        if (pedagogyWidgetActions[id]) {
+            const contextText = getSlashContextText();
+            generatePedagogyWidget(id, contextText, state.insertPosition);
+            document.getElementById('editor').focus();
+            return;
+        }
+
+        if (id === 'add-example') {
+            const contextText = getSlashContextText();
+            const prompt = `Fetch a relevant real-world example from recent news to illustrate the concept in the selected text, and summarize it concisely (2-4 sentences). If a recent news example is not applicable or available, fall back to a general real-world example. Return ONLY the example text, without repeating the original text.`;
+            state.currentAIAction = id;
+            generateAIResponse(prompt, contextText, state.insertPosition);
+            document.getElementById('editor').focus();
+            return;
+        }
+
         document.getElementById('editor').focus();
     }
 
@@ -3100,20 +3429,16 @@
         state.selectionToolbarVisible = false;
     }
 
-    function hideAIPanel() {
-        const menu = document.getElementById('ai-selection-menu');
-        if (menu) menu.classList.add('hidden');
-        state.aiPanelOpen = false;
-    }
-
     function hideSelectionMenus() {
         hideSelectionToolbar();
-        hideAIPanel();
         document.getElementById('block-menu')?.classList.add('hidden');
     }
 
     function clearSelectionUI(options = {}) {
         hideSelectionMenus();
+        if (state.commandMenuVisible) {
+            closeCommandMenu();
+        }
         clearSelectionHighlight();
         if (options.collapse) {
             const selection = window.getSelection();
@@ -3162,8 +3487,7 @@
             return;
         }
 
-        closeSlashMenu();
-        hideAIPanel();
+        closeCommandMenu();
 
         const toolbar = document.getElementById('selection-toolbar');
         const rect = state.selectedRange.getBoundingClientRect();
@@ -3180,7 +3504,7 @@
         const rect = state.selectedRange.getBoundingClientRect();
 
         const highlightLayer = document.getElementById('selection-highlight-layer');
-        if (state.aiPanelOpen || (highlightLayer && highlightLayer.innerHTML !== '')) {
+        if (isSelectionCommandMenuOpen() || (highlightLayer && highlightLayer.innerHTML !== '')) {
             renderSelectionHighlight();
         }
 
@@ -3190,10 +3514,14 @@
                 positionFloatingUI(toolbar, rect, { width: 320, height: 44, preferAbove: true });
             }
         }
-        if (state.aiPanelOpen) {
-            const menu = document.getElementById('ai-selection-menu');
+        if (state.commandMenuVisible) {
+            const menu = document.getElementById('command-menu');
             if (menu && !menu.classList.contains('hidden')) {
-                positionFloatingUI(menu, rect, { width: 288, height: 400, preferAbove: false });
+                positionFloatingUI(menu, rect, {
+                    width: 320,
+                    height: 400,
+                    preferAbove: state.commandMenuMode === 'selection'
+                });
             }
         }
     }
@@ -3237,19 +3565,16 @@
         if (!state.selectedRange) return;
 
         hideSelectionToolbar();
-        closeSlashMenu();
+        closeCommandMenu();
 
-        const menu = document.getElementById('ai-selection-menu');
         const rect = getSelectionAnchorRect();
-        if (!menu || !rect) return;
+        if (!rect) return;
 
-        menu.classList.remove('hidden');
-        state.aiPanelOpen = true;
-        renderAIMenu();
-        document.getElementById('ai-menu-search').value = '';
-        positionFloatingUI(menu, rect, { width: 288, height: 400, preferAbove: false });
-        renderSelectionHighlight();
-        document.getElementById('ai-menu-search').focus();
+        // Defer so the opening click doesn't hit the document click-to-close handler
+        requestAnimationFrame(() => {
+            showCommandMenu('selection', rect);
+            renderSelectionHighlight();
+        });
     }
 
     function showAISelectionMenu(x, y) {
@@ -3258,45 +3583,18 @@
         openAIFromSelection();
     }
 
-    function renderAIMenu(filter = '') {
-        const content = document.getElementById('ai-menu-content');
-        const filterLower = filter.toLowerCase();
-        
-        let html = '';
-        let currentCategory = '';
-        
-        aiMenuOptions.forEach(opt => {
-            if (!opt.label.toLowerCase().includes(filterLower)) return;
-            
-            if (opt.category !== currentCategory) {
-                currentCategory = opt.category;
-                html += `<div class="menu-header">${currentCategory}</div>`;
-            }
-            
-            const onclick = opt.action ? `${opt.action}()` : `executeAIMenuAction('${opt.id}')`;
-            html += `<div class="menu-item" onclick="${onclick}">${opt.label}</div>`;
-        });
-        
-        content.innerHTML = html || '<div class="px-3 py-2 text-sm text-text-tertiary">No matching options</div>';
-    }
-
-    function filterAIMenu(value) {
-        renderAIMenu(value);
-    }
-
-    function handleAIMenuKeydown(event) {
-        if (event.key === 'Escape') {
-            clearSelectionUI({ collapse: true });
-        }
-        if (event.key === 'Enter' && event.target.value.trim()) {
-            event.preventDefault();
-            executeCustomAIPrompt(event.target.value.trim());
-        }
-    }
-
     function toggleSourceToggle(source) {
         state.sourceToggles[source] = !state.sourceToggles[source];
-        document.getElementById(`toggle-${source}`).classList.toggle('active', state.sourceToggles[source]);
+        const el = document.getElementById(`setting-toggle-${source}`);
+        if (el) el.classList.toggle('active', state.sourceToggles[source]);
+        localStorage.setItem('ai_source_toggles', JSON.stringify(state.sourceToggles));
+    }
+
+    function syncSourceToggleUI() {
+        ['web', 'library'].forEach(source => {
+            const el = document.getElementById(`setting-toggle-${source}`);
+            if (el) el.classList.toggle('active', !!state.sourceToggles[source]);
+        });
     }
 
     const pedagogyWidgetActions = {
@@ -3360,7 +3658,7 @@ Return ONLY the implications text (2–3 short paragraphs).`,
         const capturedText = state.selectedText || '';
         const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
         
-        hideAIPanel();
+        closeCommandMenu();
         
         state.currentAIAction = actionId;
         
@@ -3453,21 +3751,21 @@ Return ONLY the implications text (2–3 short paragraphs).`,
         generateBtn.disabled = true;
 
         const personalization = document.getElementById('wcm-personalize').value.trim();
-        const difficultyHint = `Difficulty: ${widgetConfigState.difficulty}. ${widgetConfigState.difficulty === 'easy' ? 'Use simple language and straightforward questions.' : widgetConfigState.difficulty === 'challenging' ? 'Use complex reasoning and nuanced questions.' : ''}`;
+        const gradeAndDifficultyContext = getGradeDifficultyContext(appState.gradeLevel, widgetConfigState.difficulty);
         const personalHint = personalization ? `Author's instruction: ${personalization}` : '';
 
         try {
             const contentResult = state.apiKey 
                 ? await fetchStructuredAI(
-                    'You are creating educational content for a textbook.',
-                    `${config.prompt}\n\n${difficultyHint}\n${personalHint}\n\nText:\n${widgetConfigState.selectedText}`
+                    `You are creating educational content for a ${appState.gradeLevel} textbook.\n${gradeAndDifficultyContext}`,
+                    `${config.prompt}\n\n${personalHint}\n\nText:\n${widgetConfigState.selectedText}`
                   )
                 : getMockPedagogyContent(widgetConfigState.actionId, widgetConfigState.selectedText);
 
             const openingPrompt = state.apiKey
                 ? await fetchStructuredAI(
-                    'You are creating an opening question for an interactive learning exercise.',
-                    `${config.openingPromptGen}\n\n${difficultyHint}\n${personalHint}\n\nContent:\n${contentResult}`
+                    `You are creating an opening question for an interactive learning exercise for ${appState.gradeLevel} students.\n${gradeAndDifficultyContext}`,
+                    `${config.openingPromptGen}\n\n${personalHint}\n\nContent:\n${contentResult}`
                   )
                 : getMockPedagogyOpening(widgetConfigState.actionId);
 
@@ -3612,10 +3910,24 @@ Return ONLY the implications text (2–3 short paragraphs).`,
     }
 
     function executeCustomAIPrompt(prompt) {
-        const capturedText = state.selectedText || '';
-        const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
-        hideAIPanel();
-        generateAIResponse(prompt, capturedText, capturedRange);
+        const mode = state.commandMenuMode;
+        const capturedText = (state.selectedText || '').trim();
+
+        closeCommandMenu();
+        if (mode === 'slash') {
+            removeSlashCharacter();
+        }
+
+        clearSelectionUI({ collapse: true });
+        ensureCopilotVisible();
+
+        state.pendingCopilotQuote = capturedText || null;
+
+        const input = document.getElementById('copilot-input');
+        if (input) {
+            input.value = prompt;
+            sendCopilotMessage();
+        }
     }
 
     // ════════════════════════════════════════════════════════════════════════════
@@ -4084,11 +4396,68 @@ Return ONLY the implications text (2–3 short paragraphs).`,
     // ════════════════════════════════════════════════════════════════════════════
     // AI ACTIONS
     // ════════════════════════════════════════════════════════════════════════════
+    function openContinueWritingModal() {
+        if (state.insertPosition) {
+            state.aiInsertRange = state.insertPosition.cloneRange();
+        } else {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                state.aiInsertRange = selection.getRangeAt(0).cloneRange();
+            }
+        }
+        document.getElementById('continue-word-count').value = state.continueWordTarget || 150;
+        syncContinueWordButtons(state.continueWordTarget || 150);
+        document.getElementById('continue-writing-modal').classList.remove('hidden');
+    }
+
+    function closeContinueWritingModal() {
+        document.getElementById('continue-writing-modal').classList.add('hidden');
+    }
+
+    function setContinueWordCount(count) {
+        state.continueWordTarget = count;
+        document.getElementById('continue-word-count').value = count;
+        syncContinueWordButtons(count);
+    }
+
+    function syncContinueWordButtons(value) {
+        const num = parseInt(value, 10);
+        document.querySelectorAll('.continue-word-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.value, 10) === num);
+        });
+    }
+
+    function generateContinueWriting(wordCount) {
+        const words = Math.min(800, Math.max(25, parseInt(wordCount, 10) || 150));
+        state.continueWordTarget = words;
+
+        const editor = document.getElementById('editor');
+        const content = editor.innerText || '';
+        const chapterTitle = document.getElementById('chapter-title').value;
+        const capturedRange = state.aiInsertRange
+            ? state.aiInsertRange.cloneRange()
+            : (state.insertPosition ? state.insertPosition.cloneRange() : null);
+
+        const prompt = `Continue writing the following textbook content naturally to help an author overcome writer's block. Write approximately ${words} words (between ${Math.round(words * 0.85)} and ${Math.round(words * 1.15)} words). Match the tone, style, and reading level of the existing text for ${appState.gradeLevel} students. Return ONLY the new prose paragraphs — no headings, labels, meta-commentary, or repetition of the provided text.\n\n${content.slice(-800) || chapterTitle}`;
+
+        state.currentAIAction = 'continue';
+        state.aiResponsePrompt = prompt;
+        generateAIResponse(prompt, '', capturedRange);
+    }
+
+    function startContinueWriting() {
+        const words = parseInt(document.getElementById('continue-word-count').value, 10) || state.continueWordTarget || 150;
+        closeContinueWritingModal();
+        generateContinueWriting(words);
+    }
+
     function aiAction(action) {
         state.currentAIAction = action;
         
         const capturedText = state.selectedText || '';
-        const capturedRange = state.selectedRange ? state.selectedRange.cloneRange() : null;
+        const capturedRange = state.selectedRange
+            ? state.selectedRange.cloneRange()
+            : (state.insertPosition ? state.insertPosition.cloneRange() : null);
         
         const editor = document.getElementById('editor');
         const content = editor.innerText;
@@ -4100,29 +4469,43 @@ Return ONLY the implications text (2–3 short paragraphs).`,
             'continue': `Continue writing the following textbook content naturally:\n\n${content.slice(-500) || chapterTitle}`,
             'intro': `Write an engaging introduction paragraph for a textbook chapter about "${chapterTitle}". ${chapterSubtitle}`,
             'conclusion': `Write a conclusion that summarizes the key points from this chapter about "${chapterTitle}":\n\n${content.slice(0, 1000)}`,
-            'expand': `Expand and add more detail to explain this concept better:\n\n${capturedText || content.slice(-300) || chapterTitle}`,
-            'simplify': `Simplify this text to make it easier for students to understand:\n\n${capturedText || content}`,
-            'example': `Fetch a relevant real-world example from recent news to illustrate this concept, and summarize it concisely (2-4 sentences). If a recent news example is not applicable or available, fall back to a general real-world example. Return ONLY the example text, without repeating the original text:\n\n${capturedText || content.slice(-300) || chapterTitle}`
         };
         
         const prompt = prompts[action] || `Help with: ${action}`;
-        
-        if (action === 'example' && !capturedText) {
-            openExampleModal();
-        } else {
-            generateAIResponse(prompt, capturedText, capturedRange);
-        }
+        state.aiResponsePrompt = prompt;
+        generateAIResponse(prompt, capturedText, capturedRange);
     }
 
     // ════════════════════════════════════════════════════════════════════════════
     // AI RESPONSE
     // ════════════════════════════════════════════════════════════════════════════
+    function isRangeConnected(range) {
+        if (!range) return false;
+        try {
+            return document.contains(range.startContainer);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function snapshotAIInsertRange(capturedRange) {
+        const range = capturedRange
+            || (state.aiInsertRange && isRangeConnected(state.aiInsertRange) ? state.aiInsertRange.cloneRange() : null)
+            || (state.insertPosition && isRangeConnected(state.insertPosition) ? state.insertPosition.cloneRange() : null)
+            || (state.selectedRange && isRangeConnected(state.selectedRange) ? state.selectedRange.cloneRange() : null);
+        state.aiInsertRange = range;
+        state.insertPosition = range ? range.cloneRange() : null;
+        return range;
+    }
+
     async function generateAIResponse(prompt, selectedText = '', capturedRange = null) {
-        state.insertPosition = capturedRange || (state.selectedRange ? state.selectedRange.cloneRange() : null);
+        snapshotAIInsertRange(capturedRange);
+        state.aiResponsePrompt = prompt;
 
         showAIResponseModal();
         
-        const systemPrompt = `You are an expert textbook author. Create clear, educational content. When transforming text, return ONLY the transformed text.`;
+        const gradeContext = getGradeContext(appState.gradeLevel);
+        const systemPrompt = `You are an expert textbook author writing for ${appState.gradeLevel} students. ${gradeContext}\n\nCreate clear, educational content appropriate for this audience. When transforming text, return ONLY the transformed text.`;
         const userPrompt = selectedText ? `${prompt}\n\nText:\n"${selectedText}"` : prompt;
 
         try {
@@ -4289,54 +4672,75 @@ Return ONLY the implications text (2–3 short paragraphs).`,
         return null;
     }
 
+    function buildAIInsertHTML(content, action) {
+        const templateConfig = getAITemplateConfig(action);
+        const formatted = formatAIContent(content);
+        const writingActions = ['continue', 'intro', 'conclusion', 'outline'];
+
+        if (templateConfig) {
+            const { title, icon, color } = templateConfig;
+            return `<div class="my-4"><div class="border-l-4 border-${color}-500 bg-${color}-50/50 p-4 rounded-r-lg"><div class="flex items-center gap-2 font-semibold text-${color}-800 mb-2"><span class="material-symbols-outlined text-${color}-500 text-sm">${icon}</span>${title}</div><div class="text-text-primary text-sm leading-relaxed">${formatted}</div></div></div>`;
+        }
+
+        if (writingActions.includes(action) || action === 'continue') {
+            const parts = content.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+            if (parts.length > 1) {
+                return parts.map(p => `<p>${formatAIContent(p)}</p>`).join('');
+            }
+            return `<p>${formatted}</p>`;
+        }
+
+        return `<div class="my-4">${formatted}</div>`;
+    }
+
+    function insertHTMLBelowAnchor(html) {
+        const editor = document.getElementById('editor');
+        editor.focus();
+
+        // Prefer the saved block element (survives DOM changes from slash removal)
+        if (state.aiInsertAnchorBlock && state.aiInsertAnchorBlock.parentNode === editor) {
+            state.aiInsertAnchorBlock.insertAdjacentHTML('afterend', html);
+            const inserted = state.aiInsertAnchorBlock.nextElementSibling;
+            return inserted || state.aiInsertAnchorBlock;
+        }
+
+        // Fallback: try using the saved range
+        const anchorRange = isRangeConnected(state.aiInsertRange) ? state.aiInsertRange : null;
+        if (anchorRange) {
+            const blockElement = getBlockElementForRange(anchorRange);
+            if (blockElement && blockElement.parentNode === editor) {
+                blockElement.insertAdjacentHTML('afterend', html);
+                return blockElement.nextElementSibling || blockElement;
+            }
+        }
+
+        // Last resort: append to editor end
+        editor.insertAdjacentHTML('beforeend', html);
+        return editor.lastElementChild;
+    }
+
     function acceptAIResponse() {
         if (!state.generatedContent) {
             closeAIResponse();
             return;
         }
-        
-        const editor = document.getElementById('editor');
-        editor.focus();
-        
-        let htmlToInsert = formatAIContent(state.generatedContent);
-        const templateConfig = getAITemplateConfig(state.currentAIAction);
-        
-        if (templateConfig) {
-            const { title, icon, color } = templateConfig;
-            htmlToInsert = `
-                <div class="my-4">
-                    <div class="border-l-4 border-${color}-500 bg-${color}-50/50 p-4 rounded-r-lg">
-                        <div class="flex items-center gap-2 font-semibold text-${color}-800 mb-2">
-                            <span class="material-symbols-outlined text-${color}-500 text-sm">${icon}</span>
-                            ${title}
-                        </div>
-                        <div class="text-text-primary text-sm leading-relaxed">
-                            ${htmlToInsert}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        if (state.selectedRange) {
-            // Replace selected text
+
+        const htmlToInsert = buildAIInsertHTML(state.generatedContent, state.currentAIAction);
+        const shouldReplaceSelection = state.selectedRange && isRangeConnected(state.selectedRange)
+            && !['continue', 'intro', 'conclusion', 'outline'].includes(state.currentAIAction);
+
+        if (shouldReplaceSelection) {
+            const editor = document.getElementById('editor');
+            editor.focus();
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(state.selectedRange);
             document.execCommand('insertHTML', false, htmlToInsert);
-        } else if (state.insertPosition) {
-            // Insert at stored position
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(state.insertPosition);
-            document.execCommand('insertHTML', false, htmlToInsert);
         } else {
-            // Fallback: append to end
-            editor.innerHTML += `<div>${htmlToInsert}</div>`;
+            insertHTMLBelowAnchor(htmlToInsert);
         }
-        
+
         closeAIResponse();
-        clearSelectionUI();
         updateWordCount();
         checkPlaceholder();
     }
@@ -4363,68 +4767,17 @@ Return ONLY the implications text (2–3 short paragraphs).`,
             closeAIResponse();
             return;
         }
-        
-        const editor = document.getElementById('editor');
-        editor.focus();
-        
-        const anchorRange = state.insertPosition || state.selectedRange;
-        
-        const newBlock = document.createElement('div');
-        newBlock.className = 'ai-generated-block my-4';
-        
-        const formattedContent = formatAIContent(state.generatedContent);
-        const templateConfig = getAITemplateConfig(state.currentAIAction);
-        
-        if (templateConfig) {
-            const { title, icon, color } = templateConfig;
-            newBlock.className = 'my-4'; // Remove ai-generated-block to avoid the nested green background
-            newBlock.innerHTML = `
-                <div class="border-l-4 border-${color}-500 bg-${color}-50/50 p-4 rounded-r-lg">
-                    <div class="flex items-center gap-2 font-semibold text-${color}-800 mb-2">
-                        <span class="material-symbols-outlined text-${color}-500 text-sm">${icon}</span>
-                        ${title}
-                    </div>
-                    <div class="text-text-primary text-sm leading-relaxed">
-                        ${formattedContent}
-                    </div>
-                </div>
-            `;
-        } else {
-            newBlock.innerHTML = formattedContent;
-        }
-        
-        let inserted = false;
-        
-        if (anchorRange) {
-            const blockElement = getBlockElementForRange(anchorRange);
-            if (blockElement && blockElement.parentNode) {
-                blockElement.parentNode.insertBefore(newBlock, blockElement.nextSibling);
-                inserted = true;
-            } else {
-                let node = anchorRange.endContainer;
-                if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
-                
-                while (node && node !== editor && node.parentNode !== editor) {
-                    node = node.parentNode;
-                }
-                
-                if (node && node !== editor && node.parentNode === editor) {
-                    node.parentNode.insertBefore(newBlock, node.nextSibling);
-                    inserted = true;
-                }
-            }
-        }
-        
-        if (!inserted) {
-            editor.appendChild(newBlock);
-        }
-        
+
+        const htmlToInsert = buildAIInsertHTML(state.generatedContent, state.currentAIAction);
+        const inserted = insertHTMLBelowAnchor(htmlToInsert);
+
         closeAIResponse();
-        clearSelectionUI();
         updateWordCount();
         checkPlaceholder();
-        
-        newBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        if (inserted && inserted.scrollIntoView) {
+            inserted.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
     
     function formatAIContent(content) {
@@ -4438,6 +4791,15 @@ Return ONLY the implications text (2–3 short paragraphs).`,
     }
 
     function regenerateAI() {
+        if (state.currentAIAction === 'continue') {
+            generateContinueWriting(state.continueWordTarget || 150);
+            return;
+        }
+        if (state.currentAIAction && state.aiResponsePrompt) {
+            const capturedRange = state.aiInsertRange ? state.aiInsertRange.cloneRange() : null;
+            generateAIResponse(state.aiResponsePrompt, state.selectedText || '', capturedRange);
+            return;
+        }
         if (state.currentAIAction) {
             aiAction(state.currentAIAction);
         }
@@ -4446,6 +4808,8 @@ Return ONLY the implications text (2–3 short paragraphs).`,
     function closeAIResponse() {
         document.getElementById('ai-response-overlay').classList.add('hidden');
         document.getElementById('ai-response-container').classList.add('hidden');
+        state.aiInsertRange = null;
+        state.aiInsertAnchorBlock = null;
         clearSelectionUI();
         document.getElementById('editor').focus();
     }
@@ -4628,12 +4992,20 @@ Return ONLY the implications text (2–3 short paragraphs).`,
         }
         
         state.copilotPending = true;
-        addCopilotMessage('user', message);
+
+        // If the author asked about a highlighted passage, attach it to this turn.
+        const quote = state.pendingCopilotQuote || null;
+        state.pendingCopilotQuote = null;
+
+        addCopilotMessage('user', message, quote);
         input.value = '';
         input.style.height = 'auto';
 
         const hybridContext = buildHybridCopilotContext();
-        state.copilotHistory.push({ role: 'user', content: message });
+        const modelContent = quote
+            ? `The author has highlighted this specific passage from the chapter:\n"""\n${quote}\n"""\n\nTheir request about ONLY this passage: ${message}\n\nFocus your response on the highlighted passage above, not the whole chapter.`
+            : message;
+        state.copilotHistory.push({ role: 'user', content: modelContent });
         trimCopilotHistory();
         
         // Show typing indicator
@@ -4657,10 +5029,15 @@ Return ONLY the implications text (2–3 short paragraphs).`,
     }
     
     async function generateCopilotResponse(hybridContext) {
-        const systemPrompt = `You are a Writing Copilot for textbook authors. You help with:
-- Generating content, outlines, and explanations
-- Simplifying text for different grade levels
-- Adding examples and analogies
+        const gradeContext = getGradeContext(appState.gradeLevel);
+        const systemPrompt = `You are a Writing Copilot for textbook authors. This textbook is written for ${appState.gradeLevel} students.
+
+${gradeContext}
+
+You help with:
+- Generating content, outlines, and explanations appropriate for ${appState.gradeLevel} students
+- Adjusting text complexity to match the target grade level
+- Adding examples and analogies that resonate with this audience
 - Improving writing style and clarity
 - Cross-chapter consistency using the book outline
 
@@ -4715,13 +5092,21 @@ You receive the full text of the author's current chapter plus an outline of all
         return `I can help you with that! Here are some things I can do:\n\n• **Generate content** - Write introductions, conclusions, or expand sections\n• **Simplify text** - Adjust for different reading levels\n• **Add examples** - Create real-world analogies and illustrations\n• **Review & improve** - Check clarity, flow, and engagement\n\nJust tell me what you'd like to work on!`;
     }
 
-    function addCopilotMessage(role, content) {
+    function addCopilotMessage(role, content, quote = null) {
         const container = document.getElementById('copilot-messages');
         const div = document.createElement('div');
         div.className = 'flex gap-2 animate-fadeIn';
         
         if (role === 'user') {
-            div.innerHTML = `<div class="flex-1"></div><div class="bg-primary text-white text-sm px-3 py-2.5 rounded-lg rounded-br-sm max-w-[85%]">${escapeHtml(content)}</div>`;
+            let quoteHtml = '';
+            if (quote) {
+                const trimmed = quote.length > 180 ? quote.slice(0, 180) + '…' : quote;
+                quoteHtml = `<div class="flex items-start gap-1.5 mb-1.5 pb-1.5 border-b border-white/25 text-white/80 text-xs italic">
+                    <span class="material-symbols-outlined text-[14px] mt-0.5 shrink-0">format_quote</span>
+                    <span>${escapeHtml(trimmed)}</span>
+                </div>`;
+            }
+            div.innerHTML = `<div class="flex-1"></div><div class="bg-primary text-white text-sm px-3 py-2.5 rounded-lg rounded-br-sm max-w-[85%]">${quoteHtml}${escapeHtml(content)}</div>`;
         } else {
             const formattedContent = formatCopilotContent(content);
             const actionsHtml = state.copilotMode === 'author' ? `
@@ -4993,6 +5378,9 @@ You receive the full text of the author's current chapter plus an outline of all
     // MODALS
     // ════════════════════════════════════════════════════════════════════════════
     function openSettings() {
+        document.getElementById('api-key-input').value = state.apiKey || '';
+        document.getElementById('model-select').value = state.model || 'gpt-4o';
+        syncSourceToggleUI();
         document.getElementById('settings-modal').classList.remove('hidden');
     }
 
@@ -5621,10 +6009,15 @@ CRITICAL RULES:
     }
 
     async function generateWidgetChatResponse(chat) {
+        const difficulty = getWidgetElement(chat.widgetId)?.dataset.difficulty || 'moderate';
+        const gradeContext = getGradeDifficultyContext(appState.gradeLevel, difficulty);
+        
         const systemPrompt = `${chat.pedagogySystem || chat.persona.systemPrompt}
 
+Grade Level: ${appState.gradeLevel}
+${gradeContext}
+
 Learning goal: ${chat.goal || 'Help the student engage deeply with the material.'}
-Difficulty: ${getWidgetElement(chat.widgetId)?.dataset.difficulty || 'moderate'}
 Max turns guidance: ${chat.maxTurns === 'unlimited' ? 'Continue until the student demonstrates understanding.' : 'Aim to complete within ' + chat.maxTurns + ' exchanges.'}
 
 Keep responses concise (2-3 sentences). End with a question unless the student has clearly achieved the learning goal.`;
@@ -5845,10 +6238,13 @@ Respond with ONLY the goal text (1-2 sentences), no explanation or quotes.`;
         document.getElementById('pedagogy-generate-btn').disabled = true;
 
         const context = state.pedagogyContext || {};
+        const gradeContext = getGradeDifficultyContext(appState.gradeLevel, currentPedagogyDifficulty);
         let prompt = '';
         
         if (currentPedagogyType === 'socratic') {
-            prompt = `Create an opening Socratic question for a textbook.
+            prompt = `Create an opening Socratic question for a ${appState.gradeLevel} textbook.
+
+${gradeContext}
 
 Chapter: "${context.title}"
 Learning Goal: "${goal}"
@@ -5857,11 +6253,13 @@ Generate ONE powerful opening question that:
 - Is open-ended and thought-provoking
 - Doesn't give away the answer
 - Encourages students to think deeply
-- Is appropriate for undergraduate level
+- Uses vocabulary and complexity appropriate for ${appState.gradeLevel} students
 
 Respond with ONLY the question, no quotes or explanation.`;
         } else if (currentPedagogyType === 'debate') {
-            prompt = `Create a provocative devil's advocate statement for a textbook debate exercise.
+            prompt = `Create a provocative devil's advocate statement for a ${appState.gradeLevel} textbook debate exercise.
+
+${gradeContext}
 
 Chapter: "${context.title}"
 Target Assumption to Challenge: "${goal}"
@@ -5871,10 +6269,13 @@ Generate ONE thought-provoking counterargument or challenging statement that:
 - Forces students to examine their assumptions
 - Is intellectually honest (not a straw man)
 - Includes a question to engage the student
+- Uses vocabulary and complexity appropriate for ${appState.gradeLevel} students
 
 Respond with ONLY the statement and question, no quotes or explanation.`;
         } else if (currentPedagogyType === 'firstprinciples') {
-            prompt = `Create an opening question for a first principles deconstruction exercise.
+            prompt = `Create an opening question for a first principles deconstruction exercise in a ${appState.gradeLevel} textbook.
+
+${gradeContext}
 
 Chapter: "${context.title}"
 Concept to Deconstruct: "${goal}"
@@ -5884,6 +6285,7 @@ Generate ONE question that:
 - Asks "what do we really know?" or "what's the most basic element?"
 - Helps students question underlying assumptions
 - Sets up a chain of deeper inquiry
+- Uses vocabulary and complexity appropriate for ${appState.gradeLevel} students
 
 Respond with ONLY the question, no quotes or explanation.`;
         }
@@ -6039,10 +6441,13 @@ Respond with ONLY the question, no quotes or explanation.`;
         
         // Generate AI response
         const goal = document.getElementById('pedagogy-goal-input').value;
+        const gradeContext = getGradeDifficultyContext(appState.gradeLevel, currentPedagogyDifficulty);
         const systemPrompt = `${config.systemPrompt}
 
+Grade Level: ${appState.gradeLevel}
+${gradeContext}
+
 Learning Goal for this interaction: ${goal}
-Difficulty: ${currentPedagogyDifficulty}
 
 Keep responses concise (2-3 sentences max). Always end with a question unless the student has clearly achieved the learning goal.`;
 

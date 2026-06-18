@@ -207,6 +207,19 @@
     input:focus, textarea:focus, select:focus {
         @apply outline-none ring-2 ring-primary/20 border-primary;
     }
+    
+    /* Book cards - consistent sizing */
+    .book-card {
+        min-height: 240px;
+    }
+    
+    /* Book type chips */
+    .book-type-chip.active {
+        @apply border-primary bg-primary-bg text-primary;
+    }
+    .book-type-chip:not(.active):hover {
+        @apply border-border bg-surface-tertiary;
+    }
 </style>
 </head>
 
@@ -216,16 +229,15 @@
 <aside id="sidebar" class="hidden md:flex flex-col h-full bg-surface border-r border-border w-64 shrink-0">
     <!-- Logo & Profile -->
     <div class="p-6 border-b border-border">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0 sidebar-expanded-only">
-                <span class="text-white font-bold text-lg">DB</span>
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shrink-0 sidebar-expanded-only text-white shadow-sm">
+                <span class="material-symbols-outlined filled text-2xl">local_library</span>
             </div>
-            <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0 sidebar-collapsed-only hidden">
-                <span class="text-white font-bold text-sm">DB</span>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shrink-0 sidebar-collapsed-only hidden text-white shadow-sm">
+                <span class="material-symbols-outlined filled text-xl">local_library</span>
             </div>
             <div class="sidebar-text">
-                <h1 class="text-base font-bold text-text-primary tracking-tight">DreamBook Studio</h1>
-                <p class="text-xs text-text-tertiary">Academic Publisher</p>
+                <h1 class="text-lg font-bold text-text-primary tracking-tight">Dreambook</h1>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -234,7 +246,7 @@
             </div>
             <div class="sidebar-text flex-1 min-w-0">
                 <p class="text-sm font-medium text-text-primary truncate">Dr. Sarah Chen</p>
-                <p class="text-xs text-text-tertiary truncate">Active</p>
+                <span class="inline-flex items-center px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-medium rounded mt-0.5">Pearson</span>
             </div>
         </div>
     </div>
@@ -243,7 +255,7 @@
     <div class="p-4">
         <button onclick="openCreateModal()" class="w-full bg-primary text-text-inverse font-medium py-2.5 px-4 rounded flex items-center justify-center gap-2 hover:bg-primary-dark transition-colors sidebar-expanded-only">
             <span class="material-symbols-outlined text-lg">add</span>
-            <span>New Project</span>
+            <span>New Book</span>
         </button>
         <button onclick="openCreateModal()" class="w-full bg-primary text-text-inverse font-medium py-2.5 rounded flex items-center justify-center hover:bg-primary-dark transition-colors sidebar-collapsed-only hidden">
             <span class="material-symbols-outlined text-lg">add</span>
@@ -254,7 +266,7 @@
     <nav class="flex-1 px-3 space-y-1 overflow-y-auto">
         <a class="flex items-center gap-3 px-3 py-2.5 text-primary font-medium bg-primary-bg/50 rounded border-r-4 border-primary transition-colors" href="#">
             <span class="material-symbols-outlined filled text-xl">auto_stories</span>
-            <span class="sidebar-text">Courses</span>
+            <span class="sidebar-text">My Books</span>
         </a>
         <a class="flex items-center gap-3 px-3 py-2.5 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary rounded transition-colors" href="#">
             <span class="material-symbols-outlined text-xl">category</span>
@@ -268,10 +280,10 @@
     
     <!-- Bottom Actions -->
     <div class="p-3 border-t border-border space-y-1">
-        <a class="flex items-center gap-3 px-3 py-2 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary rounded transition-colors" href="#">
+        <button onclick="openSettingsModal()" class="w-full flex items-center gap-3 px-3 py-2 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary rounded transition-colors">
             <span class="material-symbols-outlined text-xl">settings</span>
             <span class="sidebar-text">Settings</span>
-        </a>
+        </button>
         <button onclick="toggleSidebar()" class="w-full flex items-center gap-3 px-3 py-2 text-text-tertiary hover:bg-surface-tertiary hover:text-text-secondary rounded transition-colors">
             <span class="material-symbols-outlined text-xl sidebar-expanded-only">chevron_left</span>
             <span class="material-symbols-outlined text-xl sidebar-collapsed-only hidden">chevron_right</span>
@@ -291,7 +303,7 @@
             <nav class="hidden sm:flex items-center gap-1 text-sm">
                 <span class="text-text-tertiary">Dashboard</span>
                 <span class="material-symbols-outlined text-text-tertiary text-base">chevron_right</span>
-                <span class="text-text-primary font-medium">My Courses</span>
+                <span class="text-text-primary font-medium">My Books</span>
             </nav>
         </div>
         <div class="flex items-center gap-3">
@@ -312,94 +324,66 @@
     <main class="flex-1 overflow-y-auto">
         <div class="max-w-6xl mx-auto px-8 py-8">
             <!-- Page Header -->
-            <div class="mb-8">
-                <h1 class="text-2xl font-bold text-text-primary tracking-tight mb-2">My Courses</h1>
-                <p class="text-text-secondary">Transform static academic content into interactive simulations. Upload your PDF chapters to begin the semantic mapping process.</p>
-            </div>
-
-            <!-- Stats Row -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-surface rounded-lg border border-border p-5">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-medium text-text-tertiary uppercase tracking-wider">Total Courses</span>
-                        <span class="material-symbols-outlined text-primary text-xl">school</span>
-                    </div>
-                    <p class="text-3xl font-bold text-text-primary tracking-tight">12</p>
-                    <p class="text-xs text-success mt-1">+2 this month</p>
+            <div class="flex items-start justify-between mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-text-primary mb-1">My Books</h1>
+                    <p class="text-sm text-text-secondary">Manage your published works and current drafts.</p>
                 </div>
-                <div class="bg-surface rounded-lg border border-border p-5">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-medium text-text-tertiary uppercase tracking-wider">Active Students</span>
-                        <span class="material-symbols-outlined text-primary text-xl">groups</span>
-                    </div>
-                    <p class="text-3xl font-bold text-text-primary tracking-tight">1,847</p>
-                    <p class="text-xs text-success mt-1">+124 this week</p>
-                </div>
-                <div class="bg-surface rounded-lg border border-border p-5">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-medium text-text-tertiary uppercase tracking-wider">Completion Rate</span>
-                        <span class="material-symbols-outlined text-primary text-xl">trending_up</span>
-                    </div>
-                    <p class="text-3xl font-bold text-text-primary tracking-tight">89%</p>
-                    <p class="text-xs text-text-tertiary mt-1">Industry avg: 67%</p>
+                <div class="flex items-center gap-1 bg-surface-secondary rounded-lg p-1">
+                    <button id="filter-all" onclick="setFilter('all')" class="px-3 py-1.5 text-sm font-medium rounded-md bg-surface text-text-primary shadow-sm transition-all">All</button>
+                    <button id="filter-published" onclick="setFilter('published')" class="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary rounded-md transition-all">Published</button>
+                    <button id="filter-drafts" onclick="setFilter('drafts')" class="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary rounded-md transition-all">Drafts</button>
                 </div>
             </div>
 
-            <!-- Courses Grid -->
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-lg font-semibold text-text-primary">Recent Projects</h2>
-                <div class="flex items-center gap-2">
-                    <button class="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-tertiary rounded transition-colors">All</button>
-                    <button class="px-3 py-1.5 text-sm text-primary font-medium bg-primary-bg/50 rounded">Published</button>
-                    <button class="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-tertiary rounded transition-colors">Drafts</button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-grid">
-                <!-- Create New -->
-                <div onclick="openCreateModal()" class="bg-surface-secondary rounded-lg border-2 border-dashed border-border p-6 hover:border-primary hover:bg-primary-bg/20 transition-all cursor-pointer flex flex-col items-center justify-center text-center min-h-[220px] group">
-                    <div class="w-12 h-12 rounded-lg bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary group-hover:bg-primary-bg transition-all">
-                        <span class="material-symbols-outlined text-text-tertiary text-2xl group-hover:text-primary transition-colors">add</span>
+            <div class="flex gap-8">
+                <!-- Books Grid (Left side) -->
+                <div class="flex-1">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-grid">
+                        <!-- Content injected by JS -->
                     </div>
-                    <h3 class="font-semibold text-text-primary mb-1">Create New Project</h3>
-                    <p class="text-sm text-text-tertiary max-w-[180px]">Start a new textbook or import existing content</p>
                 </div>
-            </div>
-
-            <!-- Recent Uploads Ledger -->
-            <div class="mt-10">
-                <h2 class="text-sm font-semibold text-text-tertiary uppercase tracking-wider mb-4">Recent Uploads Ledger</h2>
-                <div class="bg-surface rounded-lg border border-border overflow-hidden">
-                    <div class="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-3 bg-surface-secondary border-b border-border text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                        <span></span>
-                        <span>File Name</span>
-                        <span>Size</span>
-                        <span>Status</span>
-                    </div>
-                    <div class="divide-y divide-border">
-                        <div class="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-4 items-center hover:bg-surface-secondary transition-colors">
-                            <span class="material-symbols-outlined text-error text-xl">picture_as_pdf</span>
-                            <div>
-                                <p class="text-sm font-medium text-text-primary">Econ_Ch3_Elasticity.pdf</p>
-                                <p class="text-xs text-text-tertiary">Oct 24, 2023</p>
-                            </div>
-                            <span class="text-sm text-text-secondary">4.2 MB</span>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-bg text-success text-xs font-medium">
-                                <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
-                                Processed
-                            </span>
+                
+                <!-- Analytics Sidebar (Right side) -->
+                <div class="w-72 shrink-0">
+                    <div class="bg-surface rounded-lg border border-border p-5 mb-6">
+                        <div class="flex items-center gap-2 mb-4 text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                            <span class="material-symbols-outlined text-sm">trending_up</span>
+                            Global Impact
                         </div>
-                        <div class="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-4 items-center hover:bg-surface-secondary transition-colors">
-                            <span class="material-symbols-outlined text-error text-xl">picture_as_pdf</span>
-                            <div>
-                                <p class="text-sm font-medium text-text-primary">Psych_Intro_Cognition.pdf</p>
-                                <p class="text-xs text-text-tertiary">Oct 23, 2023</p>
+                        <div class="mb-6">
+                            <p class="text-3xl font-bold text-primary tracking-tight">12,450</p>
+                            <div class="flex items-center justify-between mt-1">
+                                <p class="text-xs text-text-secondary">Total Students Enrolled</p>
+                                <span class="text-xs text-success font-medium bg-success-bg px-1.5 py-0.5 rounded">~+12%</span>
                             </div>
-                            <span class="text-sm text-text-secondary">8.1 MB</span>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-bg text-success text-xs font-medium">
-                                <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
-                                Processed
-                            </span>
+                        </div>
+                        <div class="pt-4 border-t border-border">
+                            <p class="text-2xl font-bold text-warning tracking-tight">89%</p>
+                            <div class="flex items-center justify-between mt-1">
+                                <p class="text-xs text-text-secondary">Avg. Completion Rate</p>
+                                <span class="text-xs text-text-tertiary">Stable</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-4">Recent Activity</div>
+                        <div class="space-y-4">
+                            <div class="flex gap-3">
+                                <div class="w-2 h-2 mt-1.5 rounded-full bg-primary shrink-0"></div>
+                                <div>
+                                    <p class="text-sm text-text-primary">Dr. Aris commented on Chapter 2 of Biology 101.</p>
+                                    <p class="text-xs text-text-tertiary mt-1">2 hours ago</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="w-2 h-2 mt-1.5 rounded-full bg-border shrink-0"></div>
+                                <div>
+                                    <p class="text-sm text-text-primary">You published 'Introduction to Mitochondria'.</p>
+                                    <p class="text-xs text-text-tertiary mt-1">Yesterday</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -424,11 +408,8 @@
                     <button onclick="closeCreateModal()" class="p-1.5 -ml-1.5 rounded hover:bg-surface-tertiary text-text-secondary transition-colors">
                         <span class="material-symbols-outlined text-xl">close</span>
                     </button>
-                    <h1 class="text-base font-semibold text-text-primary">Create New Textbook</h1>
+                    <h1 class="text-base font-semibold text-text-primary">Create New Book</h1>
                 </div>
-                <button onclick="closeCreateModal()" class="text-sm text-text-tertiary hover:text-text-secondary transition-colors">
-                    Skip setup
-                </button>
             </header>
 
             <!-- Content -->
@@ -449,9 +430,28 @@
                         </div>
                         <div id="acc-title-body" class="accordion-body open px-5">
                             <div class="pl-13 space-y-5">
+                                <!-- Book Type -->
+                                <div>
+                                    <label class="block text-sm font-medium text-text-primary mb-2">What are you creating?</label>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button onclick="selectBookType(this, 'textbook')" class="book-type-chip active px-4 py-2 rounded-lg border border-border bg-surface text-sm font-medium transition-all" data-type="textbook">
+                                            <span class="material-symbols-outlined text-base align-middle mr-1">menu_book</span>
+                                            Textbook
+                                        </button>
+                                        <button onclick="selectBookType(this, 'workbook')" class="book-type-chip px-4 py-2 rounded-lg border border-border bg-surface text-sm font-medium text-text-secondary transition-all" data-type="workbook">
+                                            <span class="material-symbols-outlined text-base align-middle mr-1">edit_note</span>
+                                            Workbook
+                                        </button>
+                                        <button onclick="selectBookType(this, 'guide')" class="book-type-chip px-4 py-2 rounded-lg border border-border bg-surface text-sm font-medium text-text-secondary transition-all" data-type="guide">
+                                            <span class="material-symbols-outlined text-base align-middle mr-1">lightbulb</span>
+                                            Study Guide
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label class="block text-sm font-medium text-text-primary mb-2">Book Title</label>
-                                    <input id="book-title" type="text" placeholder="e.g. Principles of Cell Biology" 
+                                    <input id="book-title" type="text" placeholder="e.g. Principles of Cell Biology" autocomplete="off"
                                         class="w-full px-4 py-3 rounded border border-border bg-surface text-text-primary placeholder:text-text-tertiary transition-all"
                                         oninput="handleTitleInput()"/>
                                     <p class="text-xs text-text-tertiary mt-2">This will be the main title displayed on your textbook cover.</p>
@@ -511,48 +511,42 @@
                         </div>
                         <div id="acc-sources-body" class="accordion-body px-5">
                             <div class="pl-13 space-y-5">
-                                <p class="text-sm text-text-secondary">Upload your materials and connect to academic sources. AI will extract concepts and structure from these.</p>
+                                <p class="text-sm text-text-secondary">Start from an existing Pearson title, upload your materials, or skip to start fresh.</p>
                                 
-                                <!-- Dropzone -->
-                                <div id="source-dropzone" onclick="simulateUpload()" class="dropzone p-8 text-center">
-                                    <div class="w-12 h-12 rounded-lg bg-primary-bg flex items-center justify-center mx-auto mb-3">
-                                        <span class="material-symbols-outlined text-primary text-2xl">upload_file</span>
+                                <!-- Pearson ISBN Lookup -->
+                                <div>
+                                    <label class="block text-sm font-medium text-text-primary mb-2">Start from a Pearson Title</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="isbn-input" placeholder="Enter ISBN (e.g. 978-0134093413)" autocomplete="off"
+                                            class="flex-1 px-4 py-2.5 rounded border border-border bg-surface text-sm placeholder:text-text-tertiary"/>
+                                        <button onclick="lookupISBN()" class="px-4 py-2.5 bg-surface border border-border text-sm font-medium rounded hover:bg-surface-tertiary transition-colors">
+                                            Look up
+                                        </button>
                                     </div>
-                                    <p class="font-medium text-text-primary mb-1">Drag & Drop Textbook Chapter PDF here</p>
-                                    <p class="text-sm text-text-tertiary mb-4">Supported formats: PDF, DOCX, EPUB</p>
-                                    <button class="px-4 py-2 bg-primary text-text-inverse text-sm font-medium rounded hover:bg-primary-dark transition-colors">
-                                        Browse Local Files
-                                    </button>
+                                    <p class="text-xs text-text-tertiary mt-1.5">Import structure and content from an existing Pearson textbook</p>
+                                </div>
+                                
+                                <div class="flex items-center gap-4">
+                                    <div class="flex-1 h-px bg-border"></div>
+                                    <span class="text-xs text-text-tertiary uppercase">or upload your own</span>
+                                    <div class="flex-1 h-px bg-border"></div>
+                                </div>
+
+                                <!-- Dropzone -->
+                                <div id="source-dropzone" onclick="simulateUpload()" class="dropzone p-6 text-center">
+                                    <div class="w-10 h-10 rounded-lg bg-primary-bg flex items-center justify-center mx-auto mb-2">
+                                        <span class="material-symbols-outlined text-primary text-xl">upload_file</span>
+                                    </div>
+                                    <p class="font-medium text-text-primary text-sm mb-1">Drop files here or click to browse</p>
+                                    <p class="text-xs text-text-tertiary">PDF, DOCX, EPUB supported</p>
                                 </div>
 
                                 <!-- Uploaded files -->
                                 <div id="uploaded-files" class="hidden space-y-2"></div>
 
-                                <!-- External Sources -->
-                                <div>
-                                    <label class="block text-sm font-medium text-text-primary mb-3">Connect External Sources</label>
-                                    <div class="flex flex-wrap gap-2">
-                                        <button onclick="toggleSource(this)" class="source-chip" data-source="scholar">
-                                            <span class="w-5 h-5 rounded bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">G</span>
-                                            Google Scholar
-                                            <span class="material-symbols-outlined text-base check-icon hidden text-success">check_circle</span>
-                                        </button>
-                                        <button onclick="toggleSource(this)" class="source-chip" data-source="pubmed">
-                                            <span class="w-5 h-5 rounded bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold">P</span>
-                                            PubMed
-                                            <span class="material-symbols-outlined text-base check-icon hidden text-success">check_circle</span>
-                                        </button>
-                                        <button onclick="toggleSource(this)" class="source-chip" data-source="web">
-                                            <span class="material-symbols-outlined text-base text-text-tertiary">language</span>
-                                            Web Search
-                                            <span class="material-symbols-outlined text-base check-icon hidden text-success">check_circle</span>
-                                        </button>
-                                    </div>
-                                </div>
-
                                 <div class="flex items-center justify-between pt-2">
-                                    <button onclick="skipStep('sources', this)" class="text-sm text-text-tertiary hover:text-text-secondary transition-colors">
-                                        Skip this step
+                                    <button onclick="skipSourceStep()" class="text-sm text-text-tertiary hover:text-text-secondary transition-colors">
+                                        Skip — start fresh
                                     </button>
                                     <button onclick="completeStep('sources')" id="btn-sources-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                                         Continue
@@ -599,10 +593,13 @@
                                             </div>
                                         </div>
                                         <div>
-                                            <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Level</p>
+                                            <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Grade Level</p>
                                             <div class="flex flex-wrap gap-2" id="level-chips">
-                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="High School">High School</button>
-                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Undergrad">Undergrad</button>
+                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Class 6-8">Class 6-8</button>
+                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Class 9-10">Class 9-10</button>
+                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Class 11-12">Class 11-12</button>
+                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Undergrad Intro">Undergrad Intro</button>
+                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Undergrad Advanced">Undergrad Advanced</button>
                                                 <button onclick="selectChip(this, 'level')" class="chip" data-value="Graduate">Graduate</button>
                                             </div>
                                         </div>
@@ -648,8 +645,8 @@
                                 <!-- Source Scope (Toggles) -->
                                 <div>
                                     <label class="block text-sm font-medium text-text-primary mb-1">AI Source Access</label>
-                                    <p class="text-xs text-text-tertiary mb-4">Enable the sources AI can use when generating content</p>
-                                    <div class="space-y-3">
+                                    <p class="text-xs text-text-tertiary mb-4">Enable sources AI can use when generating content</p>
+                                    <div class="space-y-2">
                                         <div class="flex items-center justify-between p-3 rounded border border-border bg-surface">
                                             <div>
                                                 <p class="text-sm font-medium text-text-primary">Uploaded Sources</p>
@@ -679,21 +676,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Citation Style -->
-                                <div>
-                                    <label class="block text-sm font-medium text-text-primary mb-3">Citation Style</label>
-                                    <div class="flex flex-wrap gap-2" id="citation-chips">
-                                        <button onclick="selectChip(this, 'citation')" class="chip active" data-value="APA">APA 7th</button>
-                                        <button onclick="selectChip(this, 'citation')" class="chip" data-value="MLA">MLA 9th</button>
-                                        <button onclick="selectChip(this, 'citation')" class="chip" data-value="Chicago">Chicago</button>
-                                        <button onclick="selectChip(this, 'citation')" class="chip" data-value="IEEE">IEEE</button>
-                                    </div>
-                                </div>
-
-                                <p class="text-xs text-text-tertiary pt-2">
-                                    You can adjust these settings anytime from the project panel.
-                                </p>
 
                                 <div class="flex justify-end pt-2">
                                     <button onclick="completeStep('settings')" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
@@ -827,6 +809,7 @@
 const state = {
     currentStep: 'title',
     completedSteps: new Set(),
+    bookType: 'textbook', // Default
     title: '',
     coauthors: [],
     uploadedFiles: 0,
@@ -839,11 +822,96 @@ const state = {
         uploaded: true,
         academic: true,
         web: false,
-        citation: 'APA',
     },
     apiKey: localStorage.getItem('openai_api_key') || '',
     aiGeneratedDetails: false // Track if we've already generated details for this title
 };
+
+// Book type selection
+function selectBookType(btn, type) {
+    document.querySelectorAll('.book-type-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    state.bookType = type;
+}
+
+// Skip source step - jump directly to details
+function skipSourceStep() {
+    state.completedSteps.add('sources');
+    
+    // Update sources section UI immediately
+    const section = document.getElementById('acc-sources');
+    const icon = document.getElementById('acc-sources-icon');
+    const summary = document.getElementById('acc-sources-summary');
+    const body = document.getElementById('acc-sources-body');
+    const chevron = document.getElementById('acc-sources-chevron');
+    
+    section.classList.add('completed');
+    icon.innerHTML = '<span class="material-symbols-outlined text-base">check</span>';
+    icon.className = 'w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center';
+    summary.textContent = 'Skipped';
+    summary.classList.remove('hidden');
+    body.classList.remove('open');
+    chevron.classList.remove('rotate-180');
+    
+    // Open details step
+    openAndScrollToStep('details');
+}
+
+// ISBN lookup (placeholder)
+function lookupISBN() {
+    const isbn = document.getElementById('isbn-input').value.trim();
+    if (!isbn) return;
+    
+    // Show loading state
+    alert('ISBN lookup coming soon! For now, this would search the Pearson catalog for: ' + isbn);
+}
+
+// Smooth scroll to step and open it
+function openAndScrollToStep(step) {
+    const section = document.getElementById(`acc-${step}`);
+    section.classList.remove('locked');
+    
+    const icon = document.getElementById(`acc-${step}-icon`);
+    icon.className = 'w-9 h-9 rounded-full bg-primary text-text-inverse flex items-center justify-center text-sm font-semibold';
+    icon.textContent = step === 'sources' ? '2' : step === 'details' ? '3' : '4';
+    
+    const body = document.getElementById(`acc-${step}-body`);
+    const chevron = document.getElementById(`acc-${step}-chevron`);
+    body.classList.add('open');
+    chevron.classList.add('rotate-180');
+    
+    // Close other steps
+    ['title', 'sources', 'details', 'settings'].forEach(s => {
+        if (s !== step) {
+            const otherBody = document.getElementById(`acc-${s}-body`);
+            const otherChevron = document.getElementById(`acc-${s}-chevron`);
+            if (otherBody) otherBody.classList.remove('open');
+            if (otherChevron) otherChevron.classList.remove('rotate-180');
+        }
+    });
+    
+    // Smooth scroll into view
+    setTimeout(() => {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    
+    state.currentStep = step;
+    updateProgress();
+    
+    // Trigger AI generation if opening details
+    if (step === 'details' && !state.aiGeneratedDetails && state.title) {
+        triggerDetailsGeneration();
+    }
+}
+
+async function triggerDetailsGeneration() {
+    const detailsIcon = document.getElementById('acc-details-icon');
+    detailsIcon.innerHTML = '<span class="material-symbols-outlined animate-spin text-base">sync</span>';
+    
+    await generateBookDetailsAI(false);
+    
+    detailsIcon.innerHTML = '3';
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // SETTINGS MODAL
@@ -961,7 +1029,7 @@ async function completeStep(step) {
         if (state.settings.uploaded) sources.push('Uploaded');
         if (state.settings.academic) sources.push('Academic');
         if (state.settings.web) sources.push('Web');
-        summary.textContent = `${sources.join(' + ')} · ${state.settings.citation}`;
+        summary.textContent = sources.length > 0 ? `AI sources: ${sources.join(', ')}` : 'No AI sources';
     }
     
     body.classList.remove('open');
@@ -974,7 +1042,11 @@ async function completeStep(step) {
         nextSection.classList.remove('locked');
         nextIcon.className = 'w-9 h-9 rounded-full bg-primary text-text-inverse flex items-center justify-center text-sm font-semibold';
         
-        setTimeout(() => toggleAccordion(next), 200);
+        // Smooth scroll to next step
+        setTimeout(() => {
+            toggleAccordion(next);
+            nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 200);
     }
     
     updateProgress();
@@ -1173,7 +1245,7 @@ If the title appears to be complete gibberish, nonsensical, or entirely unrelate
 You MUST respond with a valid JSON object matching this exact schema:
 {
   "discipline": "Biology" | "Chemistry" | "Physics" | "Economics" | "Other",
-  "level": "High School" | "Undergrad" | "Graduate",
+  "level": "Class 6-8" | "Class 9-10" | "Class 11-12" | "Undergrad Intro" | "Undergrad Advanced" | "Graduate",
   "description": "The generated description string here..."
 }`
                     },
@@ -1316,6 +1388,18 @@ function selectStructureStyle(labelEl, style) {
     btn.classList.remove('opacity-50', 'cursor-not-allowed');
 }
 
+function getGradeContext(gradeLevel) {
+    const gradeContextMap = {
+        'Class 6-8': 'Use simple vocabulary, short sentences, and relatable everyday examples. Avoid jargon. Focus on building foundational understanding with concrete, visual explanations. Target reading level: 6th-8th grade.',
+        'Class 9-10': 'Use clear language with some technical terms (defined when first introduced). Include real-world applications and relatable examples. Balance conceptual understanding with factual knowledge. Target reading level: 9th-10th grade.',
+        'Class 11-12': 'Use standard academic vocabulary with technical terms. Include more complex concepts and their interconnections. Prepare students for higher education with rigorous but accessible content. Target reading level: 11th-12th grade.',
+        'Undergrad Intro': 'Use academic language appropriate for first-year college students. Introduce discipline-specific terminology systematically. Include foundational theories and their applications. Target reading level: introductory undergraduate.',
+        'Undergrad Advanced': 'Use sophisticated academic language and assume familiarity with foundational concepts. Include nuanced discussions, current research references, and complex problem-solving. Target reading level: advanced undergraduate.',
+        'Graduate': 'Use specialized academic language and assume strong disciplinary background. Include cutting-edge research, theoretical frameworks, and critical analysis. Target reading level: graduate/professional.'
+    };
+    return gradeContextMap[gradeLevel] || gradeContextMap['Undergrad Intro'];
+}
+
 async function createBook() {
     // Show generating overlay
     const overlay = document.createElement('div');
@@ -1338,12 +1422,15 @@ async function createBook() {
         sessionStorage.setItem('book_id', newBookId);
         sessionStorage.setItem('generated_structure', JSON.stringify({ chapters: [] }));
         sessionStorage.setItem('book_title', state.title);
+        sessionStorage.setItem('book_grade', state.level || 'Undergrad Intro');
+        sessionStorage.setItem('book_description', state.description || '');
         window.location.href = 'editor.html?id=' + newBookId;
         return;
     }
 
-    // Check cache
-    const cacheKey = `structure_cache_${state.title}_${state.structureStyle}`;
+    // Check cache (include grade in cache key)
+    const gradeForCache = state.level || 'Undergrad Intro';
+    const cacheKey = `structure_cache_${state.title}_${state.structureStyle}_${gradeForCache}`;
     const cachedStructure = localStorage.getItem(cacheKey);
     if (cachedStructure) {
         console.log("Using cached structure");
@@ -1351,21 +1438,28 @@ async function createBook() {
         sessionStorage.setItem('book_id', newBookId);
         sessionStorage.setItem('generated_structure', cachedStructure);
         sessionStorage.setItem('book_title', state.title);
+        sessionStorage.setItem('book_grade', gradeForCache);
+        sessionStorage.setItem('book_description', state.description || '');
         setTimeout(() => { window.location.href = 'editor.html?id=' + newBookId; }, 500); // Small delay for UX
         return;
     }
 
     // Generate via AI
+    const gradeLevel = state.level || 'Undergrad Intro';
+    const gradeContext = getGradeContext(gradeLevel);
+    
     let prompt = '';
     if (state.structureStyle === 'toc') {
-        prompt = `Generate a Table of Contents for a textbook titled "${state.title}". Return exactly 8 chapters. Each chapter should have a title and a subtitle, but NO subsections.`;
+        prompt = `Generate a Table of Contents for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 8 chapters. Each chapter should have a title and a subtitle, but NO subsections. ${gradeContext}`;
     } else if (state.structureStyle === 'outline') {
-        prompt = `Generate a Chapter Outline for a textbook titled "${state.title}". Return exactly 4 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a plain-text title (no numeric prefix like "1.1") and a brief description (1 sentence).`;
+        prompt = `Generate a Chapter Outline for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 4 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a plain-text title (no numeric prefix like "1.1") and a brief description (1 sentence). ${gradeContext}`;
     } else if (state.structureStyle === 'full') {
-        prompt = `Generate a Full Draft structure for a textbook titled "${state.title}". Return exactly 3 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a plain-text title (no numeric prefix like "1.1") and 2 paragraphs of full draft content.`;
+        prompt = `Generate a Full Draft structure for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 3 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a plain-text title (no numeric prefix like "1.1") and 2 paragraphs of full draft content. ${gradeContext}`;
     }
 
-    const systemPrompt = `You are an expert academic textbook author.
+    const systemPrompt = `You are an expert academic textbook author writing for ${gradeLevel} students.
+${gradeContext}
+
 You MUST respond with a valid JSON object matching this exact schema:
 {
   "chapters": [
@@ -1394,6 +1488,8 @@ You MUST respond with a valid JSON object matching this exact schema:
             sessionStorage.setItem('book_id', newBookId);
             sessionStorage.setItem('generated_structure', JSON.stringify(mockData));
             sessionStorage.setItem('book_title', state.title);
+            sessionStorage.setItem('book_grade', gradeLevel);
+            sessionStorage.setItem('book_description', state.description || '');
             setTimeout(() => { window.location.href = 'editor.html?id=' + newBookId; }, 1000);
             return;
         }
@@ -1427,6 +1523,8 @@ You MUST respond with a valid JSON object matching this exact schema:
         sessionStorage.setItem('book_id', newBookId);
         sessionStorage.setItem('generated_structure', result);
         sessionStorage.setItem('book_title', state.title);
+        sessionStorage.setItem('book_grade', gradeLevel);
+        sessionStorage.setItem('book_description', state.description || '');
         
         window.location.href = 'editor.html?id=' + newBookId;
 
@@ -1448,10 +1546,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    renderDashboard();
+    renderDashboard('all');
 });
 
-function renderDashboard() {
+let currentFilter = 'all';
+
+function setFilter(filterType) {
+    currentFilter = filterType;
+    
+    // Update filter UI - pill style tabs
+    const activeClass = 'px-3 py-1.5 text-sm font-medium rounded-md bg-surface text-text-primary shadow-sm transition-all';
+    const inactiveClass = 'px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary rounded-md transition-all';
+    
+    document.getElementById('filter-all').className = filterType === 'all' ? activeClass : inactiveClass;
+    document.getElementById('filter-published').className = filterType === 'published' ? activeClass : inactiveClass;
+    document.getElementById('filter-drafts').className = filterType === 'drafts' ? activeClass : inactiveClass;
+
+    renderDashboard(filterType);
+}
+
+function renderDashboard(filter = 'all') {
     const grid = document.getElementById('dashboard-grid');
     if (!grid) return;
     
@@ -1473,41 +1587,104 @@ function renderDashboard() {
     savedBooks.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     
     let html = '';
+    
+    // Add mock published/review books if needed for demonstration, but let's stick to real ones for now.
+    // We will consider all local storage books as "Drafts" since publishing isn't fully implemented.
+    
     savedBooks.forEach(book => {
+        // If filter is published, we don't show local drafts
+        if (filter === 'published') return;
+
         const chapterCount = book.appState && book.appState.chapters ? Object.keys(book.appState.chapters).length : 0;
+        const gradeLevel = book.gradeLevel || book.appState?.gradeLevel || 'Undergrad Intro';
         const lastUpdated = new Date(book.updatedAt || Date.now()).toLocaleDateString();
+        // Get description from appState (where it's actually saved) or fall back
+        const desc = book.appState?.description || book.description || '';
+        
         html += `
-            <a href="editor.html?id=${book.id}" class="bg-surface rounded-lg border border-border p-6 hover:border-primary/30 transition-all cursor-pointer group block">
-                <div class="flex items-center justify-between mb-4">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-bg text-warning text-xs font-medium">
-                        <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
-                        Draft
-                    </span>
-                    <button onclick="event.preventDefault(); event.stopPropagation(); if(confirm('Delete this textbook?')) { localStorage.removeItem('dreambook_data_${book.id}'); renderDashboard(); }" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-tertiary transition-all" title="Delete Textbook">
-                        <span class="material-symbols-outlined text-text-tertiary text-lg">delete</span>
-                    </button>
-                </div>
-                <h3 class="text-lg font-semibold text-text-primary mb-1 group-hover:text-primary transition-colors">${book.title}</h3>
-                <p class="text-sm text-text-secondary mb-4">${chapterCount} Chapter${chapterCount !== 1 ? 's' : ''}</p>
-                <div class="flex items-center justify-between pt-4 border-t border-border">
-                    <div class="flex -space-x-2">
-                        <div class="w-7 h-7 rounded-full bg-primary-bg text-primary text-xs font-medium flex items-center justify-center border-2 border-surface">SC</div>
+            <a href="editor.html?id=${book.id}" class="book-card bg-surface rounded-xl border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group flex flex-col relative overflow-hidden">
+                <!-- Book spine effect -->
+                <div class="absolute top-0 left-0 w-3 h-full bg-gradient-to-r from-primary/20 to-primary/5"></div>
+                
+                <!-- Corner fold for visual interest -->
+                <div class="absolute top-0 right-0 w-12 h-12 bg-surface-secondary" style="clip-path: polygon(100% 0, 0 0, 100% 100%);"></div>
+                
+                <div class="p-5 pl-6 flex flex-col h-full">
+                    <!-- Status badge -->
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-warning/10 text-warning text-xs font-medium">
+                            <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+                            Draft
+                        </span>
+                        <button onclick="event.preventDefault(); event.stopPropagation(); if(confirm('Delete this textbook?')) { localStorage.removeItem('dreambook_data_${book.id}'); renderDashboard(currentFilter); }" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-error/10 hover:text-error text-text-tertiary transition-all" title="Delete">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                        </button>
                     </div>
-                    <span class="text-xs text-text-tertiary">Updated ${lastUpdated}</span>
+                    
+                    <!-- Title -->
+                    <h3 class="text-lg font-semibold text-text-primary mb-1 line-clamp-2 group-hover:text-primary transition-colors">${book.title}</h3>
+                    <p class="text-xs text-text-tertiary uppercase tracking-wide mb-3">${gradeLevel}</p>
+                    
+                    <!-- Description -->
+                    ${desc ? `<p class="text-sm text-text-secondary line-clamp-2 mb-4 flex-1" title="${desc.replace(/"/g, '&quot;')}">${desc}</p>` : '<div class="flex-1"></div>'}
+                    
+                    <!-- Footer -->
+                    <div class="pt-3 border-t border-border flex items-center justify-between mt-auto">
+                        <span class="text-sm text-text-secondary">${chapterCount} Chapter${chapterCount !== 1 ? 's' : ''}</span>
+                        <span class="material-symbols-outlined text-lg text-text-tertiary group-hover:text-primary transition-colors">arrow_forward</span>
+                    </div>
                 </div>
             </a>
         `;
     });
     
-    // Append the Create New button
+    // Add mock published book if filter is 'all' or 'published'
+    if (filter === 'all' || filter === 'published') {
+        html += `
+            <a href="#" class="book-card bg-surface rounded-xl border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group flex flex-col relative overflow-hidden">
+                <!-- Book spine effect - green for published -->
+                <div class="absolute top-0 left-0 w-3 h-full bg-gradient-to-r from-success/30 to-success/10"></div>
+                
+                <!-- Corner fold -->
+                <div class="absolute top-0 right-0 w-12 h-12 bg-surface-secondary" style="clip-path: polygon(100% 0, 0 0, 100% 100%);"></div>
+                
+                <div class="p-5 pl-6 flex flex-col h-full">
+                    <!-- Status badge -->
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-success/10 text-success text-xs font-medium">
+                            <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                            Published
+                        </span>
+                        <button onclick="event.preventDefault(); event.stopPropagation();" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-tertiary text-text-tertiary transition-all">
+                            <span class="material-symbols-outlined text-lg">more_vert</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Title -->
+                    <h3 class="text-lg font-semibold text-text-primary mb-1 line-clamp-2 group-hover:text-primary transition-colors">Biology 101: Fundamentals of Life</h3>
+                    <p class="text-xs text-text-tertiary uppercase tracking-wide mb-3">Undergraduate Level</p>
+                    
+                    <!-- Description -->
+                    <p class="text-sm text-text-secondary line-clamp-2 mb-4 flex-1">A comprehensive overview of cellular biology, genetics, and evolutionary principles.</p>
+                    
+                    <!-- Footer -->
+                    <div class="pt-3 border-t border-border flex items-center justify-between mt-auto">
+                        <span class="text-sm text-text-secondary">3 Chapters</span>
+                        <span class="material-symbols-outlined text-lg text-text-tertiary group-hover:text-primary transition-colors">arrow_forward</span>
+                    </div>
+                </div>
+            </a>
+        `;
+    }
+
+    // Append the Create New button (always show)
     html += `
-        <!-- Create New -->
-        <div onclick="openCreateModal()" class="bg-surface-secondary rounded-lg border-2 border-dashed border-border p-6 hover:border-primary hover:bg-primary-bg/20 transition-all cursor-pointer flex flex-col items-center justify-center text-center min-h-[220px] group">
-            <div class="w-12 h-12 rounded-lg bg-surface border border-border flex items-center justify-center mb-4 group-hover:border-primary group-hover:bg-primary-bg transition-all">
+        <div onclick="openCreateModal()" class="book-card bg-surface-secondary rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer flex flex-col items-center justify-center text-center group">
+            <div class="w-14 h-14 rounded-full bg-surface border-2 border-border flex items-center justify-center mb-3 group-hover:border-primary group-hover:bg-primary/10 transition-all">
                 <span class="material-symbols-outlined text-text-tertiary text-2xl group-hover:text-primary transition-colors">add</span>
             </div>
-            <h3 class="font-semibold text-text-primary mb-1">Create New Project</h3>
-            <p class="text-sm text-text-tertiary max-w-[180px]">Start a new textbook or import existing content</p>
+            <h3 class="font-semibold text-text-primary mb-1">Create New Book</h3>
+            <p class="text-xs text-text-tertiary max-w-[160px]">Start a new manuscript or import existing content</p>
         </div>
     `;
     
