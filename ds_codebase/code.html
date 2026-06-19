@@ -220,6 +220,15 @@
     .book-type-chip:not(.active):hover {
         @apply border-border bg-surface-tertiary;
     }
+
+    /* Voice recording pulse animation */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    .animate-pulse {
+        animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
 </style>
 </head>
 
@@ -497,11 +506,268 @@
                         </div>
                     </div>
 
-                    <!-- Step 2: Source Library -->
-                    <div id="acc-sources" class="accordion-section locked" data-step="2">
+                    <!-- Step 2: Book Details -->
+                    <div id="acc-details" class="accordion-section locked" data-step="2">
+                        <div onclick="toggleAccordion('details')" class="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-secondary transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div id="acc-details-icon" class="w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center text-sm font-semibold">2</div>
+                                <div>
+                                    <h3 class="font-semibold text-text-primary">Tell Me About Your Book</h3>
+                                    <p id="acc-details-summary" class="text-sm text-text-secondary mt-0.5 hidden"></p>
+                                </div>
+                            </div>
+                            <span id="acc-details-chevron" class="material-symbols-outlined text-text-tertiary transition-transform duration-200">expand_more</span>
+                        </div>
+                        <div id="acc-details-body" class="accordion-body px-5">
+                            <div class="pl-13 space-y-5">
+                                <!-- Interview Mode (default) -->
+                                <div id="interview-mode">
+                                    <div id="interview-idle" class="text-center py-8">
+                                        <div class="w-20 h-20 rounded-full bg-primary-bg mx-auto mb-4 flex items-center justify-center">
+                                            <span class="material-symbols-outlined text-primary text-4xl">mic</span>
+                                        </div>
+                                        <h3 class="font-semibold text-text-primary mb-2">Tell me about your book</h3>
+                                        <p class="text-sm text-text-secondary mb-6 max-w-sm mx-auto">
+                                            I'll ask you a few quick questions to understand your book. Takes about 2 minutes.
+                                        </p>
+                                        <button type="button" onclick="startVoiceInterview()" id="btn-start-interview"
+                                            class="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors">
+                                            Start Conversation
+                                        </button>
+                                        <p class="text-xs text-text-tertiary mt-4">
+                                            <button type="button" onclick="showManualMode()" class="underline hover:text-text-secondary">I'd rather type</button>
+                                        </p>
+                                    </div>
+
+                                    <div id="interview-active" class="hidden space-y-4">
+                                        <div id="interview-agent-panel" class="p-4 bg-ai-bg rounded-lg border border-ai-border">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span id="interview-agent-indicator" class="w-3 h-3 rounded-full bg-primary"></span>
+                                                <span id="interview-agent-status" class="text-sm font-medium text-ai-text">Connecting...</span>
+                                            </div>
+                                            <p id="interview-agent-text" class="text-sm text-text-primary min-h-[40px]"></p>
+                                        </div>
+                                        <div id="interview-user-panel" class="p-4 bg-surface-secondary rounded-lg border border-border">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span id="interview-user-indicator" class="w-3 h-3 rounded-full bg-border-strong"></span>
+                                                <span class="text-sm font-medium text-text-secondary">You</span>
+                                            </div>
+                                            <p id="interview-user-text" class="text-sm text-text-secondary min-h-[40px] italic">Listening...</p>
+                                        </div>
+                                        <div class="flex justify-end">
+                                            <button type="button" onclick="endVoiceInterview()" id="btn-end-interview"
+                                                class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
+                                                End Conversation
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div id="interview-processing" class="hidden text-center py-8">
+                                        <div class="w-14 h-14 rounded-full bg-primary-bg flex items-center justify-center mx-auto mb-3">
+                                            <span class="material-symbols-outlined text-primary text-2xl animate-spin">sync</span>
+                                        </div>
+                                        <p class="font-medium text-text-primary text-sm">Putting together your book details...</p>
+                                    </div>
+                                </div>
+
+                                <!-- Review Mode -->
+                                <div id="review-mode" class="hidden space-y-5">
+                                    <div class="ai-content p-4">
+                                        <div class="flex items-center gap-2 text-ai-text mb-1">
+                                            <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                                            <span class="text-sm font-medium">Here's what I captured from our conversation</span>
+                                        </div>
+                                        <p class="text-xs text-text-secondary">Review and edit before continuing.</p>
+                                    </div>
+
+                                    <div id="review-suggested-title" class="hidden">
+                                        <label class="block text-sm font-medium text-text-primary mb-2">Suggested Title</label>
+                                        <input type="text" id="review-title-input"
+                                            class="w-full px-4 py-2.5 rounded border border-border bg-surface text-sm"/>
+                                        <button type="button" onclick="keepOriginalTitle()" class="text-xs text-text-tertiary hover:text-text-secondary mt-1">
+                                            Keep original title instead
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-text-primary mb-2">Description</label>
+                                        <textarea id="book-description" rows="4"
+                                            placeholder="Describe your textbook's focus, target audience, and key topics..."
+                                            class="w-full px-4 py-3 rounded border border-border bg-surface text-sm placeholder:text-text-tertiary resize-none"
+                                            oninput="handleDescriptionInput()"></textarea>
+                                    </div>
+
+                                    <div id="classification-section">
+                                        <label class="block text-sm font-medium text-text-primary mb-3">Classification</label>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Discipline</p>
+                                                <div class="flex flex-wrap gap-2" id="discipline-chips">
+                                                    <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Biology">Biology</button>
+                                                    <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Chemistry">Chemistry</button>
+                                                    <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Physics">Physics</button>
+                                                    <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Economics">Economics</button>
+                                                    <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Other">Other</button>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Grade Level</p>
+                                                <div class="flex flex-wrap gap-2" id="level-chips">
+                                                    <button onclick="selectChip(this, 'level')" class="chip" data-value="Class 6-8">Class 6-8</button>
+                                                    <button onclick="selectChip(this, 'level')" class="chip" data-value="Class 9-10">Class 9-10</button>
+                                                    <button onclick="selectChip(this, 'level')" class="chip" data-value="Class 11-12">Class 11-12</button>
+                                                    <button onclick="selectChip(this, 'level')" class="chip" data-value="Undergrad Intro">Undergrad Intro</button>
+                                                    <button onclick="selectChip(this, 'level')" class="chip" data-value="Undergrad Advanced">Undergrad Advanced</button>
+                                                    <button onclick="selectChip(this, 'level')" class="chip" data-value="Graduate">Graduate</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between pt-2">
+                                        <button type="button" onclick="restartInterview()" class="text-sm text-text-tertiary hover:text-text-secondary">
+                                            Start over with voice
+                                        </button>
+                                        <button type="button" onclick="confirmReviewAndContinue()" id="btn-details-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
+                                            Looks Good — Continue
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Manual Mode (escape hatch) -->
+                                <div id="manual-mode" class="hidden space-y-5">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm text-text-secondary">Fill in your book details manually.</p>
+                                        <button type="button" onclick="showInterviewMode()" class="text-xs text-primary hover:underline">
+                                            Try voice interview instead
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-sm font-medium text-text-primary">Description</label>
+                                            <div class="flex items-center gap-1 bg-surface-tertiary rounded-lg p-0.5">
+                                                <button type="button" onclick="setDescriptionMode('text')" id="desc-mode-text"
+                                                    class="px-2.5 py-1 text-xs font-medium rounded-md bg-surface text-text-primary shadow-sm">
+                                                    <span class="material-symbols-outlined text-sm align-middle mr-0.5">edit</span>
+                                                    Type
+                                                </button>
+                                                <button type="button" onclick="setDescriptionMode('voice')" id="desc-mode-voice"
+                                                    class="px-2.5 py-1 text-xs text-text-secondary rounded-md">
+                                                    <span class="material-symbols-outlined text-sm align-middle mr-0.5">mic</span>
+                                                    Speak
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div id="desc-text-mode">
+                                            <textarea id="manual-book-description" rows="3"
+                                                placeholder="Describe your textbook's focus, target audience, and key topics..."
+                                                class="w-full px-4 py-3 rounded border border-border bg-surface text-sm placeholder:text-text-tertiary resize-none"
+                                                oninput="handleManualDescriptionInput()"></textarea>
+                                            <div class="flex items-center justify-between mt-2">
+                                                <p class="text-xs text-text-tertiary">Write in your own words</p>
+                                                <button type="button" onclick="enhanceDescription()" id="enhance-desc-btn"
+                                                    class="hidden text-xs text-primary hover:underline flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                                                    Enhance with AI
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div id="desc-voice-mode" class="hidden">
+                                            <div id="voice-idle" class="dropzone p-6 text-center cursor-pointer" onclick="startVoiceRecording('description')">
+                                                <button type="button" onclick="event.stopPropagation(); startVoiceRecording('description')" id="voice-start-btn"
+                                                    class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center mx-auto mb-3 hover:bg-primary-dark transition-colors">
+                                                    <span class="material-symbols-outlined text-2xl">mic</span>
+                                                </button>
+                                                <p id="voice-idle-label" class="font-medium text-text-primary text-sm mb-1">Click to start recording</p>
+                                                <p class="text-xs text-text-tertiary">Describe your book in your own words</p>
+                                            </div>
+                                            <div id="voice-streaming" class="hidden p-4 bg-surface-secondary rounded-lg border border-border">
+                                                <div class="flex items-center gap-2 mb-3">
+                                                    <span class="w-3 h-3 rounded-full bg-error animate-pulse"></span>
+                                                    <span class="text-sm font-medium text-text-primary">Listening...</span>
+                                                    <button type="button" onclick="stopVoiceRecording()" class="ml-auto text-xs text-error hover:underline">Stop</button>
+                                                </div>
+                                                <p id="voice-transcript-stream" class="text-sm text-text-secondary min-h-[60px] whitespace-pre-wrap"></p>
+                                            </div>
+                                            <div id="voice-processing" class="hidden p-6 text-center">
+                                                <div class="w-14 h-14 rounded-full bg-primary-bg flex items-center justify-center mx-auto mb-3">
+                                                    <span class="material-symbols-outlined text-primary text-2xl animate-spin">sync</span>
+                                                </div>
+                                                <p class="font-medium text-text-primary text-sm">Cleaning up your recording...</p>
+                                            </div>
+                                            <div id="voice-result" class="hidden">
+                                                <div class="ai-content p-4 mb-2">
+                                                    <div class="flex items-center gap-2 text-ai-text mb-2">
+                                                        <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                                                        <span class="text-sm font-medium">Transcribed and refined</span>
+                                                    </div>
+                                                    <p id="voice-result-text" class="text-sm text-text-primary"></p>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <button type="button" onclick="reRecordVoice('description')" class="text-xs text-text-tertiary hover:text-text-secondary">
+                                                        <span class="material-symbols-outlined text-sm align-middle">replay</span>
+                                                        Record again
+                                                    </button>
+                                                    <button type="button" onclick="acceptVoiceResult('description')" class="text-xs text-primary hover:underline">
+                                                        Use this description
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="manual-classification-section">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <label class="block text-sm font-medium text-text-primary">Classification</label>
+                                            <button type="button" onclick="detectClassification()" id="detect-classification-btn"
+                                                class="hidden text-xs text-primary hover:underline flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                                                Detect with AI
+                                            </button>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Discipline</p>
+                                                <div class="flex flex-wrap gap-2" id="manual-discipline-chips">
+                                                    <button onclick="selectManualChip(this, 'discipline')" class="chip" data-value="Biology">Biology</button>
+                                                    <button onclick="selectManualChip(this, 'discipline')" class="chip" data-value="Chemistry">Chemistry</button>
+                                                    <button onclick="selectManualChip(this, 'discipline')" class="chip" data-value="Physics">Physics</button>
+                                                    <button onclick="selectManualChip(this, 'discipline')" class="chip" data-value="Economics">Economics</button>
+                                                    <button onclick="selectManualChip(this, 'discipline')" class="chip" data-value="Other">Other</button>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Grade Level</p>
+                                                <div class="flex flex-wrap gap-2" id="manual-level-chips">
+                                                    <button onclick="selectManualChip(this, 'level')" class="chip" data-value="Class 6-8">Class 6-8</button>
+                                                    <button onclick="selectManualChip(this, 'level')" class="chip" data-value="Class 9-10">Class 9-10</button>
+                                                    <button onclick="selectManualChip(this, 'level')" class="chip" data-value="Class 11-12">Class 11-12</button>
+                                                    <button onclick="selectManualChip(this, 'level')" class="chip" data-value="Undergrad Intro">Undergrad Intro</button>
+                                                    <button onclick="selectManualChip(this, 'level')" class="chip" data-value="Undergrad Advanced">Undergrad Advanced</button>
+                                                    <button onclick="selectManualChip(this, 'level')" class="chip" data-value="Graduate">Graduate</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex justify-end pt-2">
+                                        <button type="button" onclick="showReviewFromManual()" id="btn-manual-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
+                                            Continue
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Source Library -->
+                    <div id="acc-sources" class="accordion-section locked" data-step="3">
                         <div onclick="toggleAccordion('sources')" class="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-secondary transition-colors">
                             <div class="flex items-center gap-4">
-                                <div id="acc-sources-icon" class="w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center text-sm font-semibold">2</div>
+                                <div id="acc-sources-icon" class="w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center text-sm font-semibold">3</div>
                                 <div>
                                     <h3 class="font-semibold text-text-primary">Source Library</h3>
                                     <p id="acc-sources-summary" class="text-sm text-text-secondary mt-0.5 hidden"></p>
@@ -511,8 +777,8 @@
                         </div>
                         <div id="acc-sources-body" class="accordion-body px-5">
                             <div class="pl-13 space-y-5">
-                                <p class="text-sm text-text-secondary">Start from an existing Pearson title, upload your materials, or skip to start fresh.</p>
-                                
+                                <p class="text-sm text-text-secondary">Upload your notes, lectures, or recordings. AI will learn from your materials to match your voice and style.</p>
+
                                 <!-- Pearson ISBN Lookup -->
                                 <div>
                                     <label class="block text-sm font-medium text-text-primary mb-2">Start from a Pearson Title</label>
@@ -525,21 +791,34 @@
                                     </div>
                                     <p class="text-xs text-text-tertiary mt-1.5">Import structure and content from an existing Pearson textbook</p>
                                 </div>
-                                
+
                                 <div class="flex items-center gap-4">
                                     <div class="flex-1 h-px bg-border"></div>
                                     <span class="text-xs text-text-tertiary uppercase">or upload your own</span>
                                     <div class="flex-1 h-px bg-border"></div>
                                 </div>
 
-                                <!-- Dropzone -->
-                                <div id="source-dropzone" onclick="simulateUpload()" class="dropzone p-6 text-center">
-                                    <div class="w-10 h-10 rounded-lg bg-primary-bg flex items-center justify-center mx-auto mb-2">
+                                <!-- Dropzone with Multimodal Support -->
+                                <div id="source-dropzone" onclick="triggerFileUpload()" class="dropzone p-6 text-center">
+                                    <div class="w-10 h-10 rounded-lg bg-primary-bg flex items-center justify-center mx-auto mb-3">
                                         <span class="material-symbols-outlined text-primary text-xl">upload_file</span>
                                     </div>
-                                    <p class="font-medium text-text-primary text-sm mb-1">Drop files here or click to browse</p>
-                                    <p class="text-xs text-text-tertiary">PDF, DOCX, EPUB supported</p>
+                                    <p class="font-medium text-text-primary text-sm mb-2">Drop files here or click to browse</p>
+                                    <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-text-tertiary">
+                                        <span><span class="material-symbols-outlined text-xs align-middle">description</span> PDF, DOCX, PPT, TXT</span>
+                                        <span><span class="material-symbols-outlined text-xs align-middle">image</span> JPG, PNG</span>
+                                        <span><span class="material-symbols-outlined text-xs align-middle">mic</span> MP3, WAV, M4A</span>
+                                        <span><span class="material-symbols-outlined text-xs align-middle">videocam</span> MP4, YouTube</span>
+                                    </div>
                                 </div>
+                                <input type="file" id="file-upload-input" class="hidden" multiple
+                                    accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.jpg,.jpeg,.png,.mp3,.wav,.m4a,.mp4,.mov"
+                                    onchange="handleFileUpload(event)"/>
+
+                                <p class="text-xs text-text-secondary text-center">
+                                    <span class="material-symbols-outlined text-sm align-middle text-primary">info</span>
+                                    These materials help AI understand your teaching style and voice
+                                </p>
 
                                 <!-- Uploaded files -->
                                 <div id="uploaded-files" class="hidden space-y-2"></div>
@@ -556,142 +835,12 @@
                         </div>
                     </div>
 
-                    <!-- Step 3: Book Details -->
-                    <div id="acc-details" class="accordion-section locked" data-step="3">
-                        <div onclick="toggleAccordion('details')" class="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-secondary transition-colors">
-                            <div class="flex items-center gap-4">
-                                <div id="acc-details-icon" class="w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center text-sm font-semibold">3</div>
-                                <div>
-                                    <h3 class="font-semibold text-text-primary">Book Details</h3>
-                                    <p id="acc-details-summary" class="text-sm text-text-secondary mt-0.5 hidden"></p>
-                                </div>
-                            </div>
-                            <span id="acc-details-chevron" class="material-symbols-outlined text-text-tertiary transition-transform duration-200">expand_more</span>
-                        </div>
-                        <div id="acc-details-body" class="accordion-body px-5">
-                            <div class="pl-13 space-y-5">
-                                <!-- AI Notice -->
-                                <div id="ai-notice" class="hidden ai-content p-4">
-                                    <div class="flex items-center gap-2 text-ai-text">
-                                        <span class="material-symbols-outlined text-lg">auto_awesome</span>
-                                        <span class="text-sm font-medium">Details generated from your sources. Edit as needed.</span>
-                                    </div>
-                                </div>
-
-                                <!-- Classification (First) -->
-                                <div>
-                                    <label class="block text-sm font-medium text-text-primary mb-3">Classification</label>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Discipline</p>
-                                            <div class="flex flex-wrap gap-2" id="discipline-chips">
-                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Biology">Biology</button>
-                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Chemistry">Chemistry</button>
-                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Physics">Physics</button>
-                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Economics">Economics</button>
-                                                <button onclick="selectChip(this, 'discipline')" class="chip" data-value="Other">Other</button>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Grade Level</p>
-                                            <div class="flex flex-wrap gap-2" id="level-chips">
-                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Class 6-8">Class 6-8</button>
-                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Class 9-10">Class 9-10</button>
-                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Class 11-12">Class 11-12</button>
-                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Undergrad Intro">Undergrad Intro</button>
-                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Undergrad Advanced">Undergrad Advanced</button>
-                                                <button onclick="selectChip(this, 'level')" class="chip" data-value="Graduate">Graduate</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Description (Second) -->
-                                <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <label class="text-sm font-medium text-text-primary">Description</label>
-                                        <button id="regenerate-btn" class="hidden text-xs text-primary hover:underline flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-sm">refresh</span>
-                                            Regenerate
-                                        </button>
-                                    </div>
-                                    <textarea id="book-description" rows="3" placeholder="Describe your textbook's focus, target audience, and key topics..."
-                                        class="w-full px-4 py-3 rounded border border-border bg-surface text-sm placeholder:text-text-tertiary resize-none"></textarea>
-                                </div>
-
-                                <div class="flex justify-end pt-2">
-                                    <button onclick="completeStep('details')" id="btn-details-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
-                                        Continue
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 4: Settings -->
-                    <div id="acc-settings" class="accordion-section locked" data-step="4">
-                        <div onclick="toggleAccordion('settings')" class="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-secondary transition-colors">
-                            <div class="flex items-center gap-4">
-                                <div id="acc-settings-icon" class="w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center text-sm font-semibold">4</div>
-                                <div>
-                                    <h3 class="font-semibold text-text-primary">Settings</h3>
-                                    <p id="acc-settings-summary" class="text-sm text-text-secondary mt-0.5 hidden"></p>
-                                </div>
-                            </div>
-                            <span id="acc-settings-chevron" class="material-symbols-outlined text-text-tertiary transition-transform duration-200">expand_more</span>
-                        </div>
-                        <div id="acc-settings-body" class="accordion-body px-5">
-                            <div class="pl-13 space-y-5">
-                                <!-- Source Scope (Toggles) -->
-                                <div>
-                                    <label class="block text-sm font-medium text-text-primary mb-1">AI Source Access</label>
-                                    <p class="text-xs text-text-tertiary mb-4">Enable sources AI can use when generating content</p>
-                                    <div class="space-y-2">
-                                        <div class="flex items-center justify-between p-3 rounded border border-border bg-surface">
-                                            <div>
-                                                <p class="text-sm font-medium text-text-primary">Uploaded Sources</p>
-                                                <p class="text-xs text-text-tertiary">Files from your Source Library</p>
-                                            </div>
-                                            <div onclick="toggleSwitch(this)" class="toggle-switch active" data-setting="uploaded">
-                                                <div class="toggle-dot"></div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center justify-between p-3 rounded border border-border bg-surface">
-                                            <div>
-                                                <p class="text-sm font-medium text-text-primary">Academic Databases</p>
-                                                <p class="text-xs text-text-tertiary">Google Scholar, PubMed, arXiv</p>
-                                            </div>
-                                            <div onclick="toggleSwitch(this)" class="toggle-switch active" data-setting="academic">
-                                                <div class="toggle-dot"></div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center justify-between p-3 rounded border border-border bg-surface">
-                                            <div>
-                                                <p class="text-sm font-medium text-text-primary">Web Sources</p>
-                                                <p class="text-xs text-text-tertiary">Curated educational content</p>
-                                            </div>
-                                            <div onclick="toggleSwitch(this)" class="toggle-switch" data-setting="web">
-                                                <div class="toggle-dot"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="flex justify-end pt-2">
-                                    <button onclick="completeStep('settings')" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
-                                        Continue
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
             <!-- Footer -->
             <footer class="h-16 bg-surface border-t border-border shrink-0 flex items-center justify-between px-6">
-                <span class="text-sm text-text-tertiary" id="progress-text">Step 1 of 4</span>
+                <span class="text-sm text-text-tertiary" id="progress-text">Step 1 of 3</span>
                 <div class="flex items-center gap-3">
                     <button onclick="closeCreateModal()" class="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
                         Cancel
@@ -755,6 +904,103 @@
                                     <p class="text-xs text-text-secondary">Complete chapters with sections, objectives, and draft content</p>
                                 </div>
                             </label>
+                            <label class="select-card flex items-start gap-4" onclick="selectStructureStyle(this, 'custom')">
+                                <input type="radio" name="structure" value="custom" class="accent-primary mt-1"/>
+                                <div class="flex-1">
+                                    <p class="font-medium text-text-primary text-sm">Custom Structure</p>
+                                    <p class="text-xs text-text-secondary mb-3">Describe exactly what you need</p>
+                                    <div id="custom-structure-input" class="hidden" onclick="event.stopPropagation()">
+                                        <div class="flex items-center gap-1 bg-surface-tertiary rounded-lg p-0.5 mb-2 w-fit">
+                                            <button type="button" onclick="setCustomMode('text')" id="custom-mode-text"
+                                                class="px-2 py-1 text-xs font-medium rounded bg-surface shadow-sm">Type</button>
+                                            <button type="button" onclick="setCustomMode('voice')" id="custom-mode-voice"
+                                                class="px-2 py-1 text-xs text-text-secondary rounded">Speak</button>
+                                        </div>
+                                        <div id="custom-text-input">
+                                            <textarea id="custom-structure-desc" rows="2"
+                                                placeholder="e.g., '8 chapters covering wave mechanics, start with historical context...'"
+                                                class="w-full px-3 py-2 rounded border border-border bg-surface text-xs"
+                                                oninput="handleCustomStructureInput()"></textarea>
+                                        </div>
+                                        <div id="custom-voice-input" class="hidden space-y-2">
+                                            <div id="custom-voice-idle">
+                                                <button type="button" onclick="startVoiceRecording('custom')" id="custom-voice-btn"
+                                                    class="w-full py-3 rounded border border-dashed border-border bg-surface-secondary text-sm text-text-secondary hover:border-primary hover:text-primary transition-all">
+                                                    <span class="material-symbols-outlined text-lg align-middle mr-1">mic</span>
+                                                    Click to describe with voice
+                                                </button>
+                                            </div>
+                                            <div id="custom-voice-streaming" class="hidden p-3 bg-surface-secondary rounded-lg border border-border">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse"></span>
+                                                    <span class="text-xs font-medium text-text-primary">Listening...</span>
+                                                    <button type="button" onclick="stopVoiceRecording()" class="ml-auto text-xs text-error hover:underline">
+                                                        Stop
+                                                    </button>
+                                                </div>
+                                                <p id="custom-voice-transcript-stream" class="text-xs text-text-secondary min-h-[48px] whitespace-pre-wrap"></p>
+                                            </div>
+                                            <div id="custom-voice-processing" class="hidden p-3 text-center">
+                                                <span class="material-symbols-outlined text-primary text-lg animate-spin align-middle mr-1">sync</span>
+                                                <span class="text-xs text-text-secondary">Cleaning up your recording...</span>
+                                            </div>
+                                            <div id="custom-voice-result" class="hidden ai-content p-3">
+                                                <p id="custom-voice-result-text" class="text-xs text-text-primary"></p>
+                                                <div class="flex items-center justify-between mt-2">
+                                                    <button type="button" onclick="reRecordVoice('custom')" class="text-xs text-text-tertiary hover:text-text-secondary">
+                                                        Record again
+                                                    </button>
+                                                    <button type="button" onclick="acceptVoiceResult('custom')" class="text-xs text-primary hover:underline">
+                                                        Use this structure description
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- AI Source Settings (Collapsed) -->
+                    <div class="border border-border rounded-lg overflow-hidden">
+                        <button type="button" onclick="toggleSourceSettings()" id="source-settings-toggle"
+                            class="w-full flex items-center justify-between p-4 bg-surface hover:bg-surface-secondary transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-text-tertiary text-lg">tune</span>
+                                <span class="text-sm font-medium text-text-primary">AI Source Settings</span>
+                                <span id="source-settings-summary" class="text-xs text-text-tertiary">(Uploaded + Academic enabled)</span>
+                            </div>
+                            <span id="source-settings-chevron" class="material-symbols-outlined text-text-tertiary transition-transform">expand_more</span>
+                        </button>
+                        <div id="source-settings-body" class="hidden px-4 pb-4 space-y-2">
+                            <div class="flex items-center justify-between p-3 rounded border border-border bg-surface-secondary">
+                                <div>
+                                    <p class="text-sm font-medium text-text-primary">Uploaded Sources</p>
+                                    <p class="text-xs text-text-tertiary">Your notes, lectures, and files</p>
+                                </div>
+                                <div onclick="toggleSwitch(this)" class="toggle-switch active" data-setting="uploaded">
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded border border-border bg-surface-secondary">
+                                <div>
+                                    <p class="text-sm font-medium text-text-primary">Academic Databases</p>
+                                    <p class="text-xs text-text-tertiary">Google Scholar, PubMed, arXiv</p>
+                                </div>
+                                <div onclick="toggleSwitch(this)" class="toggle-switch active" data-setting="academic">
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded border border-border bg-surface-secondary">
+                                <div>
+                                    <p class="text-sm font-medium text-text-primary">Web Sources</p>
+                                    <p class="text-xs text-text-tertiary">Curated educational content</p>
+                                </div>
+                                <div onclick="toggleSwitch(this)" class="toggle-switch" data-setting="web">
+                                    <div class="toggle-dot"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -804,12 +1050,16 @@
         </div>
     </div>
 
+<script src="realtime-voice.js"></script>
 <script>
 // State
+const SETUP_STEPS = ['title', 'details', 'sources'];
+const STEP_NUMBERS = { title: 1, details: 2, sources: 3 };
+
 const state = {
     currentStep: 'title',
     completedSteps: new Set(),
-    bookType: 'textbook', // Default
+    bookType: 'textbook',
     title: '',
     coauthors: [],
     uploadedFiles: 0,
@@ -817,15 +1067,51 @@ const state = {
     discipline: '',
     level: '',
     description: '',
-    structureStyle: 'outline', // Default
+    descriptionMode: 'text',
+    customStructureMode: 'text',
+    customStructureDesc: '',
+    structureStyle: 'outline',
     settings: {
         uploaded: true,
         academic: true,
         web: false,
     },
     apiKey: localStorage.getItem('openai_api_key') || '',
-    aiGeneratedDetails: false // Track if we've already generated details for this title
+    voiceRecordingTarget: null,
+    interviewTranscript: '',
+    interviewMode: 'idle',
 };
+
+const INTERVIEW_SYSTEM_PROMPT = `You are a warm editorial assistant helping an author set up their textbook on DreamBook.
+
+CRITICAL TURN-TAKING RULE:
+- You MUST ask exactly ONE question per response, then STOP and wait for the user to speak.
+- Do NOT ask multiple questions or add follow-up questions in the same turn.
+- Do NOT preview or tease the next question before the user answers.
+- After you ask a question, END your turn. The user will respond.
+
+CONVERSATION GOALS (gather this info across 2-3 turns):
+1. Subject matter and focus of the book
+2. Target audience (grade level, student type)
+3. Teaching approach or philosophy (if distinctive)
+
+FLOW:
+- Turn 1: Greet briefly, then ask what the book is about and who it's for.
+- Turn 2: Based on their answer, ask about their approach or what readers should walk away with.
+- Turn 3: If needed, clarify grade level or confirm your understanding.
+- Final turn: When you have enough information, say exactly: "Perfect, I have what I need! When you're ready, tap 'End Conversation' and I'll put together your book details."
+
+Keep each response to 1-2 sentences max before your single question.
+
+BEHAVIOR GUIDELINES:
+- Be conversational, not robotic. Use natural phrasing.
+- If the author interrupts or corrects you, adapt gracefully.
+- Keep it SHORT. The whole conversation should be under 2 minutes.
+- Do not ask about ISBN, co-authors, or source materials.
+- If the author seems unsure, offer gentle suggestions.
+
+TONE:
+Friendly, curious, and efficient. Think helpful colleague, not customer service script.`;
 
 // Book type selection
 function selectBookType(btn, type) {
@@ -834,27 +1120,25 @@ function selectBookType(btn, type) {
     state.bookType = type;
 }
 
-// Skip source step - jump directly to details
+// Skip source step - mark complete and enable generate
 function skipSourceStep() {
     state.completedSteps.add('sources');
-    
-    // Update sources section UI immediately
+
     const section = document.getElementById('acc-sources');
     const icon = document.getElementById('acc-sources-icon');
     const summary = document.getElementById('acc-sources-summary');
     const body = document.getElementById('acc-sources-body');
     const chevron = document.getElementById('acc-sources-chevron');
-    
+
     section.classList.add('completed');
-    icon.innerHTML = '<span class="material-symbols-outlined text-base">check</span>';
-    icon.className = 'w-9 h-9 rounded-full bg-surface-tertiary text-text-tertiary flex items-center justify-center';
+    icon.innerHTML = '<span class="material-symbols-outlined text-base filled">check_circle</span>';
+    icon.className = 'w-9 h-9 rounded-full bg-success text-text-inverse flex items-center justify-center';
     summary.textContent = 'Skipped';
     summary.classList.remove('hidden');
     body.classList.remove('open');
     chevron.classList.remove('rotate-180');
-    
-    // Open details step
-    openAndScrollToStep('details');
+
+    updateProgress();
 }
 
 // ISBN lookup (placeholder)
@@ -870,18 +1154,17 @@ function lookupISBN() {
 function openAndScrollToStep(step) {
     const section = document.getElementById(`acc-${step}`);
     section.classList.remove('locked');
-    
+
     const icon = document.getElementById(`acc-${step}-icon`);
     icon.className = 'w-9 h-9 rounded-full bg-primary text-text-inverse flex items-center justify-center text-sm font-semibold';
-    icon.textContent = step === 'sources' ? '2' : step === 'details' ? '3' : '4';
-    
+    icon.textContent = STEP_NUMBERS[step] || '';
+
     const body = document.getElementById(`acc-${step}-body`);
     const chevron = document.getElementById(`acc-${step}-chevron`);
     body.classList.add('open');
     chevron.classList.add('rotate-180');
-    
-    // Close other steps
-    ['title', 'sources', 'details', 'settings'].forEach(s => {
+
+    SETUP_STEPS.forEach(s => {
         if (s !== step) {
             const otherBody = document.getElementById(`acc-${s}-body`);
             const otherChevron = document.getElementById(`acc-${s}-chevron`);
@@ -889,28 +1172,13 @@ function openAndScrollToStep(step) {
             if (otherChevron) otherChevron.classList.remove('rotate-180');
         }
     });
-    
-    // Smooth scroll into view
+
     setTimeout(() => {
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
-    
+
     state.currentStep = step;
     updateProgress();
-    
-    // Trigger AI generation if opening details
-    if (step === 'details' && !state.aiGeneratedDetails && state.title) {
-        triggerDetailsGeneration();
-    }
-}
-
-async function triggerDetailsGeneration() {
-    const detailsIcon = document.getElementById('acc-details-icon');
-    detailsIcon.innerHTML = '<span class="material-symbols-outlined animate-spin text-base">sync</span>';
-    
-    await generateBookDetailsAI(false);
-    
-    detailsIcon.innerHTML = '3';
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -943,9 +1211,13 @@ function toggleSidebar() {
 function openCreateModal() {
     document.getElementById('create-modal').classList.add('open');
     document.body.style.overflow = 'hidden';
+    showInterviewMode();
 }
 
 function closeCreateModal() {
+    if (typeof RealtimeVoiceAgent !== 'undefined' && RealtimeVoiceAgent.isActive()) {
+        RealtimeVoiceAgent.abort();
+    }
     document.getElementById('create-modal').classList.remove('open');
     document.body.style.overflow = '';
 }
@@ -957,9 +1229,7 @@ function toggleAccordion(step) {
     const section = document.getElementById(`acc-${step}`);
     if (section.classList.contains('locked')) return;
 
-    const steps = ['title', 'sources', 'details', 'settings'];
-    
-    steps.forEach(s => {
+    SETUP_STEPS.forEach(s => {
         const body = document.getElementById(`acc-${s}-body`);
         const chevron = document.getElementById(`acc-${s}-chevron`);
         if (s === step) {
@@ -970,85 +1240,55 @@ function toggleAccordion(step) {
             chevron.classList.remove('rotate-180');
         }
     });
-    
+
     state.currentStep = step;
 }
 
 async function completeStep(step) {
     state.completedSteps.add(step);
-    
+
     const section = document.getElementById(`acc-${step}`);
     const icon = document.getElementById(`acc-${step}-icon`);
     const summary = document.getElementById(`acc-${step}-summary`);
     const body = document.getElementById(`acc-${step}-body`);
     const chevron = document.getElementById(`acc-${step}-chevron`);
-    
-    const steps = ['title', 'sources', 'details', 'settings'];
-    const idx = steps.indexOf(step);
-    
-    // Check if we need to generate AI details before moving to the next step
-    if (idx < steps.length - 1) {
-        const next = steps[idx + 1];
-        if (next === 'details' && !state.aiGeneratedDetails && state.title) {
-            const continueBtn = document.getElementById(`btn-${step}-continue`);
-            let originalText = '';
-            if (continueBtn) {
-                originalText = continueBtn.innerHTML;
-                continueBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm inline-block align-middle mr-1">sync</span> Generating...';
-                continueBtn.disabled = true;
-            }
-            
-            // Wait for AI generation to finish (passing false to not show inline loading)
-            await generateBookDetailsAI(false);
-            
-            if (continueBtn) {
-                continueBtn.innerHTML = originalText;
-                continueBtn.disabled = false;
-            }
-        }
-    }
-    
-    // Now update the UI for the completed step
+
+    const idx = SETUP_STEPS.indexOf(step);
+
     section.classList.add('completed');
     icon.innerHTML = '<span class="material-symbols-outlined text-base filled">check_circle</span>';
     icon.className = 'w-9 h-9 rounded-full bg-success text-text-inverse flex items-center justify-center';
-    
+
     summary.classList.remove('hidden');
     if (step === 'title') {
         const coauthorText = state.coauthors.length > 0 ? ` + ${state.coauthors.length} co-author(s)` : '';
         summary.textContent = `"${state.title}"${coauthorText}`;
+    } else if (step === 'details') {
+        summary.textContent = `${state.discipline || 'Unclassified'} · ${state.level || 'Unspecified'}`;
     } else if (step === 'sources') {
         const parts = [];
         if (state.uploadedFiles > 0) parts.push(`${state.uploadedFiles} files`);
         if (state.externalSources.size > 0) parts.push(`${state.externalSources.size} external sources`);
         summary.textContent = parts.length > 0 ? parts.join(', ') : 'No sources added';
-    } else if (step === 'details') {
-        summary.textContent = `${state.discipline || 'Unclassified'} · ${state.level || 'Unspecified'}`;
-    } else if (step === 'settings') {
-        const sources = [];
-        if (state.settings.uploaded) sources.push('Uploaded');
-        if (state.settings.academic) sources.push('Academic');
-        if (state.settings.web) sources.push('Web');
-        summary.textContent = sources.length > 0 ? `AI sources: ${sources.join(', ')}` : 'No AI sources';
     }
-    
+
     body.classList.remove('open');
     chevron.classList.remove('rotate-180');
-    
-    if (idx < steps.length - 1) {
-        const next = steps[idx + 1];
+
+    if (idx < SETUP_STEPS.length - 1) {
+        const next = SETUP_STEPS[idx + 1];
         const nextSection = document.getElementById(`acc-${next}`);
         const nextIcon = document.getElementById(`acc-${next}-icon`);
         nextSection.classList.remove('locked');
         nextIcon.className = 'w-9 h-9 rounded-full bg-primary text-text-inverse flex items-center justify-center text-sm font-semibold';
-        
-        // Smooth scroll to next step
+        nextIcon.textContent = STEP_NUMBERS[next];
+
         setTimeout(() => {
             toggleAccordion(next);
             nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 200);
     }
-    
+
     updateProgress();
 }
 
@@ -1067,9 +1307,9 @@ async function skipStep(step, btnElement) {
 
 function updateProgress() {
     const count = state.completedSteps.size;
-    document.getElementById('progress-text').textContent = `Step ${Math.min(count + 1, 4)} of 4`;
-    
-    if (state.completedSteps.has('settings')) {
+    document.getElementById('progress-text').textContent = `Step ${Math.min(count + 1, 3)} of 3`;
+
+    if (state.completedSteps.has('sources')) {
         const btn = document.getElementById('btn-generate');
         btn.disabled = false;
         btn.className = 'px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors';
@@ -1120,42 +1360,66 @@ function addCoauthor() {
 // ══════════════════════════════════════════════════════════════════════
 // SOURCE LIBRARY
 // ══════════════════════════════════════════════════════════════════════
-function simulateUpload() {
+function triggerFileUpload() {
+    document.getElementById('file-upload-input').click();
+}
+
+function handleFileUpload(event) {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    addUploadedFiles(files);
+    event.target.value = '';
+}
+
+function getFileIcon(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    if (['pdf'].includes(ext)) return 'picture_as_pdf';
+    if (['doc', 'docx', 'txt', 'md'].includes(ext)) return 'description';
+    if (['ppt', 'pptx'].includes(ext)) return 'slideshow';
+    if (['jpg', 'jpeg', 'png'].includes(ext)) return 'image';
+    if (['mp3', 'wav', 'm4a'].includes(ext)) return 'mic';
+    if (['mp4', 'mov'].includes(ext)) return 'videocam';
+    return 'insert_drive_file';
+}
+
+function formatFileMeta(file) {
+    const sizeKb = Math.max(1, Math.round(file.size / 1024));
+    if (file.type.startsWith('audio/')) return `${sizeKb} KB · Audio · Processing in background`;
+    if (file.type.startsWith('video/')) return `${sizeKb} KB · Video · Processing in background`;
+    if (file.type.startsWith('image/')) return `${sizeKb} KB · Image · Ready`;
+    return `${sizeKb} KB · Document · Ready`;
+}
+
+function addUploadedFiles(files) {
     const dropzone = document.getElementById('source-dropzone');
     const filesDiv = document.getElementById('uploaded-files');
-    
+
     dropzone.classList.add('hidden');
     filesDiv.classList.remove('hidden');
-    
-    const files = [
-        { name: 'Bio101_Syllabus_Fall2025.pdf', icon: 'picture_as_pdf', meta: '2 pages · 450 KB' },
-        { name: 'Lecture_04_Respiration.mp3', icon: 'mic', meta: '45 min · Audio' },
-        { name: 'Mitochondria_Paper_2024.pdf', icon: 'article', meta: '14 pages · 2.1 MB' }
-    ];
-    
-    state.uploadedFiles = files.length;
-    
+
     files.forEach((file, i) => {
         setTimeout(() => {
             const div = document.createElement('div');
             div.className = 'flex items-center gap-3 p-3 rounded border border-border bg-surface log-entry';
             div.innerHTML = `
                 <div class="w-9 h-9 rounded bg-surface-tertiary flex items-center justify-center">
-                    <span class="material-symbols-outlined text-text-tertiary text-lg">${file.icon}</span>
+                    <span class="material-symbols-outlined text-text-tertiary text-lg">${getFileIcon(file.name)}</span>
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-text-primary truncate">${file.name}</p>
-                    <p class="text-xs text-text-tertiary">${file.meta}</p>
+                    <p class="text-xs text-text-tertiary">${formatFileMeta(file)}</p>
                 </div>
                 <span class="material-symbols-outlined text-success text-lg">check_circle</span>
             `;
             filesDiv.appendChild(div);
-            
-            if (i === files.length - 1) {
-                document.getElementById('btn-sources-continue').disabled = false;
-            }
-        }, i * 400);
+            state.uploadedFiles += 1;
+            document.getElementById('btn-sources-continue').disabled = false;
+        }, i * 200);
     });
+}
+
+function simulateUpload() {
+    triggerFileUpload();
 }
 
 function toggleSource(btn) {
@@ -1176,55 +1440,528 @@ function toggleSource(btn) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
+// BOOK DETAILS — VOICE INTERVIEW
+// ══════════════════════════════════════════════════════════════════════
+function setInterviewView(view) {
+    ['interview-idle', 'interview-active', 'interview-processing'].forEach(id => {
+        document.getElementById(id).classList.toggle('hidden', id !== view);
+    });
+}
+
+function showInterviewMode() {
+    state.interviewMode = 'idle';
+    document.getElementById('interview-mode').classList.remove('hidden');
+    document.getElementById('review-mode').classList.add('hidden');
+    document.getElementById('manual-mode').classList.add('hidden');
+    setInterviewView('interview-idle');
+}
+
+function showReviewMode() {
+    state.interviewMode = 'review';
+    document.getElementById('interview-mode').classList.add('hidden');
+    document.getElementById('review-mode').classList.remove('hidden');
+    document.getElementById('manual-mode').classList.add('hidden');
+}
+
+function showManualMode() {
+    if (RealtimeVoiceAgent.isActive()) {
+        RealtimeVoiceAgent.abort();
+    }
+    state.interviewMode = 'manual';
+    document.getElementById('interview-mode').classList.add('hidden');
+    document.getElementById('review-mode').classList.add('hidden');
+    document.getElementById('manual-mode').classList.remove('hidden');
+    setDescriptionMode('text');
+}
+
+function updateInterviewAgentUI(speaking, text) {
+    const indicator = document.getElementById('interview-agent-indicator');
+    const status = document.getElementById('interview-agent-status');
+    const textEl = document.getElementById('interview-agent-text');
+    if (speaking) {
+        indicator.className = 'w-3 h-3 rounded-full bg-primary animate-pulse';
+        status.textContent = 'DreamBook is speaking...';
+    } else {
+        indicator.className = 'w-3 h-3 rounded-full bg-primary';
+        status.textContent = 'DreamBook';
+    }
+    if (text !== undefined) textEl.textContent = text;
+}
+
+function updateInterviewUserUI(speaking, text) {
+    const indicator = document.getElementById('interview-user-indicator');
+    const textEl = document.getElementById('interview-user-text');
+    if (speaking) {
+        indicator.className = 'w-3 h-3 rounded-full bg-error animate-pulse';
+        textEl.classList.remove('italic');
+    } else {
+        indicator.className = 'w-3 h-3 rounded-full bg-border-strong';
+    }
+    if (text !== undefined) {
+        textEl.textContent = text || 'Your turn — speak now...';
+        textEl.classList.toggle('italic', !text);
+    }
+}
+
+async function startVoiceInterview() {
+    if (!state.apiKey) {
+        alert('Add your OpenAI API key in Settings to use voice interview.');
+        return;
+    }
+
+    const btn = document.getElementById('btn-start-interview');
+    btn.disabled = true;
+    btn.textContent = 'Connecting...';
+    state.interviewMode = 'active';
+
+    try {
+        setInterviewView('interview-active');
+        updateInterviewAgentUI(false, '');
+        updateInterviewUserUI(false, 'Listening...');
+
+        await RealtimeVoiceAgent.start({
+            apiKey: state.apiKey,
+            instructions: INTERVIEW_SYSTEM_PROMPT,
+            onReady: () => {
+                updateInterviewAgentUI(false, 'Starting our conversation...');
+                document.getElementById('interview-agent-status').textContent = 'DreamBook';
+            },
+            onTranscriptUpdate: (transcript) => {
+                state.interviewTranscript = transcript;
+            },
+            onAssistantPartial: (text) => updateInterviewAgentUI(true, text),
+            onUserPartial: (text) => updateInterviewUserUI(true, text),
+            onAgentSpeaking: (speaking) => {
+                const current = document.getElementById('interview-agent-text').textContent;
+                updateInterviewAgentUI(speaking, current);
+            },
+            onUserSpeaking: (speaking) => {
+                const current = document.getElementById('interview-user-text').textContent;
+                if (current !== 'Your turn — speak now...') {
+                    updateInterviewUserUI(speaking, current);
+                } else {
+                    updateInterviewUserUI(speaking, '');
+                }
+            },
+            onInputEnabled: () => {
+                const textEl = document.getElementById('interview-user-text');
+                if (!textEl.textContent || textEl.textContent === 'Listening...') {
+                    updateInterviewUserUI(false, 'Your turn — speak now...');
+                }
+            },
+            onError: (error) => {
+                console.error('Voice interview failed:', error);
+                alert(error.message || 'Voice interview failed. Please try again.');
+                showInterviewMode();
+            }
+        });
+    } catch (e) {
+        showInterviewMode();
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Start Conversation';
+    }
+}
+
+async function endVoiceInterview() {
+    setInterviewView('interview-processing');
+    state.interviewMode = 'processing';
+
+    const transcript = await RealtimeVoiceAgent.stop();
+    state.interviewTranscript = transcript || RealtimeVoiceAgent.getTranscript();
+
+    if (!state.interviewTranscript.trim()) {
+        alert('No conversation captured. Please try again.');
+        showInterviewMode();
+        return;
+    }
+
+    try {
+        const extracted = await extractBookDetails(state.interviewTranscript);
+        populateReviewFields(extracted);
+        showReviewMode();
+    } catch (e) {
+        console.error('Extraction failed:', e);
+        alert('Failed to extract book details. You can fill them in manually.');
+        showManualMode();
+        document.getElementById('manual-book-description').value = state.interviewTranscript;
+    }
+}
+
+async function extractBookDetails(transcript) {
+    const existingTitle = state.title ? `The author already set the title to "${state.title}".` : '';
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.apiKey}`
+        },
+        body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+                {
+                    role: 'system',
+                    content: `Given a conversation transcript between an AI and an author setting up a textbook, extract JSON with:
+"suggested_title" (string or null — only if meaningfully different/better than the existing title; otherwise null),
+"description" (2-3 sentence catalog summary in third person),
+"discipline" (one of: Biology, Chemistry, Physics, Economics, Other),
+"grade_level" (one of: Class 6-8, Class 9-10, Class 11-12, Undergrad Intro, Undergrad Advanced, Graduate),
+"confidence" (object with discipline and grade_level as high/medium/low).
+${existingTitle}
+Return ONLY valid JSON.`
+                },
+                { role: 'user', content: transcript }
+            ]
+        })
+    });
+
+    if (!response.ok) throw new Error('Extraction request failed');
+    const data = await response.json();
+    const content = data.choices[0].message.content.trim().replace(/```json\n?|\n?```/g, '');
+    return JSON.parse(content);
+}
+
+function normalizeTitleForComparison(title) {
+    return (title || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .replace(/\s+/g, ' ');
+}
+
+function isMeaningfullyDifferentTitle(suggested, existing) {
+    if (!suggested || !existing) return Boolean(suggested);
+    return normalizeTitleForComparison(suggested) !== normalizeTitleForComparison(existing);
+}
+
+function populateReviewFields(extracted) {
+    const descEl = document.getElementById('book-description');
+    descEl.value = extracted.description || '';
+    state.description = descEl.value;
+    handleDescriptionInput();
+
+    selectChipByValue('discipline', extracted.discipline);
+    selectChipByValue('level', extracted.grade_level);
+
+    const titleBlock = document.getElementById('review-suggested-title');
+    const suggested = (extracted.suggested_title || '').trim();
+    if (suggested && isMeaningfullyDifferentTitle(suggested, state.title)) {
+        titleBlock.classList.remove('hidden');
+        document.getElementById('review-title-input').value = suggested;
+    } else {
+        titleBlock.classList.add('hidden');
+    }
+}
+
+function keepOriginalTitle() {
+    document.getElementById('review-suggested-title').classList.add('hidden');
+}
+
+function restartInterview() {
+    state.interviewTranscript = '';
+    showInterviewMode();
+}
+
+function showReviewFromManual() {
+    const manualDesc = document.getElementById('manual-book-description').value.trim();
+    if (!manualDesc) {
+        alert('Please add a description before continuing.');
+        return;
+    }
+    document.getElementById('book-description').value = manualDesc;
+    state.description = manualDesc;
+
+    document.querySelectorAll('#manual-discipline-chips .chip.active').forEach(chip => {
+        selectChipByValue('discipline', chip.dataset.value);
+    });
+    document.querySelectorAll('#manual-level-chips .chip.active').forEach(chip => {
+        selectChipByValue('level', chip.dataset.value);
+    });
+
+    showReviewMode();
+}
+
+function handleManualDescriptionInput() {
+    const desc = document.getElementById('manual-book-description').value.trim();
+    state.description = desc;
+    const enhanceBtn = document.getElementById('enhance-desc-btn');
+    const detectBtn = document.getElementById('detect-classification-btn');
+    const showActions = desc.length > 20;
+    if (enhanceBtn) enhanceBtn.classList.toggle('hidden', !showActions);
+    if (detectBtn) detectBtn.classList.toggle('hidden', !showActions);
+}
+
+function selectManualChip(btn, group) {
+    const container = group === 'discipline' ? '#manual-discipline-chips' : '#manual-level-chips';
+    document.querySelectorAll(`${container} .chip`).forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    const value = btn.dataset.value;
+    if (group === 'discipline') state.discipline = value;
+    else if (group === 'level') state.level = value;
+}
+
+// ══════════════════════════════════════════════════════════════════════
 // BOOK DETAILS
 // ══════════════════════════════════════════════════════════════════════
-// ══════════════════════════════════════════════════════════════════════
-// DETAILS (STEP 3) & AI GENERATION
-// ══════════════════════════════════════════════════════════════════════
-async function generateBookDetailsAI(showInlineLoading = true) {
-    const descBox = document.getElementById('book-description');
-    const continueBtn = document.getElementById('btn-details-continue');
-    const notice = document.getElementById('ai-notice');
-    const regenBtn = document.getElementById('regenerate-btn');
-    
-    if (showInlineLoading) {
-        // UI Loading State
-        descBox.value = '';
-        descBox.placeholder = 'AI is analyzing your title and sources to generate a description...';
-        descBox.classList.add('animate-pulse', 'bg-surface-tertiary');
-        continueBtn.disabled = true;
-        notice.classList.add('hidden');
-        regenBtn.classList.add('hidden');
+function setDescriptionMode(mode) {
+    if (mode === 'text' && RealtimeVoice.isRecording() && state.voiceRecordingTarget === 'description') {
+        RealtimeVoice.abort();
+        resetVoiceUI('description');
     }
-    
-    // Reset chips
-    document.querySelectorAll('#discipline-chips .chip, #level-chips .chip').forEach(c => c.classList.remove('active'));
 
-    const fallbackGeneration = () => {
-        // Fallback Logic (Keyword matching)
-        const titleLower = state.title.toLowerCase();
-        let discipline = 'Other';
-        if (titleLower.includes('bio') || titleLower.includes('cell') || titleLower.includes('life')) discipline = 'Biology';
-        else if (titleLower.includes('chem') || titleLower.includes('molecule') || titleLower.includes('reaction')) discipline = 'Chemistry';
-        else if (titleLower.includes('phys') || titleLower.includes('mechanics') || titleLower.includes('quantum')) discipline = 'Physics';
-        else if (titleLower.includes('econ') || titleLower.includes('market') || titleLower.includes('finance')) discipline = 'Economics';
-        
-        applyGeneratedDetails({
-            discipline: discipline,
-            level: 'Undergrad',
-            description: `A comprehensive textbook covering the fundamental principles of ${state.title}. This book provides students with in-depth knowledge, practical examples, and foundational theories necessary for mastery of the subject.`
-        }, showInlineLoading);
-    };
+    state.descriptionMode = mode;
+    const textBtn = document.getElementById('desc-mode-text');
+    const voiceBtn = document.getElementById('desc-mode-voice');
+    const textMode = document.getElementById('desc-text-mode');
+    const voiceMode = document.getElementById('desc-voice-mode');
+
+    if (mode === 'text') {
+        textBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-md bg-surface text-text-primary shadow-sm';
+        voiceBtn.className = 'px-2.5 py-1 text-xs text-text-secondary rounded-md';
+        textMode.classList.remove('hidden');
+        voiceMode.classList.add('hidden');
+    } else {
+        textBtn.className = 'px-2.5 py-1 text-xs text-text-secondary rounded-md';
+        voiceBtn.className = 'px-2.5 py-1 text-xs font-medium rounded-md bg-surface text-text-primary shadow-sm';
+        textMode.classList.add('hidden');
+        voiceMode.classList.remove('hidden');
+    }
+}
+
+function handleDescriptionInput() {
+    const desc = document.getElementById('book-description').value.trim();
+    state.description = desc;
+}
+
+function confirmReviewAndContinue() {
+    state.description = document.getElementById('book-description').value.trim();
+    const titleBlock = document.getElementById('review-suggested-title');
+    if (!titleBlock.classList.contains('hidden')) {
+        const suggested = document.getElementById('review-title-input').value.trim();
+        if (suggested) {
+            state.title = suggested;
+            document.getElementById('book-title').value = suggested;
+            document.getElementById('btn-title-continue').disabled = suggested.length < 3;
+        }
+    }
+    completeStep('details');
+}
+
+async function enhanceDescription() {
+    const descEl = state.interviewMode === 'manual'
+        ? document.getElementById('manual-book-description')
+        : document.getElementById('book-description');
+    const desc = descEl.value.trim();
+    if (!desc) return;
+
+    const btn = document.getElementById('enhance-desc-btn');
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Enhancing...';
+    btn.disabled = true;
 
     if (!state.apiKey) {
-        console.log("No API key found, using fallback generation.");
-        return new Promise(resolve => {
-            setTimeout(() => {
-                fallbackGeneration();
-                resolve();
-            }, 800); // Simulate slight delay
-        });
+        alert('Add your OpenAI API key in Settings to use AI enhancement.');
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm">auto_awesome</span> Enhance with AI';
+        btn.disabled = false;
+        return;
     }
+
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.apiKey}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: 'You are a skilled editor. Enhance the following textbook description to be more compelling, clear, and professional while preserving the author\'s voice and intent. Keep it concise (2-3 sentences). Return only the enhanced text.' },
+                    { role: 'user', content: desc }
+                ]
+            })
+        });
+        if (!response.ok) throw new Error('Enhance request failed');
+        const data = await response.json();
+        const enhanced = data.choices[0].message.content.trim();
+        descEl.value = enhanced;
+        state.description = enhanced;
+        if (state.interviewMode !== 'manual') handleDescriptionInput();
+        else handleManualDescriptionInput();
+    } catch (e) {
+        console.error('Enhance failed:', e);
+        alert('Failed to enhance description. Please try again.');
+    }
+
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm">auto_awesome</span> Enhance with AI';
+    btn.disabled = false;
+}
+
+const VOICE_CLEANUP_PROMPTS = {
+    description: 'Clean up this spoken transcription: remove filler words (um, uh, like, you know), fix grammar, and make it read naturally as a textbook description. Do NOT expand or add new content. Keep the author\'s voice and intent. Return only the cleaned text.',
+    custom: 'Clean up this spoken transcription: remove filler words (um, uh, like, you know), fix grammar, and make it read naturally as instructions for a textbook chapter structure. Do NOT expand or add new content. Keep the author\'s intent. Return only the cleaned text.'
+};
+
+function showDescriptionVoiceState(view) {
+    ['voice-idle', 'voice-streaming', 'voice-processing', 'voice-result'].forEach(id => {
+        document.getElementById(id).classList.toggle('hidden', id !== view);
+    });
+}
+
+function showCustomVoiceState(view) {
+    ['custom-voice-idle', 'custom-voice-streaming', 'custom-voice-processing', 'custom-voice-result'].forEach(id => {
+        document.getElementById(id).classList.toggle('hidden', id !== view);
+    });
+}
+
+function setVoiceConnectingUI(target, connecting) {
+    if (target === 'description') {
+        const btn = document.getElementById('voice-start-btn');
+        const label = document.getElementById('voice-idle-label');
+        const idle = document.getElementById('voice-idle');
+        if (btn) btn.disabled = connecting;
+        if (idle) idle.classList.toggle('opacity-60', connecting);
+        if (idle) idle.classList.toggle('pointer-events-none', connecting);
+        if (label) label.textContent = connecting ? 'Connecting microphone...' : 'Click to start recording';
+    } else if (target === 'custom') {
+        const btn = document.getElementById('custom-voice-btn');
+        if (btn) {
+            btn.disabled = connecting;
+            btn.innerHTML = connecting
+                ? '<span class="material-symbols-outlined text-lg align-middle mr-1 animate-spin">sync</span> Connecting microphone...'
+                : '<span class="material-symbols-outlined text-lg align-middle mr-1">mic</span> Click to describe with voice';
+        }
+    }
+}
+
+async function startVoiceRecording(target) {
+    if (RealtimeVoice.isRecording()) {
+        await stopVoiceRecording();
+        return;
+    }
+
+    if (!state.apiKey) {
+        alert('Add your OpenAI API key in Settings to use voice transcription.');
+        return;
+    }
+
+    state.voiceRecordingTarget = target;
+    setVoiceConnectingUI(target, true);
+
+    try {
+        await RealtimeVoice.start({
+            apiKey: state.apiKey,
+            cleanupPrompt: VOICE_CLEANUP_PROMPTS[target],
+            onTranscribing: (text) => {
+                if (target === 'description') {
+                    document.getElementById('voice-transcript-stream').textContent = text;
+                } else if (target === 'custom') {
+                    document.getElementById('custom-voice-transcript-stream').textContent = text;
+                }
+            },
+            onError: (error) => {
+                console.error('Voice recording failed:', error);
+                alert(error.message || 'Voice recording failed. Please try again.');
+                resetVoiceUI(target);
+            },
+            onComplete: (cleanedText) => {
+                handleVoiceComplete(target, cleanedText);
+            }
+        });
+
+        if (target === 'description') {
+            showDescriptionVoiceState('voice-streaming');
+            document.getElementById('voice-transcript-stream').textContent = '';
+        } else if (target === 'custom') {
+            showCustomVoiceState('custom-voice-streaming');
+            document.getElementById('custom-voice-transcript-stream').textContent = '';
+        }
+    } catch (e) {
+        resetVoiceUI(target);
+    } finally {
+        setVoiceConnectingUI(target, false);
+    }
+}
+
+async function stopVoiceRecording() {
+    const target = state.voiceRecordingTarget;
+    if (!target) return;
+
+    if (RealtimeVoice.isRecording()) {
+        if (target === 'description') {
+            showDescriptionVoiceState('voice-processing');
+        } else if (target === 'custom') {
+            showCustomVoiceState('custom-voice-processing');
+        }
+        await RealtimeVoice.stop();
+        return;
+    }
+
+    await RealtimeVoice.abort();
+    resetVoiceUI(target);
+}
+
+function handleVoiceComplete(target, cleanedText) {
+    if (target === 'description') {
+        showDescriptionVoiceState('voice-result');
+        document.getElementById('voice-result-text').textContent = cleanedText;
+        state.description = cleanedText;
+    } else if (target === 'custom') {
+        showCustomVoiceState('custom-voice-result');
+        document.getElementById('custom-voice-result-text').textContent = cleanedText;
+        state.customStructureDesc = cleanedText;
+    }
+
+    state.voiceRecordingTarget = null;
+}
+
+function resetVoiceUI(target) {
+    setVoiceConnectingUI(target, false);
+    if (target === 'description') {
+        showDescriptionVoiceState('voice-idle');
+        document.getElementById('voice-transcript-stream').textContent = '';
+    } else if (target === 'custom') {
+        showCustomVoiceState('custom-voice-idle');
+        document.getElementById('custom-voice-transcript-stream').textContent = '';
+    }
+    state.voiceRecordingTarget = null;
+}
+
+function reRecordVoice(target) {
+    if (target === 'description') {
+        showDescriptionVoiceState('voice-idle');
+        document.getElementById('voice-transcript-stream').textContent = '';
+    } else if (target === 'custom') {
+        showCustomVoiceState('custom-voice-idle');
+        document.getElementById('custom-voice-transcript-stream').textContent = '';
+    }
+}
+
+function acceptVoiceResult(target) {
+    if (target === 'description') {
+        document.getElementById('manual-book-description').value = state.description;
+        setDescriptionMode('text');
+        handleManualDescriptionInput();
+    } else if (target === 'custom') {
+        document.getElementById('custom-structure-desc').value = state.customStructureDesc;
+        setCustomMode('text');
+        handleCustomStructureInput();
+    }
+}
+
+async function detectClassification() {
+    const desc = state.interviewMode === 'manual'
+        ? document.getElementById('manual-book-description').value.trim()
+        : document.getElementById('book-description').value.trim();
+    if (!desc) return;
+
+    if (!state.apiKey) {
+        alert('Add your OpenAI API key in Settings to use AI detection.');
+        return;
+    }
+
+    const btn = document.getElementById('detect-classification-btn');
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Detecting...';
+    btn.disabled = true;
 
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1238,81 +1975,44 @@ async function generateBookDetailsAI(showInlineLoading = true) {
                 messages: [
                     {
                         role: 'system',
-                        content: `You are an academic publisher assistant. Based on the textbook title provided by the user, you must deduce the discipline, academic level, and write a compelling, imaginative short description (2-3 sentences) for the book. 
-                        
-If the title appears to be complete gibberish, nonsensical, or entirely unrelated to any academic subject, return "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." for the description. Otherwise, generate a real, thoughtful description.
-
-You MUST respond with a valid JSON object matching this exact schema:
-{
-  "discipline": "Biology" | "Chemistry" | "Physics" | "Economics" | "Other",
-  "level": "Class 6-8" | "Class 9-10" | "Class 11-12" | "Undergrad Intro" | "Undergrad Advanced" | "Graduate",
-  "description": "The generated description string here..."
-}`
+                        content: 'Analyze this textbook description and return JSON with "discipline" (one of: Biology, Chemistry, Physics, Economics, Other) and "level" (one of: Class 6-8, Class 9-10, Class 11-12, Undergrad Intro, Undergrad Advanced, Graduate). Return ONLY valid JSON.'
                     },
-                    {
-                        role: 'user',
-                        content: `Textbook Title: "${state.title}"`
-                    }
-                ],
-                response_format: { type: "json_object" }
+                    { role: 'user', content: desc }
+                ]
             })
         });
-
-        if (!response.ok) throw new Error('API request failed');
+        if (!response.ok) throw new Error('Detection request failed');
 
         const data = await response.json();
-        const result = JSON.parse(data.choices[0].message.content);
-        
-        applyGeneratedDetails(result, showInlineLoading);
+        const content = data.choices[0].message.content.trim().replace(/```json\n?|\n?```/g, '');
+        const parsed = JSON.parse(content);
 
-    } catch (error) {
-        console.error("AI Generation failed:", error);
-        fallbackGeneration();
+        selectChipByValue('discipline', parsed.discipline);
+        selectChipByValue('level', parsed.grade_level || parsed.level);
+    } catch (e) {
+        console.error('Classification detection failed:', e);
+        alert('Failed to detect classification. Please select manually.');
     }
+
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm">auto_awesome</span> Detect with AI';
+    btn.disabled = false;
 }
 
-function applyGeneratedDetails(data, removeInlineLoading = true) {
-    const descBox = document.getElementById('book-description');
-    const continueBtn = document.getElementById('btn-details-continue');
-    const notice = document.getElementById('ai-notice');
-    const regenBtn = document.getElementById('regenerate-btn');
+function selectChipByValue(group, value) {
+    if (!value) return;
+    const selectors = group === 'discipline'
+        ? ['#discipline-chips', '#manual-discipline-chips']
+        : ['#level-chips', '#manual-level-chips'];
 
-    if (removeInlineLoading) {
-        // Remove loading state
-        descBox.classList.remove('animate-pulse', 'bg-surface-tertiary');
-        descBox.placeholder = "Describe your textbook's focus, target audience, and key topics...";
-    }
-    
-    // Apply data
-    state.discipline = data.discipline;
-    state.level = data.level;
-    state.description = data.description;
-    
-    // Update UI
-    descBox.value = state.description;
-    
-    const discChip = document.querySelector(`#discipline-chips .chip[data-value="${state.discipline}"]`);
-    if (discChip) discChip.classList.add('active');
-    
-    const levelChip = document.querySelector(`#level-chips .chip[data-value="${state.level}"]`);
-    if (levelChip) levelChip.classList.add('active');
-    
-    // Show notices and enable buttons
-    notice.classList.remove('hidden');
-    regenBtn.classList.remove('hidden');
-    continueBtn.disabled = false;
-    
-    // Mark as generated so we don't overwrite if they navigate back
-    state.aiGeneratedDetails = true;
+    selectors.forEach(sel => {
+        document.querySelectorAll(`${sel} .chip`).forEach(chip => {
+            chip.classList.toggle('active', chip.dataset.value === value);
+        });
+    });
+
+    if (group === 'discipline') state.discipline = value;
+    else if (group === 'level') state.level = value;
 }
-
-// Ensure the regenerate button calls the new AI function with inline loading
-document.getElementById('regenerate-btn').onclick = () => generateBookDetailsAI(true);
-
-// Ensure manual edits update state so "Continue" works correctly
-document.getElementById('book-description').addEventListener('input', (e) => {
-    state.description = e.target.value;
-});
 
 function selectChip(btn, group) {
     document.querySelectorAll(`#${group}-chips .chip`).forEach(c => c.classList.remove('active'));
@@ -1325,12 +2025,62 @@ function selectChip(btn, group) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// SETTINGS
+// SETTINGS & GENERATE STRUCTURE
 // ══════════════════════════════════════════════════════════════════════
+function updateSourceSettingsSummary() {
+    const enabled = [];
+    if (state.settings.uploaded) enabled.push('Uploaded');
+    if (state.settings.academic) enabled.push('Academic');
+    if (state.settings.web) enabled.push('Web');
+    const summary = document.getElementById('source-settings-summary');
+    if (summary) {
+        summary.textContent = enabled.length
+            ? `(${enabled.join(' + ')} enabled)`
+            : '(No sources enabled)';
+    }
+}
+
 function toggleSwitch(el) {
     el.classList.toggle('active');
     const setting = el.dataset.setting;
     state.settings[setting] = el.classList.contains('active');
+    updateSourceSettingsSummary();
+}
+
+function toggleSourceSettings() {
+    const body = document.getElementById('source-settings-body');
+    const chevron = document.getElementById('source-settings-chevron');
+    body.classList.toggle('hidden');
+    chevron.classList.toggle('rotate-180');
+}
+
+function setCustomMode(mode) {
+    if (mode === 'text' && RealtimeVoice.isRecording() && state.voiceRecordingTarget === 'custom') {
+        RealtimeVoice.abort();
+        resetVoiceUI('custom');
+    }
+
+    state.customStructureMode = mode;
+    const textBtn = document.getElementById('custom-mode-text');
+    const voiceBtn = document.getElementById('custom-mode-voice');
+    const textInput = document.getElementById('custom-text-input');
+    const voiceInput = document.getElementById('custom-voice-input');
+
+    if (mode === 'text') {
+        textBtn.className = 'px-2 py-1 text-xs font-medium rounded bg-surface shadow-sm';
+        voiceBtn.className = 'px-2 py-1 text-xs text-text-secondary rounded';
+        textInput.classList.remove('hidden');
+        voiceInput.classList.add('hidden');
+    } else {
+        textBtn.className = 'px-2 py-1 text-xs text-text-secondary rounded';
+        voiceBtn.className = 'px-2 py-1 text-xs font-medium rounded bg-surface shadow-sm';
+        textInput.classList.add('hidden');
+        voiceInput.classList.remove('hidden');
+    }
+}
+
+function handleCustomStructureInput() {
+    state.customStructureDesc = document.getElementById('custom-structure-desc').value.trim();
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1340,15 +2090,21 @@ function goToGenerateScreen() {
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('generate-screen').classList.remove('hidden');
     document.getElementById('generate-book-title').textContent = state.title;
-    
-    // Reset structure selection to a clean unselected state
+
     document.querySelectorAll('#structure-options .select-card').forEach(card => {
         card.classList.remove('active');
         card.querySelector('input').checked = false;
     });
     state.structureStyle = null;
-    
-    // Disable Generate & Open until user picks a style
+    state.customStructureDesc = '';
+
+    const customInput = document.getElementById('custom-structure-input');
+    if (customInput) customInput.classList.add('hidden');
+    document.getElementById('custom-structure-desc').value = '';
+    document.getElementById('custom-voice-result').classList.add('hidden');
+    setCustomMode('text');
+    updateSourceSettingsSummary();
+
     const btn = document.getElementById('btn-create');
     btn.disabled = true;
     btn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -1364,25 +2120,29 @@ function runAnalysis() {
 }
 
 function selectStructureStyle(labelEl, style) {
-    // Clear all cards
     document.querySelectorAll('#structure-options .select-card').forEach(card => {
         card.classList.remove('active');
         card.querySelector('input').checked = false;
-        // Reset text color for all card titles
         card.querySelector('p.font-medium').classList.remove('text-primary');
         card.querySelector('p.font-medium').classList.add('text-text-primary');
     });
-    
-    // Activate the clicked card
+
     labelEl.classList.add('active');
     labelEl.querySelector('input').checked = true;
     labelEl.querySelector('p.font-medium').classList.remove('text-text-primary');
     labelEl.querySelector('p.font-medium').classList.add('text-primary');
-    
-    // Save choice
+
     state.structureStyle = style;
-    
-    // Enable the Generate & Open button
+
+    const customInput = document.getElementById('custom-structure-input');
+    if (customInput) {
+        if (style === 'custom') {
+            customInput.classList.remove('hidden');
+        } else {
+            customInput.classList.add('hidden');
+        }
+    }
+
     const btn = document.getElementById('btn-create');
     btn.disabled = false;
     btn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -1401,7 +2161,14 @@ function getGradeContext(gradeLevel) {
 }
 
 async function createBook() {
-    // Show generating overlay
+    if (state.structureStyle === 'custom') {
+        handleCustomStructureInput();
+        if (!state.customStructureDesc) {
+            alert('Please describe your custom structure before generating.');
+            return;
+        }
+    }
+
     const overlay = document.createElement('div');
     overlay.id = 'generating-overlay';
     overlay.className = 'fixed inset-0 z-[100] bg-surface flex items-center justify-center';
@@ -1416,7 +2183,6 @@ async function createBook() {
     `;
     document.body.appendChild(overlay);
 
-    // If blank, we just pass an empty structure
     if (state.structureStyle === 'blank') {
         const newBookId = 'book_' + Date.now();
         sessionStorage.setItem('book_id', newBookId);
@@ -1428,37 +2194,50 @@ async function createBook() {
         return;
     }
 
-    // Check cache (include grade in cache key)
     const gradeForCache = state.level || 'Undergrad Intro';
-    const cacheKey = `structure_cache_${state.title}_${state.structureStyle}_${gradeForCache}`;
+    const customSuffix = state.structureStyle === 'custom' ? `_${state.customStructureDesc.slice(0, 40)}` : '';
+    const cacheKey = `structure_cache_${state.title}_${state.structureStyle}_${gradeForCache}${customSuffix}`;
     const cachedStructure = localStorage.getItem(cacheKey);
     if (cachedStructure) {
-        console.log("Using cached structure");
         const newBookId = 'book_' + Date.now();
         sessionStorage.setItem('book_id', newBookId);
         sessionStorage.setItem('generated_structure', cachedStructure);
         sessionStorage.setItem('book_title', state.title);
         sessionStorage.setItem('book_grade', gradeForCache);
         sessionStorage.setItem('book_description', state.description || '');
-        setTimeout(() => { window.location.href = 'editor.html?id=' + newBookId; }, 500); // Small delay for UX
+        setTimeout(() => { window.location.href = 'editor.html?id=' + newBookId; }, 500);
         return;
     }
 
-    // Generate via AI
     const gradeLevel = state.level || 'Undergrad Intro';
     const gradeContext = getGradeContext(gradeLevel);
-    
+    const bookContext = state.description
+        ? `AUTHOR'S VISION:\n"${state.description}"\n\nIMPORTANT: Structure the chapters to reflect this approach. Do NOT default to a generic textbook format.\n\n`
+        : '';
+
     let prompt = '';
     if (state.structureStyle === 'toc') {
-        prompt = `Generate a Table of Contents for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 8 chapters. Each chapter should have a title and a subtitle, but NO subsections. ${gradeContext}`;
+        prompt = `${bookContext}Generate a Table of Contents for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 10 chapters total: Chapter 1 must be an Introduction, Chapters 2-9 are content chapters, and Chapter 10 must be Practice/Exercises. Each chapter should have a title and a subtitle, but NO subsections. Structure the content chapters to reflect the author's vision described above. ${gradeContext}`;
     } else if (state.structureStyle === 'outline') {
-        prompt = `Generate a Chapter Outline for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 4 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a plain-text title (no numeric prefix like "1.1") and a brief description (1 sentence). ${gradeContext}`;
+        prompt = `${bookContext}Generate a Chapter Outline for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 6 chapters total: Chapter 1 must be an Introduction (1-3 subsections), Chapters 2-5 are content chapters with exactly 3 subsections each, and Chapter 6 must be Practice/Exercises (1-3 subsections). Each chapter must have a title and a subtitle. Each subsection must have a plain-text title and a brief description (1 sentence). Structure the content chapters to reflect the author's vision described above. ${gradeContext}`;
     } else if (state.structureStyle === 'full') {
-        prompt = `Generate a Full Draft structure for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 3 chapters. Each chapter must have a title, a subtitle, and exactly 3 subsections. Each subsection must have a plain-text title (no numeric prefix like "1.1") and 2 paragraphs of full draft content. ${gradeContext}`;
+        prompt = `${bookContext}Generate a Full Draft structure for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 5 chapters total: Chapter 1 must be an Introduction (1-3 subsections), Chapters 2-4 are content chapters with exactly 3 subsections each, and Chapter 5 must be Practice/Exercises (1-3 subsections). Each chapter must have a title and a subtitle. Each subsection must have a plain-text title and 2 paragraphs of full draft content. Structure the content chapters to reflect the author's vision described above. ${gradeContext}`;
+    } else if (state.structureStyle === 'custom') {
+        prompt = `${bookContext}Generate a textbook structure for "${state.title}" for ${gradeLevel} students based on the author's instructions below. Chapter 1 must be an Introduction (1-3 subsections). The final chapter must be Practice/Exercises (1-3 subsections). All middle chapters are content chapters and should follow the requested chapter count, topics, and ordering as closely as possible. Each chapter must have a title, a subtitle, and subsections with plain-text titles and brief descriptions. Structure content chapters to reflect the author's vision described above.
+
+Author's structure instructions:
+"${state.customStructureDesc}"
+
+${gradeContext}`;
     }
 
     const systemPrompt = `You are an expert academic textbook author writing for ${gradeLevel} students.
 ${gradeContext}
+
+STRUCTURAL GUIDELINES:
+- Chapter 1 MUST be an Introduction that orients readers to the book's purpose, approach, and what they will learn (1-3 subsections).
+- The FINAL chapter MUST be Practice/Exercises with review problems, experiments, or activities (1-3 subsections).
+- All middle chapters are content chapters and should follow the subsection requirements in the prompt.
 
 You MUST respond with a valid JSON object matching this exact schema:
 {
@@ -1547,6 +2326,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     renderDashboard('all');
+    updateSourceSettingsSummary();
 });
 
 let currentFilter = 'all';
