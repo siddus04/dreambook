@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="favicon.svg"/>
+<title>Analytics · DreamBook Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'primary': '#2E4CB9', 'primary-dark': '#1E3A8A', 'primary-light': '#6B7FD7', 'primary-bg': '#EEF1FB',
+                    'surface': '#FFFFFF', 'surface-secondary': '#F8F9FF', 'surface-tertiary': '#F1F3F9',
+                    'border': '#E5E7EB', 'border-strong': '#D1D5DB',
+                    'text-primary': '#111827', 'text-secondary': '#4B5563', 'text-tertiary': '#9CA3AF', 'text-inverse': '#FFFFFF',
+                    'success': '#059669', 'success-bg': '#ECFDF5', 'warning': '#D97706', 'warning-bg': '#FFFBEB',
+                    'ai-bg': '#EFF6FF', 'ai-border': '#BFDBFE', 'ai-text': '#1E40AF',
+                },
+                fontFamily: { 'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+                borderRadius: { 'DEFAULT': '8px', 'lg': '12px', 'xl': '16px' },
+            }
+        }
+    };
+</script>
+<style type="text/tailwindcss">
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1; }
+    .toggle-switch { @apply relative w-11 h-6 rounded-full cursor-pointer transition-colors bg-border-strong; }
+    .toggle-switch.active { @apply bg-primary; }
+    .toggle-switch .toggle-dot { @apply absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .toggle-switch.active .toggle-dot { @apply translate-x-5; }
+    #sidebar { transition: width 0.2s ease; }
+    .sidebar-collapsed { width: 72px !important; }
+    .sidebar-collapsed .sidebar-text { display: none; }
+    .sidebar-collapsed .app-nav-item {
+        justify-content: center;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        margin: 0 auto;
+        border-radius: 12px;
+    }
+    .sidebar-brand-row {
+        height: 3.5rem;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        flex-shrink: 0;
+    }
+    .sidebar-brand-link {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        min-width: 0;
+    }
+    .sidebar-collapsed .sidebar-brand-row {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .sidebar-collapsed .sidebar-brand-link {
+        justify-content: center;
+    }
+    .sidebar-collapsed .sidebar-profile {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .sidebar-collapsed .sidebar-profile-row {
+        justify-content: center;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
+    .hero-gradient { background: linear-gradient(135deg, #EEF1FB 0%, #F8F9FF 45%, #EFF6FF 100%); }
+    .metric-card { @apply bg-surface rounded-xl border border-border p-5 transition-shadow hover:shadow-md; }
+    .metric-icon-wrap { @apply w-9 h-9 rounded-lg flex items-center justify-center shrink-0; }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .mode-badge-demo { @apply bg-ai-bg text-ai-text border border-ai-border; }
+    .mode-badge-live { @apply bg-success-bg text-success border border-success/20; }
+    .chart-wrap { position: relative; width: 100%; }
+    .metric-ring { @apply w-11 h-11 rounded-full shrink-0 relative; background: conic-gradient(#2E4CB9 var(--pct), #E5E7EB 0); }
+    .metric-ring-inner { @apply absolute inset-1 rounded-full bg-surface flex items-center justify-center; }
+    .heatmap-tile { @apply rounded-lg border-2 transition-all cursor-default min-h-[3.5rem] flex flex-col justify-end p-2; }
+    .heatmap-tile-label { @apply text-[10px] font-medium text-white/95 leading-tight line-clamp-2 drop-shadow-sm; }
+    .insight-card { @apply bg-surface rounded-xl border border-border p-5; }
+    .dreambook-logo-mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(145deg, #eef2ff 0%, #f5f3ff 55%, #fdf4ff 100%);
+        border: 1px solid rgba(99, 102, 241, 0.16);
+        box-shadow: 0 1px 2px rgba(79, 70, 229, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .dreambook-logo-mark::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 18px;
+        height: 18px;
+        background: radial-gradient(circle, rgba(251, 191, 36, 0.28) 0%, rgba(251, 191, 36, 0.06) 50%, transparent 72%);
+        pointer-events: none;
+    }
+    .dreambook-logo-mark .material-symbols-outlined {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        font-size: 21px;
+        color: #4f46e5;
+        z-index: 1;
+    }
+    .sidebar-wordmark {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        min-width: 0;
+    }
+    .dreambook-logo-title {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #0f172a;
+        line-height: 1;
+    }
+    .dreambook-logo-subtitle {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+    .app-nav-item {
+        @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary transition-colors;
+    }
+    .app-nav-item:hover {
+        @apply bg-surface-tertiary text-text-primary;
+    }
+    .app-nav-item.active {
+        @apply bg-primary-bg text-primary font-medium;
+    }
+    .analytics-tab {
+        @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors text-text-secondary hover:text-text-primary hover:bg-surface-tertiary;
+    }
+    .analytics-tab.active {
+        @apply bg-primary-bg text-primary;
+    }
+    .decision-funnel-step {
+        @apply flex items-center gap-3 py-2;
+    }
+    .decision-funnel-bar-wrap {
+        @apply flex-1 h-2 bg-surface-tertiary rounded-full overflow-hidden;
+    }
+    .decision-funnel-bar {
+        @apply h-full bg-primary rounded-full transition-all duration-500;
+    }
+    .decision-signal-row {
+        @apply flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-3 border-b border-border/60 last:border-0;
+    }
+    .topic-cluster-chip {
+        @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-surface-tertiary text-text-secondary;
+    }
+    .topic-trend-up { @apply text-warning; }
+    .topic-trend-down { @apply text-success; }
+    .topic-trend-stable { @apply text-text-tertiary; }
+    .flywheel-stage {
+        @apply relative flex flex-col items-center text-center p-4 rounded-xl border border-border bg-surface min-w-0;
+    }
+    .flywheel-stage::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -12px;
+        width: 24px;
+        height: 2px;
+        background: linear-gradient(90deg, #2E4CB9, #6B7FD7);
+        transform: translateY(-50%);
+        z-index: 1;
+    }
+    .flywheel-stage:last-child::after { display: none; }
+    @media (max-width: 1023px) {
+        .flywheel-stage::after { display: none; }
+    }
+    .flywheel-icon {
+        @apply w-10 h-10 rounded-xl flex items-center justify-center mb-2;
+        background: linear-gradient(135deg, #EEF1FB 0%, #EFF6FF 100%);
+    }
+    .brief-evidence-chip {
+        @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-surface border border-border text-text-secondary;
+    }
+    .moat-tool-card {
+        @apply rounded-xl border border-border p-5 bg-surface h-full flex flex-col;
+        background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FF 100%);
+    }
+    .loop-card {
+        @apply rounded-xl border border-border p-4 bg-surface flex flex-col gap-3;
+    }
+    .loop-status-improved { @apply bg-success-bg text-success border-success/20; }
+    .loop-status-active { @apply bg-ai-bg text-ai-text border-ai-border; }
+    .loop-status-queued { @apply bg-surface-tertiary text-text-secondary border-border; }
+    .quality-pillar-card { @apply metric-card h-full; }
+    .pillar-metric-row { @apply py-3 border-b border-border/50 last:border-0; }
+    #panel-tactical { display: block; }
+    #panel-tactical.hidden-panel { display: none; }
+    #panel-strategic { display: none; }
+    #panel-strategic.active { display: block; }
+    .story-step { @apply flex gap-4 py-4 border-b border-border/60 last:border-0; }
+    .story-step-num {
+        @apply w-7 h-7 rounded-full bg-surface-tertiary text-text-secondary text-xs font-bold flex items-center justify-center shrink-0;
+    }
+    .ai-tool-panel { @apply insight-card h-full; }
+    .data-feed-row { @apply flex flex-col sm:flex-row sm:items-start gap-2 py-2.5 border-b border-border/40 last:border-0 text-sm; }
+</style>
+</head>
+<body class="bg-surface-secondary text-text-primary font-sans flex h-screen overflow-hidden antialiased">
+
+<aside id="sidebar" class="hidden md:flex flex-col h-full bg-surface border-r border-border w-64 shrink-0">
+    <div class="sidebar-brand-row border-b border-border">
+        <a href="code.html" class="sidebar-brand-link" title="Lumina AI">
+            <div class="dreambook-logo-mark" aria-hidden="true">
+                <span class="material-symbols-outlined">auto_stories</span>
+            </div>
+            <div class="sidebar-text sidebar-wordmark">
+                <span class="dreambook-logo-title">Lumina</span>
+                <span class="dreambook-logo-subtitle">AI</span>
+            </div>
+        </a>
+    </div>
+    <div class="p-4 border-b border-border sidebar-profile">
+        <div class="flex items-center gap-3 sidebar-profile-row">
+            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-medium shrink-0">SC</div>
+            <div class="min-w-0">
+                <p class="text-sm font-medium truncate">Dr. Sarah Chen</p>
+                <span class="inline-flex px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-medium rounded mt-0.5">Author</span>
+            </div>
+        </div>
+    </div>
+    <nav class="flex-1 px-3 space-y-1 overflow-y-auto py-2">
+        <a class="app-nav-item" href="code.html" title="My Books">
+            <span class="material-symbols-outlined">menu_book</span>
+            <span class="sidebar-text">My Books</span>
+        </a>
+        <a class="app-nav-item" href="#" title="Sources">
+            <span class="material-symbols-outlined">folder_open</span>
+            <span class="sidebar-text">Sources</span>
+        </a>
+        <a class="app-nav-item active" href="analytics.html" title="Analytics">
+            <span class="material-symbols-outlined">bar_chart</span>
+            <span class="sidebar-text">Analytics</span>
+        </a>
+    </nav>
+    <div class="p-3 border-t border-border space-y-1">
+        <a href="code.html?openSettings=1" class="app-nav-item" title="Settings">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="sidebar-text">Settings</span>
+        </a>
+        <button type="button" onclick="toggleSidebar()" class="app-nav-item w-full" title="Collapse sidebar">
+            <span class="material-symbols-outlined sidebar-expanded-only">chevron_left</span>
+            <span class="material-symbols-outlined sidebar-collapsed-only hidden">chevron_right</span>
+            <span class="sidebar-text text-sm">Collapse</span>
+        </button>
+    </div>
+</aside>
+
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+    <header class="h-14 bg-surface border-b border-border shrink-0 flex items-center justify-between px-6">
+        <nav class="flex items-center gap-1 text-sm">
+            <a href="code.html" class="text-text-tertiary hover:text-primary transition-colors">Dashboard</a>
+            <span class="material-symbols-outlined text-text-tertiary text-base">chevron_right</span>
+            <span class="text-text-primary font-medium">Analytics</span>
+        </nav>
+        <a href="code.html" class="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">
+            <span class="material-symbols-outlined text-lg">arrow_back</span> Back to books
+        </a>
+    </header>
+
+    <main class="flex-1 overflow-y-auto">
+        <div class="max-w-6xl mx-auto px-6 lg:px-8 py-8 fade-in" id="analytics-root">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-text-primary mb-1">Analytics</h1>
+                    <p class="text-sm text-text-secondary">Tactical decision traces and how they improve Peer Review and the AI interviewer.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label for="book-select" class="text-xs font-medium text-text-tertiary uppercase tracking-wider">Book</label>
+                        <select id="book-select" onchange="onBookChange()" class="text-sm border border-border rounded-lg px-3 py-2 bg-surface min-w-[200px] max-w-[280px]"></select>
+                    </div>
+                    <div class="flex items-center gap-3 px-4 py-2 bg-surface rounded-lg border border-border">
+                        <span id="mode-label-demo" class="text-sm font-medium text-text-primary">Demo</span>
+                        <div id="mode-toggle" class="toggle-switch" onclick="toggleDataMode()" role="switch" aria-checked="false" title="Toggle live vs demo data">
+                            <div class="toggle-dot"></div>
+                        </div>
+                        <span id="mode-label-live" class="text-sm font-medium text-text-tertiary">Live</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 mb-6 p-1 bg-surface rounded-xl border border-border w-fit">
+                <button type="button" id="tab-tactical" class="analytics-tab active" onclick="switchAnalyticsTab('tactical')">
+                    <span class="material-symbols-outlined text-base align-middle mr-1">monitoring</span>
+                    Tactical
+                </button>
+                <button type="button" id="tab-strategic" class="analytics-tab" onclick="switchAnalyticsTab('strategic')">
+                    <span class="material-symbols-outlined text-base align-middle mr-1">hub</span>
+                    Strategic
+                </button>
+            </div>
+
+            <div id="panel-tactical">
+            <section id="tactical-hero" class="hero-gradient rounded-2xl border border-primary/10 p-6 lg:p-8 mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+                <div class="relative flex flex-col lg:flex-row lg:items-center gap-8">
+                    <div class="flex items-center gap-6 shrink-0">
+                        <div class="relative w-32 h-32 shrink-0">
+                            <canvas id="hero-donut-chart"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span id="hero-donut-value" class="text-2xl font-bold text-primary">—</span>
+                                <span class="text-[9px] text-text-tertiary uppercase tracking-wider">explored</span>
+                            </div>
+                        </div>
+                        <div class="lg:hidden min-w-0">
+                            <p id="hero-book-title-mobile" class="text-lg font-semibold text-text-primary truncate"></p>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            <span id="mode-badge" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium mode-badge-demo"></span>
+                            <span id="period-label" class="text-xs text-text-tertiary"></span>
+                        </div>
+                        <h2 id="hero-book-title" class="text-xl font-bold text-text-primary mb-1 hidden lg:block"></h2>
+                        <p class="text-sm font-medium text-text-secondary mb-1">Section exploration &amp; decision traces</p>
+                        <p id="hero-secondary" class="text-sm text-text-secondary max-w-2xl"></p>
+                        <div class="flex flex-wrap gap-4 mt-4 text-sm">
+                            <span class="flex items-center gap-1.5 text-text-secondary">
+                                <span class="material-symbols-outlined text-base text-ai-text">school</span>
+                                <span id="hero-student-sessions">—</span> student AI sessions
+                            </span>
+                            <span class="flex items-center gap-1.5 text-text-secondary">
+                                <span class="material-symbols-outlined text-base text-primary">edit_note</span>
+                                <span id="hero-author-sessions">—</span> author decisions
+                            </span>
+                        </div>
+                    </div>
+                    <div class="shrink-0 w-full sm:w-auto">
+                        <label for="quality-chapter-select" class="text-xs font-medium text-text-tertiary uppercase tracking-wider block mb-1">Chapter</label>
+                        <select id="quality-chapter-select" onchange="onQualityChapterChange()" class="text-sm border border-border rounded-lg px-3 py-2 bg-surface min-w-[180px] w-full sm:w-auto"></select>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="metric-columns"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <section class="insight-card">
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
+                            <span class="material-symbols-outlined text-ai-text">school</span>
+                            Student decisions
+                        </h2>
+                        <p class="text-sm text-text-secondary mt-1">Skips, questions, and re-reads — paths that never appear in scores.</p>
+                    </div>
+                    <div id="decisions-student-funnel" class="mb-6"></div>
+                    <h3 class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Signals</h3>
+                    <div id="decisions-student-signals"></div>
+                </section>
+                <section class="insight-card">
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">edit_note</span>
+                            Author decisions
+                        </h2>
+                        <p class="text-sm text-text-secondary mt-1">Review accepts, dismissals, and enrichment choices.</p>
+                    </div>
+                    <div id="decisions-author-signals" class="mb-6"></div>
+                    <h3 class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Editorial clusters</h3>
+                    <div id="decisions-author-clusters"></div>
+                </section>
+            </div>
+
+            <section class="bg-surface rounded-xl border border-border p-6 mb-8">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-ai-text">bubble_chart</span>
+                        Question clusters
+                    </h2>
+                    <p class="text-sm text-text-secondary mt-1">Aggregated topics from checkpoints and Learning Assistant — no raw transcripts.</p>
+                </div>
+                <div id="decisions-student-clusters" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                <div id="decisions-clusters-empty" class="hidden text-center py-8 text-text-tertiary text-sm">No clusters yet.</div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+                <section class="insight-card lg:col-span-3">
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">show_chart</span>
+                            Reading journey
+                        </h2>
+                        <p class="text-sm text-text-secondary mt-1">Section completion and friction by chapter.</p>
+                    </div>
+                    <div class="chart-wrap h-52">
+                        <canvas id="journey-chart"></canvas>
+                    </div>
+                    <div id="journey-empty" class="hidden text-center py-8 text-text-tertiary text-sm">No chapters yet.</div>
+                </section>
+                <section class="insight-card lg:col-span-2 flex flex-col">
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">pie_chart</span>
+                            Widget outcomes
+                        </h2>
+                        <p class="text-sm text-text-secondary mt-1">Completed vs skipped vs not opened.</p>
+                    </div>
+                    <div class="flex-1 flex items-center justify-center min-h-[160px]">
+                        <div class="w-40 h-40 relative">
+                            <canvas id="funnel-chart"></canvas>
+                        </div>
+                    </div>
+                    <div id="funnel-legend" class="flex flex-wrap justify-center gap-3 mt-2 text-xs text-text-secondary"></div>
+                </section>
+            </div>
+
+            <section class="bg-surface rounded-xl border border-border p-6 mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">apps</span>
+                            Section heatmap
+                        </h2>
+                        <p class="text-sm text-text-secondary mt-1">Friction by section — inputs for Peer Review prioritization.</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs text-text-tertiary shrink-0">
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-400"></span> Smooth</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-sky-400"></span> Moderate</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-400"></span> High</span>
+                    </div>
+                </div>
+                <div id="heatmap-tiles" class="space-y-5"></div>
+                <div id="heatmap-empty" class="hidden text-center py-12 text-text-tertiary">
+                    <p class="text-sm">No sections yet. Add chapter content in the editor.</p>
+                </div>
+            </section>
+
+            <section class="insight-card mb-8">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">library_books</span>
+                        Chapter breakdown
+                    </h2>
+                </div>
+                <div id="decisions-chapter-table" class="overflow-x-auto"></div>
+            </section>
+
+            <section>
+                <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-warning">lightbulb</span>
+                    Suggested edits
+                </h2>
+                <div id="action-cards" class="grid grid-cols-1 lg:grid-cols-3 gap-4"></div>
+            </section>
+            </div><!-- /panel-tactical -->
+
+            <div id="panel-strategic">
+            <section class="insight-card mb-6">
+                <p id="strategic-intro" class="text-sm text-text-secondary leading-relaxed"></p>
+                <div id="strategic-data-inventory" class="flex flex-wrap gap-3 mt-4"></div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <section class="ai-tool-panel" id="panel-peer-reviewer"></section>
+                <section class="ai-tool-panel" id="panel-interviewer"></section>
+            </div>
+
+            <section class="mb-8">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-success">sync</span>
+                        Closed loops
+                    </h2>
+                    <p class="text-sm text-text-secondary mt-1">When a signal drove an edit, did student behavior change?</p>
+                </div>
+                <div id="improvement-loops" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+            </section>
+
+            <section class="insight-card">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">show_chart</span>
+                        Resolution after edits
+                    </h2>
+                    <p class="text-sm text-text-secondary mt-1">Chapter-level learning resolution before and after the last publish cycle.</p>
+                </div>
+                <div class="chart-wrap h-52">
+                    <canvas id="quality-journey-chart"></canvas>
+                </div>
+                <div id="quality-journey-empty" class="hidden text-center py-8 text-text-tertiary text-sm">No chapter data yet.</div>
+            </section>
+            </div><!-- /panel-strategic -->
+        </div>
+    </main>
+</div>
+
+<script src="analytics.js"></script>
+<script>
+    var currentBookId = new URLSearchParams(window.location.search).get('id') || null;
+    var chartInstances = {};
+    var currentQualityChapter = 'all';
+    var currentAnalyticsTab = new URLSearchParams(window.location.search).get('tab') === 'strategic' ? 'strategic' : 'tactical';
+    var cachedQualityData = null;
+
+    function destroyChart(key) {
+        if (chartInstances[key]) {
+            chartInstances[key].destroy();
+            chartInstances[key] = null;
+        }
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('sidebar-collapsed');
+    }
+
+    function populateBookSelect() {
+        var select = document.getElementById('book-select');
+        var books = listSavedBooks();
+        select.innerHTML = '';
+        if (!books.length) {
+            select.innerHTML = '<option value="">No saved books</option>';
+            return;
+        }
+        books.forEach(function (book) {
+            var opt = document.createElement('option');
+            opt.value = book.id;
+            opt.textContent = book.title || 'Untitled Book';
+            select.appendChild(opt);
+        });
+        if (currentBookId && books.some(function (b) { return b.id === currentBookId; })) {
+            select.value = currentBookId;
+        } else if (books.length) {
+            currentBookId = books[0].id;
+            select.value = currentBookId;
+        }
+    }
+
+    function syncModeToggleUI() {
+        var mode = getAnalyticsMode();
+        var toggle = document.getElementById('mode-toggle');
+        var isLive = mode === 'live';
+        toggle.classList.toggle('active', isLive);
+        toggle.setAttribute('aria-checked', isLive ? 'true' : 'false');
+        document.getElementById('mode-label-demo').className = isLive
+            ? 'text-sm font-medium text-text-tertiary'
+            : 'text-sm font-medium text-text-primary';
+        document.getElementById('mode-label-live').className = isLive
+            ? 'text-sm font-medium text-text-primary'
+            : 'text-sm font-medium text-text-tertiary';
+    }
+
+    function toggleDataMode() {
+        setAnalyticsMode(getAnalyticsMode() === 'live' ? 'demo' : 'live');
+        syncModeToggleUI();
+        renderDashboard();
+    }
+
+    function onBookChange() {
+        currentBookId = document.getElementById('book-select').value;
+        currentQualityChapter = 'all';
+        if (currentBookId) {
+            var url = new URL(window.location.href);
+            url.searchParams.set('id', currentBookId);
+            window.history.replaceState(null, '', url.toString());
+        }
+        renderDashboard();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function switchAnalyticsTab(tab) {
+        currentAnalyticsTab = tab === 'strategic' ? 'strategic' : 'tactical';
+        document.getElementById('tab-tactical').classList.toggle('active', currentAnalyticsTab === 'tactical');
+        document.getElementById('tab-strategic').classList.toggle('active', currentAnalyticsTab === 'strategic');
+        document.getElementById('panel-tactical').classList.toggle('hidden-panel', currentAnalyticsTab !== 'tactical');
+        document.getElementById('panel-strategic').classList.toggle('active', currentAnalyticsTab === 'strategic');
+        var url = new URL(window.location.href);
+        if (currentAnalyticsTab === 'strategic') url.searchParams.set('tab', 'strategic');
+        else url.searchParams.delete('tab');
+        window.history.replaceState(null, '', url.toString());
+        renderDashboard();
+    }
+
+    var COLUMN_ICON_BG = {
+        reach: 'bg-primary-bg text-primary',
+        engagement: 'bg-ai-bg text-ai-text',
+        impact: 'bg-warning-bg text-warning'
+    };
+
+    function renderMetricColumn(column, colKey) {
+        var bg = COLUMN_ICON_BG[colKey] || 'bg-surface-tertiary text-text-secondary';
+        var metricsHtml = column.metrics.map(function (m) {
+            var viz = '';
+            if (m.displayType === 'percent' && m.progress != null) {
+                viz = '<div class="metric-ring shrink-0" style="--pct:' + Math.min(100, m.progress) + '%">' +
+                    '<div class="metric-ring-inner"><span class="text-[9px] font-bold text-primary">' + Math.round(m.progress) + '</span></div></div>';
+            } else {
+                viz = '<div class="metric-icon-wrap ' + bg + '"><span class="material-symbols-outlined text-lg">' + m.icon + '</span></div>';
+            }
+            return '<div class="flex gap-3 py-3 border-b border-border/50 last:border-0">' + viz +
+                '<div class="flex-1 min-w-0"><p class="text-xl font-bold text-text-primary tracking-tight">' + escapeHtml(m.value) + '</p>' +
+                '<p class="text-sm text-text-secondary mt-0.5">' + escapeHtml(m.label) + '</p>' +
+                '<p class="text-xs text-text-tertiary mt-0.5">' + escapeHtml(m.hint) + '</p></div></div>';
+        }).join('');
+        return '<div class="metric-card"><h3 class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2 flex items-center gap-2">' +
+            '<span class="material-symbols-outlined text-base text-primary">' + column.headerIcon + '</span>' +
+            escapeHtml(column.label) + '</h3>' + metricsHtml + '</div>';
+    }
+
+    function renderHeroDonut(pct) {
+        destroyChart('donut');
+        var canvas = document.getElementById('hero-donut-chart');
+        var val = pct != null ? Math.min(100, Math.max(0, pct)) : 0;
+        chartInstances.donut = new Chart(canvas, {
+            type: 'doughnut',
+            data: { datasets: [{ data: [val, 100 - val], backgroundColor: ['#2E4CB9', '#E5E7EB'], borderWidth: 0, cutout: '78%' }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+        });
+        document.getElementById('hero-donut-value').textContent = pct != null ? (Math.round(val) + '%') : '—';
+    }
+
+    function renderJourneyChart(chapters) {
+        destroyChart('journey');
+        var canvas = document.getElementById('journey-chart');
+        var empty = document.getElementById('journey-empty');
+        if (!chapters || !chapters.length) {
+            canvas.parentElement.classList.add('hidden');
+            empty.classList.remove('hidden');
+            return;
+        }
+        canvas.parentElement.classList.remove('hidden');
+        empty.classList.add('hidden');
+        chartInstances.journey = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: chapters.map(function (c) { return 'Ch.' + c.chapterNum; }),
+                datasets: [
+                    { label: 'Section completion', data: chapters.map(function (c) { return c.completionPct; }),
+                        borderColor: '#2E4CB9', backgroundColor: 'rgba(46, 76, 185, 0.15)', fill: true, tension: 0.35, yAxisID: 'y' },
+                    { label: 'Avg. friction', data: chapters.map(function (c) { return c.struggleAvg; }),
+                        borderColor: '#D97706', borderDash: [6, 4], tension: 0.35, fill: false, yAxisID: 'y1' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, usePointStyle: true, font: { size: 11 } } } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { position: 'left', beginAtZero: true, max: 100, ticks: { callback: function (v) { return v + '%'; } } },
+                    y1: { position: 'right', beginAtZero: true, max: 100, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+    }
+
+    function renderHeatmapTiles(sections) {
+        var container = document.getElementById('heatmap-tiles');
+        var empty = document.getElementById('heatmap-empty');
+        if (!sections || !sections.length) {
+            container.innerHTML = '';
+            empty.classList.remove('hidden');
+            return;
+        }
+        empty.classList.add('hidden');
+        var groups = groupSectionsByChapter(sections);
+        container.innerHTML = groups.map(function (g) {
+            var tiles = g.sections.map(function (s) {
+                var short = s.sectionLabel.replace(/^\d+\.\d+\s*/, '');
+                if (short.length > 22) short = short.slice(0, 20) + '…';
+                return '<div class="heatmap-tile ' + intensityTileClass(s.signals.intensity) + '" title="' + escapeHtml(s.sectionLabel) + '">' +
+                    '<span class="heatmap-tile-label">' + escapeHtml(short) + '</span></div>';
+            }).join('');
+            return '<div><div class="flex items-center gap-2 mb-2"><span class="text-xs font-semibold text-text-tertiary uppercase">Ch.' + g.chapterNum + '</span>' +
+                '<span class="text-xs text-text-tertiary truncate">' + escapeHtml(g.chapterTitle) + '</span></div>' +
+                '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">' + tiles + '</div></div>';
+        }).join('');
+    }
+
+    function renderActionCards(actions) {
+        document.getElementById('action-cards').innerHTML = (actions || []).map(function (a) {
+            var borderClass = a.severity === 'warning' ? 'border-l-4 border-l-warning bg-warning-bg/20' :
+                a.severity === 'success' ? 'border-l-4 border-l-success bg-success-bg/20' : 'border-l-4 border-l-primary';
+            return '<div class="rounded-xl border p-5 flex flex-col ' + borderClass + '">' +
+                '<p class="font-semibold text-text-primary">' + escapeHtml(a.title) + '</p>' +
+                (a.chapter ? '<p class="text-xs text-text-tertiary mt-0.5">' + escapeHtml(a.chapter) + '</p>' : '') +
+                '<p class="text-sm text-text-secondary flex-1 my-3">' + escapeHtml(a.body) + '</p>' +
+                '<a href="' + a.ctaHref + '" class="text-sm font-medium text-primary hover:text-primary-dark inline-flex items-center gap-1">' +
+                escapeHtml(a.ctaLabel) + '<span class="material-symbols-outlined text-base">arrow_forward</span></a></div>';
+        }).join('');
+    }
+
+    function renderStrategicStory(story) {
+        if (!story) {
+            document.getElementById('strategic-intro').textContent = 'Collect decision traces to see how they calibrate Peer Review and the interviewer.';
+            document.getElementById('strategic-data-inventory').innerHTML = '';
+            document.getElementById('panel-peer-reviewer').innerHTML = '';
+            document.getElementById('panel-interviewer').innerHTML = '';
+            return;
+        }
+        document.getElementById('strategic-intro').textContent = story.intro || '';
+        document.getElementById('strategic-data-inventory').innerHTML = (story.dataInventory || []).map(function (item) {
+            return '<span class="brief-evidence-chip"><strong>' + escapeHtml(item.label) + '</strong> ' + escapeHtml(item.value) +
+                ' <span class="text-text-tertiary">→ ' + escapeHtml(item.feeds) + '</span></span>';
+        }).join('');
+        renderAiToolPanel('panel-peer-reviewer', story.peerReviewer);
+        renderAiToolPanel('panel-interviewer', story.interviewer);
+    }
+
+    function renderAiToolPanel(containerId, tool) {
+        var el = document.getElementById(containerId);
+        if (!tool) { el.innerHTML = ''; return; }
+        var feedsHtml = (tool.dataFeeds || []).map(function (f, i) {
+            return '<div class="story-step"><span class="story-step-num">' + (i + 1) + '</span><div class="min-w-0">' +
+                '<p class="text-sm font-medium text-text-primary">' + escapeHtml(f.signal) + '</p>' +
+                '<p class="text-xs text-text-secondary mt-1">→ ' + escapeHtml(f.effect) + '</p></div></div>';
+        }).join('');
+        if (!feedsHtml) feedsHtml = '<p class="text-sm text-text-tertiary py-2">More traces needed to show calibration examples.</p>';
+        var metricsHtml = (tool.metrics || []).map(function (m) {
+            return '<div class="flex justify-between gap-2 py-2 border-b border-border/40 last:border-0 text-sm">' +
+                '<span class="text-text-secondary">' + escapeHtml(m.label) + '</span>' +
+                '<span class="font-semibold text-text-primary text-right">' + escapeHtml(m.value) +
+                (m.hint ? '<span class="block text-[10px] font-normal text-text-tertiary">' + escapeHtml(m.hint) + '</span>' : '') +
+                '</span></div>';
+        }).join('');
+        var out = tool.outcome || {};
+        var outcomeHtml = out.label
+            ? '<div class="mt-4 pt-4 border-t border-border text-sm">' +
+                '<p class="text-xs font-semibold text-text-tertiary uppercase mb-1">Measured change</p>' +
+                '<p class="font-medium text-text-primary">' + escapeHtml(out.label) + ': ' +
+                escapeHtml(out.before) + ' → <span class="text-success">' + escapeHtml(out.after) + '</span></p></div>'
+            : '';
+        el.innerHTML = '<div class="flex items-start gap-3 mb-4">' +
+            '<div class="w-10 h-10 rounded-xl bg-primary-bg flex items-center justify-center shrink-0">' +
+            '<span class="material-symbols-outlined text-primary">' + escapeHtml(tool.icon || 'psychology') + '</span></div>' +
+            '<div><h3 class="text-lg font-semibold text-text-primary">' + escapeHtml(tool.title) + '</h3>' +
+            '<p class="text-sm text-text-secondary mt-1">' + escapeHtml(tool.summary) + '</p></div></div>' +
+            '<p class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">How decision data calibrates this</p>' +
+            feedsHtml + metricsHtml + outcomeHtml;
+    }
+
+    function renderFunnelChart(funnel) {
+        destroyChart('funnel');
+        var f = funnel || { completed: 0, skipped: 0, notStarted: 0 };
+        var total = f.completed + f.skipped + f.notStarted;
+        var legend = document.getElementById('funnel-legend');
+        if (!total) {
+            legend.innerHTML = '<span class="text-text-tertiary">No widget data yet</span>';
+            return;
+        }
+        chartInstances.funnel = new Chart(document.getElementById('funnel-chart'), {
+            type: 'polarArea',
+            data: {
+                labels: ['Completed', 'Skipped', 'Not started'],
+                datasets: [{
+                    data: [f.completed, f.skipped, f.notStarted],
+                    backgroundColor: ['rgba(5, 150, 105, 0.75)', 'rgba(217, 119, 6, 0.75)', 'rgba(229, 231, 235, 0.9)'],
+                    borderWidth: 1,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var pct = Math.round((ctx.raw / total) * 100);
+                                return ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        legend.innerHTML = [
+            { color: '#059669', label: 'Completed', val: f.completed },
+            { color: '#D97706', label: 'Skipped', val: f.skipped },
+            { color: '#E5E7EB', label: 'Not started', val: f.notStarted, text: 'text-text-tertiary' }
+        ].map(function (item) {
+            return '<span class="flex items-center gap-1.5 ' + (item.text || '') + '">' +
+                '<span class="w-2.5 h-2.5 rounded-full" style="background:' + item.color + '"></span>' +
+                item.label + ' · ' + item.val + '</span>';
+        }).join('');
+    }
+
+    function renderQualityJourneyChart(chapters) {
+        destroyChart('qualityJourney');
+        var canvas = document.getElementById('quality-journey-chart');
+        var empty = document.getElementById('quality-journey-empty');
+        if (!chapters || !chapters.length) {
+            canvas.parentElement.classList.add('hidden');
+            empty.classList.remove('hidden');
+            return;
+        }
+        canvas.parentElement.classList.remove('hidden');
+        empty.classList.add('hidden');
+        var labels = chapters.map(function (c) { return 'Ch.' + c.chapterNum; });
+        var hasBefore = chapters.some(function (c) { return c.resolutionBefore != null; });
+        var datasets = [];
+        if (hasBefore) {
+            datasets.push({
+                label: 'Resolution (before)',
+                data: chapters.map(function (c) { return c.resolutionBefore; }),
+                borderColor: '#9CA3AF',
+                borderDash: [4, 4],
+                tension: 0.35,
+                pointRadius: 4,
+                fill: false,
+                yAxisID: 'y'
+            });
+        }
+        datasets.push({
+            label: hasBefore ? 'Resolution (after)' : 'Learning resolution',
+            data: chapters.map(function (c) { return c.resolutionAfter; }),
+            borderColor: '#059669',
+            backgroundColor: 'rgba(5, 150, 105, 0.12)',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 5,
+            pointBackgroundColor: '#059669',
+            yAxisID: 'y'
+        });
+        datasets.push({
+            label: 'Friction index',
+            data: chapters.map(function (c) { return c.frictionAvg; }),
+            borderColor: '#D97706',
+            borderDash: [6, 4],
+            tension: 0.35,
+            pointRadius: 3,
+            fill: false,
+            yAxisID: 'y1'
+        });
+        chartInstances.qualityJourney = new Chart(canvas, {
+            type: 'line',
+            data: { labels: labels, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top', align: 'end', labels: { boxWidth: 10, usePointStyle: true, font: { size: 11 } } },
+                    tooltip: {
+                        callbacks: {
+                            afterTitle: function (items) {
+                                var ch = chapters[items[0].dataIndex];
+                                return ch ? ch.title : '';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                    y: {
+                        position: 'left',
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Resolution %', font: { size: 10 } },
+                        ticks: { callback: function (v) { return v + '%'; }, font: { size: 10 } },
+                        grid: { color: '#F1F3F9' }
+                    },
+                    y1: {
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Friction', font: { size: 10 } },
+                        grid: { drawOnChartArea: false },
+                        ticks: { font: { size: 10 } }
+                    }
+                }
+            }
+        });
+    }
+
+    function loopStatusClass(status) {
+        if (status === 'improved') return 'loop-status-improved';
+        if (status === 'active') return 'loop-status-active';
+        return 'loop-status-queued';
+    }
+
+    function renderImprovementLoops(loops) {
+        var container = document.getElementById('improvement-loops');
+        if (!loops || !loops.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary col-span-full py-4">No improvement loops yet — decision traces will populate signal → action → outcome cycles.</p>';
+            return;
+        }
+        container.innerHTML = loops.map(function (loop) {
+            var sig = loop.signal || {};
+            var act = loop.action || {};
+            var out = loop.outcome || {};
+            return '<div class="loop-card">' +
+                '<div class="flex items-center justify-between gap-2">' +
+                    '<span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ' + loopStatusClass(loop.status) + '">' + escapeHtml(loop.status) + '</span>' +
+                    (loop.chapterNum ? '<span class="text-xs text-text-tertiary">Ch. ' + loop.chapterNum + '</span>' : '') +
+                '</div>' +
+                '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">' +
+                    '<div><p class="text-[10px] font-semibold text-text-tertiary uppercase mb-1">Signal</p>' +
+                        '<p class="font-medium text-text-primary">' + escapeHtml(sig.topic) + '</p>' +
+                        '<p class="text-xs text-text-tertiary">' + escapeHtml(sig.section) + '</p></div>' +
+                    '<div><p class="text-[10px] font-semibold text-text-tertiary uppercase mb-1">Action</p>' +
+                        '<p class="font-medium text-text-primary">' + escapeHtml(act.tool) + '</p>' +
+                        '<p class="text-xs text-text-tertiary">' + escapeHtml(act.detail) + '</p></div>' +
+                    '<div><p class="text-[10px] font-semibold text-text-tertiary uppercase mb-1">Outcome</p>' +
+                        '<p class="font-medium text-text-primary">' + escapeHtml(out.metric) + '</p>' +
+                        '<p class="text-xs text-text-tertiary">' +
+                            (out.before ? escapeHtml(out.before) + ' → ' : '') +
+                            escapeHtml(out.after || out.delta || '—') + '</p></div>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    function severityDotClass(severity) {
+        if (severity === 'high') return 'bg-amber-400';
+        if (severity === 'medium') return 'bg-sky-400';
+        if (severity === 'success') return 'bg-emerald-400';
+        return 'bg-border-strong';
+    }
+
+    function trendIcon(trend) {
+        if (trend === 'up') return '<span class="material-symbols-outlined text-sm topic-trend-up">trending_up</span>';
+        if (trend === 'down') return '<span class="material-symbols-outlined text-sm topic-trend-down">trending_down</span>';
+        return '<span class="material-symbols-outlined text-sm topic-trend-stable">trending_flat</span>';
+    }
+
+    function renderDecisionFunnel(funnel) {
+        var container = document.getElementById('decisions-student-funnel');
+        if (!funnel || !funnel.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No student decision funnel data yet.</p>';
+            return;
+        }
+        container.innerHTML = funnel.map(function (step) {
+            return '<div class="decision-funnel-step">' +
+                '<span class="text-xs text-text-secondary w-36 shrink-0">' + escapeHtml(step.step) + '</span>' +
+                '<div class="decision-funnel-bar-wrap"><div class="decision-funnel-bar" style="width:' + step.pct + '%"></div></div>' +
+                '<span class="text-xs font-semibold text-text-primary w-10 text-right">' + step.pct + '%</span></div>';
+        }).join('');
+    }
+
+    function renderDecisionSignals(containerId, signals, emptyLabel) {
+        var container = document.getElementById(containerId);
+        if (!signals || !signals.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-2">' + escapeHtml(emptyLabel) + '</p>';
+            return;
+        }
+        container.innerHTML = signals.map(function (s) {
+            var rateHtml = s.rate != null
+                ? '<span class="text-xs font-semibold text-text-primary shrink-0">' + s.rate + '%</span>'
+                : '<span class="text-xs font-semibold text-text-primary shrink-0">' + s.count + '×</span>';
+            return '<div class="decision-signal-row">' +
+                '<span class="w-2 h-2 rounded-full shrink-0 ' + severityDotClass(s.severity) + '"></span>' +
+                '<div class="flex-1 min-w-0">' +
+                    '<p class="text-sm font-medium text-text-primary">' + escapeHtml(s.label) + '</p>' +
+                    '<p class="text-xs text-text-tertiary mt-0.5">' + escapeHtml(s.section) + '</p>' +
+                '</div>' + rateHtml + '</div>';
+        }).join('');
+    }
+
+    function renderTopicClusterCards(containerId, clusters, emptyId) {
+        var container = document.getElementById(containerId);
+        var empty = document.getElementById(emptyId);
+        if (!clusters || !clusters.length) {
+            container.innerHTML = '';
+            if (empty) empty.classList.remove('hidden');
+            return;
+        }
+        if (empty) empty.classList.add('hidden');
+        container.innerHTML = clusters.map(function (c) {
+            var share = c.sharePct != null ? c.sharePct + '% of questions' : c.count + ' events';
+            var sections = (c.sections || []).slice(0, 2).map(function (sec) {
+                return '<span class="topic-cluster-chip">' + escapeHtml(sec) + '</span>';
+            }).join('');
+            return '<div class="rounded-xl border border-border p-4 bg-surface-secondary/50 hover:border-primary/30 transition-colors">' +
+                '<div class="flex items-start justify-between gap-2 mb-2">' +
+                    '<p class="text-sm font-semibold text-text-primary">' + escapeHtml(c.topic) + '</p>' +
+                    trendIcon(c.trend) +
+                '</div>' +
+                '<p class="text-2xl font-bold text-primary mb-1">' + c.count + '</p>' +
+                '<p class="text-xs text-text-tertiary mb-3">' + share + '</p>' +
+                '<div class="flex flex-wrap gap-1">' + sections + '</div></div>';
+        }).join('');
+    }
+
+    function renderAuthorTopicList(containerId, clusters) {
+        var container = document.getElementById(containerId);
+        if (!clusters || !clusters.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-2">No author decision clusters yet.</p>';
+            return;
+        }
+        container.innerHTML = clusters.map(function (c) {
+            return '<div class="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-0">' +
+                '<div class="min-w-0">' +
+                    '<p class="text-sm font-medium text-text-primary truncate">' + escapeHtml(c.topic) + '</p>' +
+                    '<p class="text-xs text-text-tertiary">' + c.count + ' decisions · ' + (c.sharePct != null ? c.sharePct + '%' : '') + '</p>' +
+                '</div>' + trendIcon(c.trend) + '</div>';
+        }).join('');
+    }
+
+    function onQualityChapterChange() {
+        currentQualityChapter = document.getElementById('quality-chapter-select').value || 'all';
+        renderDashboard();
+    }
+
+    function populateQualityChapterSelect(chapters) {
+        var select = document.getElementById('quality-chapter-select');
+        select.innerHTML = '<option value="all">All chapters</option>';
+        (chapters || []).forEach(function (ch) {
+            var opt = document.createElement('option');
+            opt.value = String(ch.chapterNum);
+            opt.textContent = 'Ch. ' + ch.chapterNum + ' · ' + (ch.title || '');
+            select.appendChild(opt);
+        });
+        if (currentQualityChapter && select.querySelector('option[value="' + currentQualityChapter + '"]')) {
+            select.value = currentQualityChapter;
+        } else {
+            currentQualityChapter = 'all';
+            select.value = 'all';
+        }
+    }
+
+    function renderDecisionChapterTable(chapters) {
+        var container = document.getElementById('decisions-chapter-table');
+        if (!chapters || !chapters.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No chapters in this book.</p>';
+            return;
+        }
+        var hasDelta = chapters.some(function (ch) { return ch.qualityDelta != null && ch.qualityDelta > 0; });
+        var rows = chapters.map(function (ch) {
+            var resolution = Math.max(0, 100 - (ch.unresolvedPct || 0));
+            var barColor = ch.unresolvedPct >= 30 ? 'bg-amber-400' : ch.unresolvedPct >= 15 ? 'bg-sky-400' : 'bg-emerald-400';
+            var isSelected = String(currentQualityChapter) === String(ch.chapterNum);
+            var deltaCell = hasDelta
+                ? '<td class="py-3 pr-4 text-xs font-semibold text-success">' +
+                    (ch.qualityDelta ? ('−' + ch.qualityDelta + ' pts unresolved') : '—') + '</td>'
+                : '';
+            return '<tr class="' + (isSelected ? 'bg-primary-bg/40' : '') + '">' +
+                '<td class="py-3 pr-4 text-sm font-medium text-text-primary">Ch. ' + ch.chapterNum + '</td>' +
+                '<td class="py-3 pr-4 text-sm text-text-secondary">' + escapeHtml(ch.title) + '</td>' +
+                '<td class="py-3 pr-4 text-sm text-text-secondary">' + ch.studentSessions + '</td>' +
+                '<td class="py-3 pr-4 text-sm font-semibold text-text-primary">' + resolution + '%</td>' +
+                (hasDelta ? deltaCell : '') +
+                '<td class="py-3 pr-4"><div class="flex items-center gap-2">' +
+                    '<div class="flex-1 h-2 bg-surface-tertiary rounded-full max-w-[100px]"><div class="h-full rounded-full ' + barColor + '" style="width:' + ch.unresolvedPct + '%"></div></div>' +
+                    '<span class="text-xs text-text-tertiary">' + ch.unresolvedPct + '% open</span></div></td>' +
+                '<td class="py-3"><button type="button" onclick="filterQualityChapter(' + ch.chapterNum + ')" class="text-xs text-primary hover:underline">Filter</button></td></tr>';
+        }).join('');
+        container.innerHTML = '<table class="w-full text-left"><thead><tr class="text-xs text-text-tertiary uppercase tracking-wider border-b border-border">' +
+            '<th class="pb-2 pr-4 font-semibold">#</th><th class="pb-2 pr-4 font-semibold">Chapter</th>' +
+            '<th class="pb-2 pr-4 font-semibold">Sessions</th><th class="pb-2 pr-4 font-semibold">Resolution</th>' +
+            (hasDelta ? '<th class="pb-2 pr-4 font-semibold">Improvement</th>' : '') +
+            '<th class="pb-2 pr-4 font-semibold">Unresolved</th><th class="pb-2 font-semibold"></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    }
+
+    function filterQualityChapter(num) {
+        currentQualityChapter = String(num);
+        document.getElementById('quality-chapter-select').value = currentQualityChapter;
+        renderDashboard();
+    }
+
+    function renderDashboard() {
+        ['donut', 'journey', 'funnel', 'qualityJourney'].forEach(destroyChart);
+
+        if (!currentBookId) {
+            document.getElementById('hero-donut-value').textContent = '—';
+            document.getElementById('hero-secondary').textContent = 'Create a book to view analytics.';
+            renderStrategicStory(null);
+            return;
+        }
+
+        var bookData = loadBookData(currentBookId);
+        cachedQualityData = getBookQualityDashboard(currentBookId, bookData);
+        var data = filterQualityDashboardByChapter(cachedQualityData, currentQualityChapter);
+        var isLive = data.mode === 'live';
+        var tacticalHero = data.tacticalHero || {};
+
+        document.title = 'Analytics · ' + (data.bookTitle || 'DreamBook');
+        document.getElementById('hero-book-title').textContent = data.bookTitle;
+        document.getElementById('hero-book-title-mobile').textContent = data.bookTitle;
+
+        var badge = document.getElementById('mode-badge');
+        badge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ' +
+            (isLive ? 'mode-badge-live' : 'mode-badge-demo');
+        badge.innerHTML = isLive
+            ? '<span class="material-symbols-outlined text-sm">sensors</span> Live data'
+            : '<span class="material-symbols-outlined text-sm">science</span> Demo data';
+
+        document.getElementById('period-label').textContent = data.period || '';
+        document.getElementById('hero-secondary').textContent = tacticalHero.secondary || data.hero.secondary || '';
+        document.getElementById('hero-student-sessions').textContent = data.hero.studentSessions != null ? data.hero.studentSessions.toLocaleString() : '—';
+        document.getElementById('hero-author-sessions').textContent = data.hero.authorSessions != null ? data.hero.authorSessions.toLocaleString() : '—';
+
+        renderHeroDonut(tacticalHero.completionPct != null ? tacticalHero.completionPct : 0);
+
+        if (data.reach && data.engagementCol && data.impact) {
+            document.getElementById('metric-columns').innerHTML =
+                renderMetricColumn(data.reach, 'reach') +
+                renderMetricColumn(data.engagementCol, 'engagement') +
+                renderMetricColumn(data.impact, 'impact');
+        }
+
+        populateQualityChapterSelect(cachedQualityData.chapters);
+        renderDecisionFunnel(data.student.funnel);
+        renderDecisionSignals('decisions-student-signals', data.student.signals, 'No signals for this scope.');
+        renderDecisionSignals('decisions-author-signals', data.author.signals, 'No author decisions yet.');
+        renderAuthorTopicList('decisions-author-clusters', data.author.topicClusters);
+        renderTopicClusterCards('decisions-student-clusters', data.student.topicClusters, 'decisions-clusters-empty');
+        renderJourneyChart(data.chapterOverview);
+        renderFunnelChart(data.widgetFunnel);
+        renderHeatmapTiles(data.sections);
+        renderActionCards(data.actions);
+        renderDecisionChapterTable(cachedQualityData.chapters);
+
+        renderStrategicStory(data.strategicStory);
+        renderImprovementLoops(data.improvementLoops);
+        renderQualityJourneyChart(data.chapterQualityOverview);
+    }
+
+    populateBookSelect();
+    syncModeToggleUI();
+    switchAnalyticsTab(currentAnalyticsTab);
+</script>
+</body>
+</html>

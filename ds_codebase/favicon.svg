@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="DreamBook">
+  <defs>
+    <linearGradient id="db-bg" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2E4CB9"/>
+      <stop offset="1" stop-color="#1E3A8A"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#db-bg)"/>
+  <!-- Open book -->
+  <path fill="#FFFFFF" d="M16 7.5v17"/>
+  <path fill="#FFFFFF" fill-opacity="0.95" d="M8.5 9.2c0-1.3 1-2.2 2.2-2.2H15v15.8h-4.3c-1.2 0-2.2-1-2.2-2.2V9.2z"/>
+  <path fill="#FFFFFF" fill-opacity="0.72" d="M23.5 9.2c0-1.3-1-2.2-2.2-2.2H17v15.8h4.3c1.2 0 2.2-1 2.2-2.2V9.2z"/>
+  <!-- Spark / AI accent -->
+  <circle cx="23" cy="9" r="2.2" fill="#6B7FD7"/>
+  <path fill="#EEF1FB" d="M23 7.4v3.2M21.4 8.9h3.2"/>
+</svg>

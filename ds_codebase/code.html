@@ -2,8 +2,11 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="favicon.svg"/>
 <title>DreamBook Studio</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script>
@@ -104,6 +107,9 @@
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     .toggle-switch.active .toggle-dot { @apply translate-x-5; }
+    .toggle-switch.locked {
+        @apply opacity-60 cursor-not-allowed pointer-events-none;
+    }
     
     /* Select Card */
     .select-card {
@@ -112,6 +118,17 @@
     }
     .select-card.active { 
         @apply border-primary bg-primary-bg/50; 
+    }
+
+    .template-card {
+        @apply p-3 rounded-lg border border-border bg-surface cursor-pointer transition-all text-left;
+        @apply hover:border-primary/40 hover:bg-primary-bg/20;
+    }
+    .template-card.active {
+        @apply border-primary bg-primary-bg/40 ring-1 ring-primary/30;
+    }
+    .template-swatch {
+        @apply w-full h-10 rounded-md mb-2 border border-border/60;
     }
     
     /* Accordion Section */
@@ -185,11 +202,47 @@
     .sidebar-collapsed .sidebar-text { 
         display: none; 
     }
+    .sidebar-collapsed .app-nav-item {
+        justify-content: center;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        margin: 0 auto;
+        border-radius: 12px;
+    }
     .sidebar-collapsed .sidebar-collapsed-only { 
         display: flex !important; 
     }
     .sidebar-collapsed .sidebar-expanded-only { 
         display: none !important; 
+    }
+    .sidebar-brand-row {
+        height: 3.5rem;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        flex-shrink: 0;
+    }
+    .sidebar-brand-link {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        min-width: 0;
+    }
+    .sidebar-collapsed .sidebar-brand-row {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .sidebar-collapsed .sidebar-brand-link {
+        justify-content: center;
+    }
+    .sidebar-collapsed .sidebar-profile {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .sidebar-collapsed .sidebar-profile-row {
+        justify-content: center;
     }
     
     /* AI Content Indicator */
@@ -212,6 +265,14 @@
     .book-card {
         min-height: 240px;
     }
+
+    .impact-chart-wrap {
+        position: relative;
+        height: 8.5rem;
+    }
+    .impact-chart-wrap.multi-book {
+        height: 9.5rem;
+    }
     
     /* Book type chips */
     .book-type-chip.active {
@@ -219,6 +280,69 @@
     }
     .book-type-chip:not(.active):hover {
         @apply border-border bg-surface-tertiary;
+    }
+
+    .dreambook-logo-mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(145deg, #eef2ff 0%, #f5f3ff 55%, #fdf4ff 100%);
+        border: 1px solid rgba(99, 102, 241, 0.16);
+        box-shadow: 0 1px 2px rgba(79, 70, 229, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .dreambook-logo-mark::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 18px;
+        height: 18px;
+        background: radial-gradient(circle, rgba(251, 191, 36, 0.28) 0%, rgba(251, 191, 36, 0.06) 50%, transparent 72%);
+        pointer-events: none;
+    }
+    .dreambook-logo-mark .material-symbols-outlined {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        font-size: 21px;
+        color: #4f46e5;
+        z-index: 1;
+    }
+    .sidebar-wordmark {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        min-width: 0;
+    }
+    .dreambook-logo-title {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #0f172a;
+        line-height: 1;
+    }
+    .dreambook-logo-subtitle {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+    .app-nav-item {
+        @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary transition-colors;
+    }
+    .app-nav-item:hover {
+        @apply bg-surface-tertiary text-text-primary;
+    }
+    .app-nav-item.active {
+        @apply bg-primary-bg text-primary font-medium;
     }
 
     /* Voice recording pulse animation */
@@ -236,20 +360,21 @@
 
 <!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
 <aside id="sidebar" class="hidden md:flex flex-col h-full bg-surface border-r border-border w-64 shrink-0">
-    <!-- Logo & Profile -->
-    <div class="p-6 border-b border-border">
-        <div class="flex items-center gap-3 mb-5">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shrink-0 sidebar-expanded-only text-white shadow-sm">
-                <span class="material-symbols-outlined filled text-2xl">local_library</span>
+    <!-- Brand row — height matches main header (h-14) -->
+    <div class="sidebar-brand-row border-b border-border">
+        <a href="code.html" class="sidebar-brand-link" title="Lumina AI">
+            <div class="dreambook-logo-mark" aria-hidden="true">
+                <span class="material-symbols-outlined">auto_stories</span>
             </div>
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shrink-0 sidebar-collapsed-only hidden text-white shadow-sm">
-                <span class="material-symbols-outlined filled text-xl">local_library</span>
+            <div class="sidebar-text sidebar-wordmark">
+                <span class="dreambook-logo-title">Lumina</span>
+                <span class="dreambook-logo-subtitle">AI</span>
             </div>
-            <div class="sidebar-text">
-                <h1 class="text-lg font-bold text-text-primary tracking-tight">Dreambook</h1>
-            </div>
-        </div>
-        <div class="flex items-center gap-3">
+        </a>
+    </div>
+    <!-- Profile -->
+    <div class="p-4 border-b border-border sidebar-profile">
+        <div class="flex items-center gap-3 sidebar-profile-row">
             <div class="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-border">
                 <img alt="Dr. Chen" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAP3EN7nDOxMk9Dul-2-TSDpEnzmWgnkUVgiQLR9M8d6LfV8MNUmDFAnuVc3bKIh_oN6BEFySxlheQcDiIDyzMrTCHuDq6PbUzzo1PFuHc-4vNa2DLfrOhfma0SFdIpVpcPMogtuvxiJWWwlmH3oit6fgLmCAjZBwDULhBJ-_38lF1y_781KmtItxiLz0iwGDItAw0eYpoR2Tlhcs1HQRMYb0NFcntQimMh7uRJDdG5fO9mAeMQVsebg-XldlSMgdoeKLNmVMPt"/>
             </div>
@@ -266,36 +391,36 @@
             <span class="material-symbols-outlined text-lg">add</span>
             <span>New Book</span>
         </button>
-        <button onclick="openCreateModal()" class="w-full bg-primary text-text-inverse font-medium py-2.5 rounded flex items-center justify-center hover:bg-primary-dark transition-colors sidebar-collapsed-only hidden">
+        <button onclick="openCreateModal()" class="w-10 h-10 mx-auto bg-primary text-text-inverse font-medium rounded-xl flex items-center justify-center hover:bg-primary-dark transition-colors sidebar-collapsed-only hidden">
             <span class="material-symbols-outlined text-lg">add</span>
         </button>
     </div>
     
     <!-- Navigation -->
     <nav class="flex-1 px-3 space-y-1 overflow-y-auto">
-        <a class="flex items-center gap-3 px-3 py-2.5 text-primary font-medium bg-primary-bg/50 rounded border-r-4 border-primary transition-colors" href="#">
-            <span class="material-symbols-outlined filled text-xl">auto_stories</span>
+        <a class="app-nav-item active" href="code.html" title="My Books">
+            <span class="material-symbols-outlined">menu_book</span>
             <span class="sidebar-text">My Books</span>
         </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary rounded transition-colors" href="#">
-            <span class="material-symbols-outlined text-xl">category</span>
-            <span class="sidebar-text">Catalog</span>
+        <a class="app-nav-item" href="#" title="Sources">
+            <span class="material-symbols-outlined">folder_open</span>
+            <span class="sidebar-text">Sources</span>
         </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary rounded transition-colors" href="#">
-            <span class="material-symbols-outlined text-xl">bar_chart</span>
+        <a class="app-nav-item" href="analytics.html" title="Analytics">
+            <span class="material-symbols-outlined">bar_chart</span>
             <span class="sidebar-text">Analytics</span>
         </a>
     </nav>
     
     <!-- Bottom Actions -->
     <div class="p-3 border-t border-border space-y-1">
-        <button onclick="openSettingsModal()" class="w-full flex items-center gap-3 px-3 py-2 text-text-secondary hover:bg-surface-tertiary hover:text-text-primary rounded transition-colors">
-            <span class="material-symbols-outlined text-xl">settings</span>
+        <button type="button" onclick="openSettingsModal()" class="app-nav-item w-full" title="Settings">
+            <span class="material-symbols-outlined">settings</span>
             <span class="sidebar-text">Settings</span>
         </button>
-        <button onclick="toggleSidebar()" class="w-full flex items-center gap-3 px-3 py-2 text-text-tertiary hover:bg-surface-tertiary hover:text-text-secondary rounded transition-colors">
-            <span class="material-symbols-outlined text-xl sidebar-expanded-only">chevron_left</span>
-            <span class="material-symbols-outlined text-xl sidebar-collapsed-only hidden">chevron_right</span>
+        <button type="button" onclick="toggleSidebar()" class="app-nav-item w-full" title="Collapse sidebar">
+            <span class="material-symbols-outlined sidebar-expanded-only">chevron_left</span>
+            <span class="material-symbols-outlined sidebar-collapsed-only hidden">chevron_right</span>
             <span class="sidebar-text text-sm">Collapse</span>
         </button>
     </div>
@@ -316,9 +441,6 @@
             </nav>
         </div>
         <div class="flex items-center gap-3">
-            <button onclick="openSettingsModal()" class="p-2 rounded hover:bg-surface-tertiary text-text-secondary transition-colors" title="Settings">
-                <span class="material-symbols-outlined text-xl">settings</span>
-            </button>
             <button class="p-2 rounded hover:bg-surface-tertiary text-text-secondary transition-colors relative">
                 <span class="material-symbols-outlined text-xl">notifications</span>
                 <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span>
@@ -353,25 +475,66 @@
                     </div>
                 </div>
                 
-                <!-- Analytics Sidebar (Right side) -->
-                <div class="w-72 shrink-0">
-                    <div class="bg-surface rounded-lg border border-border p-5 mb-6">
-                        <div class="flex items-center gap-2 mb-4 text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                            <span class="material-symbols-outlined text-sm">trending_up</span>
-                            Global Impact
+                <!-- Student Impact Sidebar -->
+                <div class="w-80 shrink-0">
+                    <div class="bg-surface rounded-xl border border-border p-5 mb-6">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center gap-2 text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                                <span class="material-symbols-outlined text-sm">insights</span>
+                                Student Impact
+                            </div>
+                            <a id="impact-analytics-link" href="analytics.html" class="text-xs text-primary hover:underline hidden">Full report</a>
                         </div>
-                        <div class="mb-6">
-                            <p class="text-3xl font-bold text-primary tracking-tight">12,450</p>
-                            <div class="flex items-center justify-between mt-1">
-                                <p class="text-xs text-text-secondary">Total Students Enrolled</p>
-                                <span class="text-xs text-success font-medium bg-success-bg px-1.5 py-0.5 rounded">~+12%</span>
+
+                        <div class="mt-4">
+                            <p id="stat-readers" class="text-3xl font-bold text-primary tracking-tight">—</p>
+                            <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                <p class="text-xs text-text-secondary">Active readers</p>
+                                <span id="stat-trend-badge" class="hidden inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-semibold">
+                                    <span class="material-symbols-outlined text-xs">trending_up</span>
+                                    <span id="stat-trend-delta">+0%</span>
+                                </span>
+                                <span id="stat-readers-badge" class="hidden text-[10px] uppercase tracking-wide text-text-tertiary bg-surface-tertiary px-1.5 py-0.5 rounded shrink-0">Sample</span>
+                            </div>
+                            <p id="stat-readers-hint" class="text-xs text-text-tertiary mt-1.5 leading-snug">Publish a book to track reach</p>
+                        </div>
+
+                        <div class="mt-5 mb-5">
+                            <p class="text-[10px] font-medium text-text-tertiary uppercase tracking-wider mb-2">Engagement by book</p>
+                            <div id="readership-chart-empty" class="h-28 rounded-lg bg-surface-secondary border border-dashed border-border flex items-center justify-center text-xs text-text-tertiary text-center px-4 leading-relaxed">
+                                Publish a book to see engagement trends
+                            </div>
+                            <div id="readership-chart-wrap" class="impact-chart-wrap hidden">
+                                <canvas id="readership-chart"></canvas>
+                            </div>
+                            <div id="per-book-readership-notes" class="mt-3 space-y-2 hidden"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-5">
+                            <div class="rounded-lg bg-surface-secondary border border-border p-3">
+                                <div class="flex items-center gap-1 mb-1">
+                                    <span class="material-symbols-outlined text-sm text-primary">public</span>
+                                    <p id="stat-countries" class="text-xl font-bold text-text-primary leading-none">—</p>
+                                </div>
+                                <p class="text-[10px] text-text-secondary">Countries reached</p>
+                            </div>
+                            <div class="rounded-lg bg-surface-secondary border border-border p-3">
+                                <div class="flex items-center gap-1 mb-1">
+                                    <span class="material-symbols-outlined text-sm text-success">check_circle</span>
+                                    <p id="stat-completion" class="text-xl font-bold text-success leading-none">—</p>
+                                </div>
+                                <p class="text-[10px] text-text-secondary">Section completion</p>
                             </div>
                         </div>
+
                         <div class="pt-4 border-t border-border">
-                            <p class="text-2xl font-bold text-warning tracking-tight">89%</p>
-                            <div class="flex items-center justify-between mt-1">
-                                <p class="text-xs text-text-secondary">Avg. Completion Rate</p>
-                                <span class="text-xs text-text-tertiary">Stable</span>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">Reach by country</p>
+                                <span id="stat-country-total" class="text-[10px] text-text-tertiary hidden"></span>
+                            </div>
+                            <div id="country-reach-list" class="space-y-2.5"></div>
+                            <div id="country-reach-empty" class="hidden text-xs text-text-tertiary text-center py-5 rounded-lg bg-surface-secondary border border-dashed border-border leading-relaxed">
+                                Geographic reach appears once students start reading
                             </div>
                         </div>
                     </div>
@@ -380,9 +543,16 @@
                         <div class="text-xs font-medium text-text-tertiary uppercase tracking-wider mb-4">Recent Activity</div>
                         <div class="space-y-4">
                             <div class="flex gap-3">
-                                <div class="w-2 h-2 mt-1.5 rounded-full bg-primary shrink-0"></div>
+                                <div class="w-2 h-2 mt-1.5 rounded-full bg-success shrink-0"></div>
                                 <div>
-                                    <p class="text-sm text-text-primary">Dr. Aris commented on Chapter 2 of Biology 101.</p>
+                                    <p class="text-sm text-text-primary">Foundation Biology engagement down 12% since January — Review suggests Ch. 2 fixes.</p>
+                                    <p class="text-xs text-text-tertiary mt-1">3 days ago</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="w-2 h-2 mt-1.5 rounded-full bg-success shrink-0"></div>
+                                <div>
+                                    <p class="text-sm text-text-primary">Experiments in Physics draft engagement up 18% after new simulations.</p>
                                     <p class="text-xs text-text-tertiary mt-1">2 hours ago</p>
                                 </div>
                             </div>
@@ -459,7 +629,7 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-text-primary mb-2">Book Title</label>
+                                    <label class="block text-sm font-medium text-text-primary mb-2">Book Title <span class="text-error">*</span></label>
                                     <input id="book-title" type="text" placeholder="e.g. Principles of Cell Biology" autocomplete="off"
                                         class="w-full px-4 py-3 rounded border border-border bg-surface text-text-primary placeholder:text-text-tertiary transition-all"
                                         oninput="handleTitleInput()"/>
@@ -590,15 +760,23 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-text-primary mb-2">Description</label>
+                                        <label class="block text-sm font-medium text-text-primary mb-2">Description <span class="text-error">*</span></label>
                                         <textarea id="book-description" rows="4"
                                             placeholder="Describe your textbook's focus, target audience, and key topics..."
                                             class="w-full px-4 py-3 rounded border border-border bg-surface text-sm placeholder:text-text-tertiary resize-none"
                                             oninput="handleDescriptionInput()"></textarea>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <p class="text-xs text-text-tertiary">Write in your own words</p>
+                                            <button type="button" onclick="enhanceDescription()" id="enhance-desc-btn-review"
+                                                class="hidden text-xs text-primary hover:underline flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                                                Enhance with AI
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div id="classification-section">
-                                        <label class="block text-sm font-medium text-text-primary mb-3">Classification</label>
+                                        <label class="block text-sm font-medium text-text-primary mb-3">Classification <span class="text-error">*</span></label>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>
                                                 <p class="text-xs text-text-tertiary mb-2 uppercase tracking-wider font-medium">Discipline</p>
@@ -622,13 +800,20 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="flex justify-end mt-2">
+                                            <button type="button" onclick="detectClassification()" id="detect-classification-btn-review"
+                                                class="hidden text-xs text-primary hover:underline flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                                                Autofill with AI
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div class="flex items-center justify-between pt-2">
                                         <button type="button" onclick="restartInterview()" class="text-sm text-text-tertiary hover:text-text-secondary">
                                             Start over with voice
                                         </button>
-                                        <button type="button" onclick="confirmReviewAndContinue()" id="btn-details-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
+                                        <button type="button" onclick="confirmReviewAndContinue()" id="btn-details-continue" disabled class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors opacity-50 cursor-not-allowed">
                                             Looks Good — Continue
                                         </button>
                                     </div>
@@ -645,7 +830,7 @@
 
                                     <div>
                                         <div class="flex items-center justify-between mb-2">
-                                            <label class="text-sm font-medium text-text-primary">Description</label>
+                                            <label class="text-sm font-medium text-text-primary">Description <span class="text-error">*</span></label>
                                             <div class="flex items-center gap-1 bg-surface-tertiary rounded-lg p-0.5">
                                                 <button type="button" onclick="setDescriptionMode('text')" id="desc-mode-text"
                                                     class="px-2.5 py-1 text-xs font-medium rounded-md bg-surface text-text-primary shadow-sm">
@@ -721,12 +906,7 @@
 
                                     <div id="manual-classification-section">
                                         <div class="flex items-center justify-between mb-3">
-                                            <label class="block text-sm font-medium text-text-primary">Classification</label>
-                                            <button type="button" onclick="detectClassification()" id="detect-classification-btn"
-                                                class="hidden text-xs text-primary hover:underline flex items-center gap-1">
-                                                <span class="material-symbols-outlined text-sm">auto_awesome</span>
-                                                Detect with AI
-                                            </button>
+                                            <label class="block text-sm font-medium text-text-primary">Classification <span class="text-error">*</span></label>
                                         </div>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>
@@ -751,10 +931,17 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="flex justify-end mt-2">
+                                            <button type="button" onclick="detectClassification()" id="detect-classification-btn"
+                                                class="hidden text-xs text-primary hover:underline flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                                                Autofill with AI
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div class="flex justify-end pt-2">
-                                        <button type="button" onclick="showReviewFromManual()" id="btn-manual-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
+                                        <button type="button" onclick="completeManualDetails()" id="btn-manual-continue" disabled class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors opacity-50 cursor-not-allowed">
                                             Continue
                                         </button>
                                     </div>
@@ -778,25 +965,6 @@
                         <div id="acc-sources-body" class="accordion-body px-5">
                             <div class="pl-13 space-y-5">
                                 <p class="text-sm text-text-secondary">Upload your notes, lectures, or recordings. AI will learn from your materials to match your voice and style.</p>
-
-                                <!-- Pearson ISBN Lookup -->
-                                <div>
-                                    <label class="block text-sm font-medium text-text-primary mb-2">Start from a Pearson Title</label>
-                                    <div class="flex gap-2">
-                                        <input type="text" id="isbn-input" placeholder="Enter ISBN (e.g. 978-0134093413)" autocomplete="off"
-                                            class="flex-1 px-4 py-2.5 rounded border border-border bg-surface text-sm placeholder:text-text-tertiary"/>
-                                        <button onclick="lookupISBN()" class="px-4 py-2.5 bg-surface border border-border text-sm font-medium rounded hover:bg-surface-tertiary transition-colors">
-                                            Look up
-                                        </button>
-                                    </div>
-                                    <p class="text-xs text-text-tertiary mt-1.5">Import structure and content from an existing Pearson textbook</p>
-                                </div>
-
-                                <div class="flex items-center gap-4">
-                                    <div class="flex-1 h-px bg-border"></div>
-                                    <span class="text-xs text-text-tertiary uppercase">or upload your own</span>
-                                    <div class="flex-1 h-px bg-border"></div>
-                                </div>
 
                                 <!-- Dropzone with Multimodal Support -->
                                 <div id="source-dropzone" onclick="triggerFileUpload()" class="dropzone p-6 text-center">
@@ -823,11 +991,44 @@
                                 <!-- Uploaded files -->
                                 <div id="uploaded-files" class="hidden space-y-2"></div>
 
+                                <!-- Research Sources -->
+                                <div class="border border-border rounded-lg overflow-hidden">
+                                    <div class="px-4 py-3 bg-surface-secondary border-b border-border">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-text-tertiary text-lg">tune</span>
+                                            <div>
+                                                <p class="text-sm font-medium text-text-primary">Research Sources</p>
+                                                <p class="text-xs text-text-tertiary mt-0.5">Choose what the Teaching Assistant can reference while you write</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="px-4 py-3 space-y-2">
+                                        <div class="flex items-center justify-between p-3 rounded border border-border bg-surface-secondary">
+                                            <div>
+                                                <p class="text-sm font-medium text-text-primary">Web</p>
+                                                <p class="text-xs text-text-tertiary">Curated educational content</p>
+                                            </div>
+                                            <div onclick="toggleSwitch(this)" class="toggle-switch" data-setting="web">
+                                                <div class="toggle-dot"></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 rounded border border-border bg-surface-secondary">
+                                            <div>
+                                                <p class="text-sm font-medium text-text-primary">Academic Databases</p>
+                                                <p class="text-xs text-text-tertiary">Google Scholar, PubMed, arXiv</p>
+                                            </div>
+                                            <div onclick="toggleSwitch(this)" class="toggle-switch active" data-setting="academic">
+                                                <div class="toggle-dot"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="flex items-center justify-between pt-2">
                                     <button onclick="skipSourceStep()" class="text-sm text-text-tertiary hover:text-text-secondary transition-colors">
                                         Skip — start fresh
                                     </button>
-                                    <button onclick="completeStep('sources')" id="btn-sources-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <button onclick="completeStep('sources')" id="btn-sources-continue" class="px-5 py-2.5 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors">
                                         Continue
                                     </button>
                                 </div>
@@ -962,48 +1163,6 @@
                         </div>
                     </div>
 
-                    <!-- AI Source Settings (Collapsed) -->
-                    <div class="border border-border rounded-lg overflow-hidden">
-                        <button type="button" onclick="toggleSourceSettings()" id="source-settings-toggle"
-                            class="w-full flex items-center justify-between p-4 bg-surface hover:bg-surface-secondary transition-colors">
-                            <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-text-tertiary text-lg">tune</span>
-                                <span class="text-sm font-medium text-text-primary">AI Source Settings</span>
-                                <span id="source-settings-summary" class="text-xs text-text-tertiary">(Uploaded + Academic enabled)</span>
-                            </div>
-                            <span id="source-settings-chevron" class="material-symbols-outlined text-text-tertiary transition-transform">expand_more</span>
-                        </button>
-                        <div id="source-settings-body" class="hidden px-4 pb-4 space-y-2">
-                            <div class="flex items-center justify-between p-3 rounded border border-border bg-surface-secondary">
-                                <div>
-                                    <p class="text-sm font-medium text-text-primary">Uploaded Sources</p>
-                                    <p class="text-xs text-text-tertiary">Your notes, lectures, and files</p>
-                                </div>
-                                <div onclick="toggleSwitch(this)" class="toggle-switch active" data-setting="uploaded">
-                                    <div class="toggle-dot"></div>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between p-3 rounded border border-border bg-surface-secondary">
-                                <div>
-                                    <p class="text-sm font-medium text-text-primary">Academic Databases</p>
-                                    <p class="text-xs text-text-tertiary">Google Scholar, PubMed, arXiv</p>
-                                </div>
-                                <div onclick="toggleSwitch(this)" class="toggle-switch active" data-setting="academic">
-                                    <div class="toggle-dot"></div>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between p-3 rounded border border-border bg-surface-secondary">
-                                <div>
-                                    <p class="text-sm font-medium text-text-primary">Web Sources</p>
-                                    <p class="text-xs text-text-tertiary">Curated educational content</p>
-                                </div>
-                                <div onclick="toggleSwitch(this)" class="toggle-switch" data-setting="web">
-                                    <div class="toggle-dot"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
@@ -1024,33 +1183,74 @@
 
 <!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════════ -->
     <!-- Settings Modal -->
-    <div id="settings-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" onclick="closeSettingsModal()"></div>
-        <div class="relative bg-surface w-full max-w-md rounded-xl shadow-2xl overflow-hidden flex flex-col">
-            <header class="h-14 border-b border-border flex items-center justify-between px-6">
-                <h2 class="font-semibold text-text-primary">Global Settings</h2>
-                <button onclick="closeSettingsModal()" class="p-1.5 -ml-1.5 rounded hover:bg-surface-tertiary text-text-secondary transition-colors">
-                    <span class="material-symbols-outlined text-xl">close</span>
+    <div id="settings-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+        <div class="w-full max-w-lg bg-surface rounded-lg shadow-xl mx-4">
+            <div class="p-4 border-b border-border flex items-center justify-between">
+                <h3 class="font-semibold text-text-primary">Settings</h3>
+                <button onclick="closeSettingsModal()" class="p-1 rounded hover:bg-surface-tertiary">
+                    <span class="material-symbols-outlined text-text-tertiary">close</span>
                 </button>
-            </header>
-            <div class="p-6 space-y-4">
+            </div>
+            <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
                 <div>
-                    <label class="block text-sm font-medium text-text-primary mb-1">OpenAI API Key</label>
-                    <input type="password" id="global-api-key" placeholder="sk-..." 
-                           class="w-full px-3 py-2 rounded border border-border bg-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                           onchange="saveGlobalApiKey(this.value)"/>
-                    <p class="text-xs text-text-tertiary mt-1">Stored locally in your browser. Required for AI features.</p>
+                    <h4 class="text-sm font-semibold text-text-primary mb-3">Profile</h4>
+                    <p class="text-xs text-text-tertiary mb-3">Your Teaching Assistant uses your salutation and last name in greetings.</p>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-4 gap-2">
+                            <div class="col-span-1">
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Salutation</label>
+                                <input type="text" id="profile-salutation" placeholder="Dr."
+                                       class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary"/>
+                            </div>
+                            <div class="col-span-3">
+                                <label class="block text-sm font-medium text-text-secondary mb-1">First name</label>
+                                <input type="text" id="profile-first-name" placeholder="Sarah"
+                                       class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-text-secondary mb-1">Last name</label>
+                            <input type="text" id="profile-last-name" placeholder="Chen"
+                                   class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary"/>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-text-secondary mb-1">Email</label>
+                            <input type="email" id="profile-email" placeholder="sarah.chen@school.edu"
+                                   class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-2 border-t border-border">
+                    <h4 class="text-sm font-semibold text-text-primary mb-1">Default Reading Template</h4>
+                    <p class="text-xs text-text-tertiary mb-3">Applied to new books and used when a book has no template set.</p>
+                    <div id="settings-template-options" class="grid grid-cols-2 gap-2"></div>
+                </div>
+                <div class="pt-2 border-t border-border">
+                    <h4 class="text-sm font-semibold text-text-primary mb-3">API</h4>
+                    <div>
+                        <label class="block text-sm font-medium text-text-secondary mb-1">OpenAI API Key</label>
+                        <input type="password" id="api-key-input" placeholder="sk-..."
+                               class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary"/>
+                        <p class="mt-1 text-xs text-text-tertiary">Your API key is stored locally only.</p>
+                    </div>
+                    <div class="mt-3">
+                        <label class="block text-sm font-medium text-text-secondary mb-1">Model</label>
+                        <select id="model-select" class="w-full px-3 py-2 border border-border rounded text-sm outline-none focus:border-primary">
+                            <option value="gpt-4o">GPT-4o (Recommended)</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini (Faster)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-            <div class="p-4 border-t border-border flex justify-end">
-                <button onclick="closeSettingsModal()" class="px-4 py-2 bg-primary text-text-inverse font-medium rounded hover:bg-primary-dark transition-colors text-sm">
-                    Done
-                </button>
+            <div class="p-4 border-t border-border flex justify-end gap-2">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 text-sm text-text-secondary hover:bg-surface-tertiary rounded">Cancel</button>
+                <button onclick="saveSettings()" class="px-4 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark">Save</button>
             </div>
         </div>
     </div>
 
 <script src="realtime-voice.js"></script>
+<script src="analytics.js"></script>
 <script>
 // State
 const SETUP_STEPS = ['title', 'details', 'sources'];
@@ -1063,7 +1263,7 @@ const state = {
     title: '',
     coauthors: [],
     uploadedFiles: 0,
-    externalSources: new Set(),
+    uploadedFileNames: [],
     discipline: '',
     level: '',
     description: '',
@@ -1071,12 +1271,16 @@ const state = {
     customStructureMode: 'text',
     customStructureDesc: '',
     structureStyle: 'outline',
+    readingTemplate: 'classic-academic',
     settings: {
-        uploaded: true,
+        textbook: true,
+        uploaded: false,
         academic: true,
         web: false,
     },
     apiKey: localStorage.getItem('openai_api_key') || '',
+    model: localStorage.getItem('openai_model') || 'gpt-4o',
+    authorProfile: null,
     voiceRecordingTarget: null,
     interviewTranscript: '',
     interviewMode: 'idle',
@@ -1141,15 +1345,6 @@ function skipSourceStep() {
     updateProgress();
 }
 
-// ISBN lookup (placeholder)
-function lookupISBN() {
-    const isbn = document.getElementById('isbn-input').value.trim();
-    if (!isbn) return;
-    
-    // Show loading state
-    alert('ISBN lookup coming soon! For now, this would search the Pearson catalog for: ' + isbn);
-}
-
 // Smooth scroll to step and open it
 function openAndScrollToStep(step) {
     const section = document.getElementById(`acc-${step}`);
@@ -1182,10 +1377,131 @@ function openAndScrollToStep(step) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// SETTINGS MODAL
+// SETTINGS MODAL (shared with editor — same localStorage keys)
 // ══════════════════════════════════════════════════════════════════════
+const AUTHOR_PROFILE_STORAGE_KEY = 'author_profile';
+const DEFAULT_READING_TEMPLATE_KEY = 'dreambook_default_reading_template';
+const DEFAULT_AUTHOR_PROFILE = {
+    salutation: 'Dr.',
+    firstName: 'Sarah',
+    lastName: 'Chen',
+    email: ''
+};
+const TEXTBOOK_TEMPLATES = {
+    'classic-academic': {
+        id: 'classic-academic',
+        label: 'Classic Academic',
+        description: 'Clean layout with drop cap — the default textbook feel.'
+    },
+    'interactive-lab': {
+        id: 'interactive-lab',
+        label: 'Interactive Lab',
+        description: 'Bright, checkpoint-friendly — great for hands-on subjects.'
+    },
+    'visual-storyteller': {
+        id: 'visual-storyteller',
+        label: 'Visual Storyteller',
+        description: 'Magazine-style with room for images and pull quotes.'
+    },
+    'youth-explorer': {
+        id: 'youth-explorer',
+        label: 'Youth Explorer',
+        description: 'Spacious and playful — ideal for younger learners.'
+    }
+};
+const DEFAULT_BOOK_TEMPLATE_ID = 'classic-academic';
+
+function escapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function loadAuthorProfile() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(AUTHOR_PROFILE_STORAGE_KEY) || 'null');
+        if (saved && typeof saved === 'object') {
+            return {
+                salutation: saved.salutation ?? DEFAULT_AUTHOR_PROFILE.salutation,
+                firstName: saved.firstName ?? DEFAULT_AUTHOR_PROFILE.firstName,
+                lastName: saved.lastName ?? DEFAULT_AUTHOR_PROFILE.lastName,
+                email: saved.email ?? DEFAULT_AUTHOR_PROFILE.email
+            };
+        }
+    } catch (e) { /* use defaults */ }
+    return { ...DEFAULT_AUTHOR_PROFILE };
+}
+
+function saveAuthorProfile(profile) {
+    const normalized = {
+        salutation: (profile.salutation || '').trim(),
+        firstName: (profile.firstName || '').trim(),
+        lastName: (profile.lastName || '').trim(),
+        email: (profile.email || '').trim()
+    };
+    localStorage.setItem(AUTHOR_PROFILE_STORAGE_KEY, JSON.stringify(normalized));
+    state.authorProfile = normalized;
+    return normalized;
+}
+
+function populateProfileSettingsForm(profile) {
+    const data = profile || state.authorProfile || DEFAULT_AUTHOR_PROFILE;
+    document.getElementById('profile-salutation').value = data.salutation || '';
+    document.getElementById('profile-first-name').value = data.firstName || '';
+    document.getElementById('profile-last-name').value = data.lastName || '';
+    document.getElementById('profile-email').value = data.email || '';
+}
+
+function readProfileSettingsForm() {
+    return {
+        salutation: document.getElementById('profile-salutation').value,
+        firstName: document.getElementById('profile-first-name').value,
+        lastName: document.getElementById('profile-last-name').value,
+        email: document.getElementById('profile-email').value
+    };
+}
+
+function normalizeBookTemplateId(id) {
+    return TEXTBOOK_TEMPLATES[id] ? id : DEFAULT_BOOK_TEMPLATE_ID;
+}
+
+function getDefaultReadingTemplate() {
+    return normalizeBookTemplateId(localStorage.getItem(DEFAULT_READING_TEMPLATE_KEY) || DEFAULT_BOOK_TEMPLATE_ID);
+}
+
+function setDefaultReadingTemplate(id) {
+    const normalized = normalizeBookTemplateId(id);
+    localStorage.setItem(DEFAULT_READING_TEMPLATE_KEY, normalized);
+    state.readingTemplate = normalized;
+}
+
+function renderSettingsTemplateOptions() {
+    const container = document.getElementById('settings-template-options');
+    if (!container) return;
+    const activeId = getDefaultReadingTemplate();
+    container.innerHTML = Object.values(TEXTBOOK_TEMPLATES).map(tpl => `
+        <button type="button"
+            class="text-left p-2.5 rounded-lg border transition-all ${activeId === tpl.id ? 'border-primary bg-primary-bg/40 ring-1 ring-primary/20' : 'border-border hover:border-primary/30 hover:bg-surface-tertiary'}"
+            onclick="selectBookTemplateFromSettings('${tpl.id}')">
+            <span class="block text-sm font-medium text-text-primary">${escapeHtml(tpl.label)}</span>
+            <span class="block text-xs text-text-tertiary mt-0.5 leading-snug">${escapeHtml(tpl.description)}</span>
+        </button>
+    `).join('');
+}
+
+function selectBookTemplateFromSettings(id) {
+    setDefaultReadingTemplate(id);
+    renderSettingsTemplateOptions();
+}
+
 function openSettingsModal() {
-    document.getElementById('global-api-key').value = state.apiKey;
+    state.authorProfile = loadAuthorProfile();
+    document.getElementById('api-key-input').value = state.apiKey || '';
+    document.getElementById('model-select').value = state.model || 'gpt-4o';
+    populateProfileSettingsForm(state.authorProfile);
+    renderSettingsTemplateOptions();
     document.getElementById('settings-modal').classList.remove('hidden');
 }
 
@@ -1193,9 +1509,13 @@ function closeSettingsModal() {
     document.getElementById('settings-modal').classList.add('hidden');
 }
 
-function saveGlobalApiKey(key) {
-    state.apiKey = key.trim();
+function saveSettings() {
+    saveAuthorProfile(readProfileSettingsForm());
+    state.apiKey = document.getElementById('api-key-input').value.trim();
+    state.model = document.getElementById('model-select').value;
     localStorage.setItem('openai_api_key', state.apiKey);
+    localStorage.setItem('openai_model', state.model);
+    closeSettingsModal();
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1266,10 +1586,7 @@ async function completeStep(step) {
     } else if (step === 'details') {
         summary.textContent = `${state.discipline || 'Unclassified'} · ${state.level || 'Unspecified'}`;
     } else if (step === 'sources') {
-        const parts = [];
-        if (state.uploadedFiles > 0) parts.push(`${state.uploadedFiles} files`);
-        if (state.externalSources.size > 0) parts.push(`${state.externalSources.size} external sources`);
-        summary.textContent = parts.length > 0 ? parts.join(', ') : 'No sources added';
+        summary.textContent = formatSourcesStepSummary();
     }
 
     body.classList.remove('open');
@@ -1360,6 +1677,21 @@ function addCoauthor() {
 // ══════════════════════════════════════════════════════════════════════
 // SOURCE LIBRARY
 // ══════════════════════════════════════════════════════════════════════
+function formatSourcesStepSummary() {
+    const parts = [];
+    if (state.uploadedFiles > 0) parts.push(`${state.uploadedFiles} file${state.uploadedFiles === 1 ? '' : 's'}`);
+    const enabled = [];
+    if (state.settings.web) enabled.push('Web');
+    if (state.settings.academic) enabled.push('Academic');
+    if (enabled.length) parts.push(enabled.join(' + '));
+    return parts.length ? parts.join(' · ') : 'This Textbook only';
+}
+
+function syncInferredSourceSettings() {
+    state.settings.textbook = true;
+    state.settings.uploaded = state.uploadedFiles > 0;
+}
+
 function triggerFileUpload() {
     document.getElementById('file-upload-input').click();
 }
@@ -1413,30 +1745,14 @@ function addUploadedFiles(files) {
             `;
             filesDiv.appendChild(div);
             state.uploadedFiles += 1;
-            document.getElementById('btn-sources-continue').disabled = false;
+            state.uploadedFileNames.push(file.name);
+            syncInferredSourceSettings();
         }, i * 200);
     });
 }
 
 function simulateUpload() {
     triggerFileUpload();
-}
-
-function toggleSource(btn) {
-    btn.classList.toggle('active');
-    const check = btn.querySelector('.check-icon');
-    check.classList.toggle('hidden');
-    
-    const source = btn.dataset.source;
-    if (btn.classList.contains('active')) {
-        state.externalSources.add(source);
-    } else {
-        state.externalSources.delete(source);
-    }
-    
-    const hasFiles = state.uploadedFiles > 0;
-    const hasExternal = state.externalSources.size > 0;
-    document.getElementById('btn-sources-continue').disabled = !hasFiles && !hasExternal;
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1662,33 +1978,50 @@ function restartInterview() {
     showInterviewMode();
 }
 
-function showReviewFromManual() {
+function completeManualDetails() {
     const manualDesc = document.getElementById('manual-book-description').value.trim();
-    if (!manualDesc) {
-        alert('Please add a description before continuing.');
-        return;
-    }
-    document.getElementById('book-description').value = manualDesc;
+    if (!manualDesc) return;
+    
     state.description = manualDesc;
+    
+    // Ensure chips are selected
+    const hasDiscipline = document.querySelector('#manual-discipline-chips .chip.active') !== null;
+    const hasLevel = document.querySelector('#manual-level-chips .chip.active') !== null;
+    
+    if (!hasDiscipline || !hasLevel) return;
 
-    document.querySelectorAll('#manual-discipline-chips .chip.active').forEach(chip => {
-        selectChipByValue('discipline', chip.dataset.value);
-    });
-    document.querySelectorAll('#manual-level-chips .chip.active').forEach(chip => {
-        selectChipByValue('level', chip.dataset.value);
-    });
+    completeStep('details');
+}
 
-    showReviewMode();
+function validateManualDetails() {
+    const desc = document.getElementById('manual-book-description').value.trim();
+    const hasDiscipline = document.querySelector('#manual-discipline-chips .chip.active') !== null;
+    const hasLevel = document.querySelector('#manual-level-chips .chip.active') !== null;
+    const btn = document.getElementById('btn-manual-continue');
+    
+    if (btn) {
+        btn.disabled = !(desc && hasDiscipline && hasLevel);
+        if (btn.disabled) {
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+}
+
+function updateDescriptionAiActions(desc) {
+    const showActions = desc.length > 0;
+    ['enhance-desc-btn', 'enhance-desc-btn-review', 'detect-classification-btn', 'detect-classification-btn-review'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', !showActions);
+    });
 }
 
 function handleManualDescriptionInput() {
     const desc = document.getElementById('manual-book-description').value.trim();
     state.description = desc;
-    const enhanceBtn = document.getElementById('enhance-desc-btn');
-    const detectBtn = document.getElementById('detect-classification-btn');
-    const showActions = desc.length > 20;
-    if (enhanceBtn) enhanceBtn.classList.toggle('hidden', !showActions);
-    if (detectBtn) detectBtn.classList.toggle('hidden', !showActions);
+    updateDescriptionAiActions(desc);
+    validateManualDetails();
 }
 
 function selectManualChip(btn, group) {
@@ -1698,6 +2031,7 @@ function selectManualChip(btn, group) {
     const value = btn.dataset.value;
     if (group === 'discipline') state.discipline = value;
     else if (group === 'level') state.level = value;
+    validateManualDetails();
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1731,6 +2065,24 @@ function setDescriptionMode(mode) {
 function handleDescriptionInput() {
     const desc = document.getElementById('book-description').value.trim();
     state.description = desc;
+    updateDescriptionAiActions(desc);
+    validateReviewDetails();
+}
+
+function validateReviewDetails() {
+    const desc = document.getElementById('book-description').value.trim();
+    const hasDiscipline = document.querySelector('#discipline-chips .chip.active') !== null;
+    const hasLevel = document.querySelector('#level-chips .chip.active') !== null;
+    const btn = document.getElementById('btn-details-continue');
+    
+    if (btn) {
+        btn.disabled = !(desc && hasDiscipline && hasLevel);
+        if (btn.disabled) {
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
 }
 
 function confirmReviewAndContinue() {
@@ -1754,7 +2106,10 @@ async function enhanceDescription() {
     const desc = descEl.value.trim();
     if (!desc) return;
 
-    const btn = document.getElementById('enhance-desc-btn');
+    const btn = state.interviewMode === 'manual'
+        ? document.getElementById('enhance-desc-btn')
+        : document.getElementById('enhance-desc-btn-review');
+    if (!btn) return;
     btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Enhancing...';
     btn.disabled = true;
 
@@ -1959,9 +2314,13 @@ async function detectClassification() {
         return;
     }
 
-    const btn = document.getElementById('detect-classification-btn');
-    btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Detecting...';
-    btn.disabled = true;
+    const btn = state.interviewMode === 'manual' 
+        ? document.getElementById('detect-classification-btn')
+        : document.getElementById('detect-classification-btn-review');
+    if (btn) {
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Autofilling...';
+        btn.disabled = true;
+    }
 
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1994,8 +2353,10 @@ async function detectClassification() {
         alert('Failed to detect classification. Please select manually.');
     }
 
-    btn.innerHTML = '<span class="material-symbols-outlined text-sm">auto_awesome</span> Detect with AI';
-    btn.disabled = false;
+    if (btn) {
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm">auto_awesome</span> Autofill with AI';
+        btn.disabled = false;
+    }
 }
 
 function selectChipByValue(group, value) {
@@ -2012,6 +2373,9 @@ function selectChipByValue(group, value) {
 
     if (group === 'discipline') state.discipline = value;
     else if (group === 'level') state.level = value;
+    
+    if (typeof validateManualDetails === 'function') validateManualDetails();
+    if (typeof validateReviewDetails === 'function') validateReviewDetails();
 }
 
 function selectChip(btn, group) {
@@ -2019,39 +2383,36 @@ function selectChip(btn, group) {
     btn.classList.add('active');
     
     const value = btn.dataset.value;
-    if (group === 'discipline') state.discipline = value;
-    else if (group === 'level') state.level = value;
-    else if (group === 'citation') state.settings.citation = value;
+    if (group === 'discipline') {
+        state.discipline = value;
+        if (typeof validateReviewDetails === 'function') validateReviewDetails();
+    } else if (group === 'level') {
+        state.level = value;
+        if (typeof validateReviewDetails === 'function') validateReviewDetails();
+    } else if (group === 'citation') {
+        state.settings.citation = value;
+    }
 }
 
 // ══════════════════════════════════════════════════════════════════════
 // SETTINGS & GENERATE STRUCTURE
 // ══════════════════════════════════════════════════════════════════════
-function updateSourceSettingsSummary() {
-    const enabled = [];
-    if (state.settings.uploaded) enabled.push('Uploaded');
-    if (state.settings.academic) enabled.push('Academic');
-    if (state.settings.web) enabled.push('Web');
-    const summary = document.getElementById('source-settings-summary');
-    if (summary) {
-        summary.textContent = enabled.length
-            ? `(${enabled.join(' + ')} enabled)`
-            : '(No sources enabled)';
-    }
+function syncAllSourceSettingToggles() {
+    syncInferredSourceSettings();
+    document.querySelectorAll('.toggle-switch[data-setting]').forEach(el => {
+        const key = el.dataset.setting;
+        if (!key || key === 'textbook' || key === 'uploaded') return;
+        el.classList.toggle('active', !!state.settings[key]);
+    });
 }
 
 function toggleSwitch(el) {
-    el.classList.toggle('active');
+    if (el.classList.contains('locked')) return;
     const setting = el.dataset.setting;
+    if (!setting || setting === 'textbook' || setting === 'uploaded') return;
+    el.classList.toggle('active');
     state.settings[setting] = el.classList.contains('active');
-    updateSourceSettingsSummary();
-}
-
-function toggleSourceSettings() {
-    const body = document.getElementById('source-settings-body');
-    const chevron = document.getElementById('source-settings-chevron');
-    body.classList.toggle('hidden');
-    chevron.classList.toggle('rotate-180');
+    syncAllSourceSettingToggles();
 }
 
 function setCustomMode(mode) {
@@ -2097,13 +2458,13 @@ function goToGenerateScreen() {
     });
     state.structureStyle = null;
     state.customStructureDesc = '';
+    state.readingTemplate = getDefaultReadingTemplate();
 
     const customInput = document.getElementById('custom-structure-input');
     if (customInput) customInput.classList.add('hidden');
     document.getElementById('custom-structure-desc').value = '';
     document.getElementById('custom-voice-result').classList.add('hidden');
     setCustomMode('text');
-    updateSourceSettingsSummary();
 
     const btn = document.getElementById('btn-create');
     btn.disabled = true;
@@ -2160,6 +2521,35 @@ function getGradeContext(gradeLevel) {
     return gradeContextMap[gradeLevel] || gradeContextMap['Undergrad Intro'];
 }
 
+function buildBookSetupPayload() {
+    syncInferredSourceSettings();
+    return {
+        structureStyle: state.structureStyle,
+        customStructureDesc: state.customStructureDesc || '',
+        bookType: state.bookType,
+        discipline: state.discipline || '',
+        level: state.level || '',
+        description: state.description || '',
+        interviewTranscript: state.interviewTranscript || '',
+        sourceSettings: { ...state.settings },
+        uploadedFileCount: state.uploadedFiles,
+        uploadedFileNames: [...state.uploadedFileNames],
+        readingTemplate: state.readingTemplate || 'classic-academic'
+    };
+}
+
+function persistBookHandoff(newBookId, generatedStructure) {
+    sessionStorage.setItem('book_id', newBookId);
+    sessionStorage.setItem(
+        'generated_structure',
+        typeof generatedStructure === 'string' ? generatedStructure : JSON.stringify(generatedStructure)
+    );
+    sessionStorage.setItem('book_title', state.title);
+    sessionStorage.setItem('book_grade', state.level || 'Undergrad Intro');
+    sessionStorage.setItem('book_description', state.description || '');
+    sessionStorage.setItem('book_setup', JSON.stringify(buildBookSetupPayload()));
+}
+
 async function createBook() {
     if (state.structureStyle === 'custom') {
         handleCustomStructureInput();
@@ -2185,11 +2575,7 @@ async function createBook() {
 
     if (state.structureStyle === 'blank') {
         const newBookId = 'book_' + Date.now();
-        sessionStorage.setItem('book_id', newBookId);
-        sessionStorage.setItem('generated_structure', JSON.stringify({ chapters: [] }));
-        sessionStorage.setItem('book_title', state.title);
-        sessionStorage.setItem('book_grade', state.level || 'Undergrad Intro');
-        sessionStorage.setItem('book_description', state.description || '');
+        persistBookHandoff(newBookId, { chapters: [] });
         window.location.href = 'editor.html?id=' + newBookId;
         return;
     }
@@ -2200,11 +2586,7 @@ async function createBook() {
     const cachedStructure = localStorage.getItem(cacheKey);
     if (cachedStructure) {
         const newBookId = 'book_' + Date.now();
-        sessionStorage.setItem('book_id', newBookId);
-        sessionStorage.setItem('generated_structure', cachedStructure);
-        sessionStorage.setItem('book_title', state.title);
-        sessionStorage.setItem('book_grade', gradeForCache);
-        sessionStorage.setItem('book_description', state.description || '');
+        persistBookHandoff(newBookId, cachedStructure);
         setTimeout(() => { window.location.href = 'editor.html?id=' + newBookId; }, 500);
         return;
     }
@@ -2216,12 +2598,14 @@ async function createBook() {
         : '';
 
     let prompt = '';
+    const titleInstruction = `Each chapter's \`title\` must be a descriptive topic title (not "Chapter N"). Each \`subtitle\` must be a short, relevant tagline that complements the title.`;
+
     if (state.structureStyle === 'toc') {
-        prompt = `${bookContext}Generate a Table of Contents for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 10 chapters total: Chapter 1 must be an Introduction, Chapters 2-9 are content chapters, and Chapter 10 must be Practice/Exercises. Each chapter should have a title and a subtitle, but NO subsections. Structure the content chapters to reflect the author's vision described above. ${gradeContext}`;
+        prompt = `${bookContext}Generate a Table of Contents for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 10 chapters total: Chapter 1 must be an Introduction, Chapters 2-9 are content chapters, and Chapter 10 must be Practice/Exercises. Each chapter should have a title and a subtitle, but NO subsections. ${titleInstruction} Structure the content chapters to reflect the author's vision described above. ${gradeContext}`;
     } else if (state.structureStyle === 'outline') {
-        prompt = `${bookContext}Generate a Chapter Outline for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 6 chapters total: Chapter 1 must be an Introduction (1-3 subsections), Chapters 2-5 are content chapters with exactly 3 subsections each, and Chapter 6 must be Practice/Exercises (1-3 subsections). Each chapter must have a title and a subtitle. Each subsection must have a plain-text title and a brief description (1 sentence). Structure the content chapters to reflect the author's vision described above. ${gradeContext}`;
+        prompt = `${bookContext}Generate a Chapter Outline for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 6 chapters total: Chapter 1 must be an Introduction (1-3 subsections), Chapters 2-5 are content chapters with exactly 3 subsections each, and Chapter 6 must be Practice/Exercises (1-3 subsections). Each chapter must have a title and a subtitle. Each subsection must have a plain-text title and a brief description (1 sentence). ${titleInstruction} Structure the content chapters to reflect the author's vision described above. ${gradeContext}`;
     } else if (state.structureStyle === 'full') {
-        prompt = `${bookContext}Generate a Full Draft structure for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 5 chapters total: Chapter 1 must be an Introduction (1-3 subsections), Chapters 2-4 are content chapters with exactly 3 subsections each, and Chapter 5 must be Practice/Exercises (1-3 subsections). Each chapter must have a title and a subtitle. Each subsection must have a plain-text title and 2 paragraphs of full draft content. Structure the content chapters to reflect the author's vision described above. ${gradeContext}`;
+        prompt = `${bookContext}Generate a Full Draft structure for a textbook titled "${state.title}" for ${gradeLevel} students. Return exactly 5 chapters total: Chapter 1 must be an Introduction (1-3 subsections), Chapters 2-4 are content chapters with exactly 3 subsections each, and Chapter 5 must be Practice/Exercises (1-3 subsections). Each chapter must have a title and a subtitle. Each subsection must have a plain-text title and 2 paragraphs of full draft content. ${titleInstruction} Structure the content chapters to reflect the author's vision described above. ${gradeContext}`;
     } else if (state.structureStyle === 'custom') {
         prompt = `${bookContext}Generate a textbook structure for "${state.title}" for ${gradeLevel} students based on the author's instructions below. Chapter 1 must be an Introduction (1-3 subsections). The final chapter must be Practice/Exercises (1-3 subsections). All middle chapters are content chapters and should follow the requested chapter count, topics, and ordering as closely as possible. Each chapter must have a title, a subtitle, and subsections with plain-text titles and brief descriptions. Structure content chapters to reflect the author's vision described above.
 
@@ -2231,6 +2615,15 @@ Author's structure instructions:
 ${gradeContext}`;
     }
 
+    const titleRulesBlock = ['toc', 'outline', 'full'].includes(state.structureStyle) ? `
+TITLE AND SUBTITLE RULES:
+- "title" MUST be a descriptive chapter title (e.g., "Introduction to the World of Physics", "Forces and Motion", "Practice Problems and Review").
+- Do NOT use generic labels like "Chapter 1", "Chapter 2", "Introduction", or "Practice/Exercises" as the title.
+- Chapter numbering (Chapter 1, Chapter 2, etc.) is handled by the UI — never put it in the title field.
+- "subtitle" MUST be a short, engaging tagline (one phrase or sentence) that complements the title.
+- The subtitle must NOT repeat or paraphrase the title.
+` : '';
+
     const systemPrompt = `You are an expert academic textbook author writing for ${gradeLevel} students.
 ${gradeContext}
 
@@ -2238,13 +2631,13 @@ STRUCTURAL GUIDELINES:
 - Chapter 1 MUST be an Introduction that orients readers to the book's purpose, approach, and what they will learn (1-3 subsections).
 - The FINAL chapter MUST be Practice/Exercises with review problems, experiments, or activities (1-3 subsections).
 - All middle chapters are content chapters and should follow the subsection requirements in the prompt.
-
+${titleRulesBlock}
 You MUST respond with a valid JSON object matching this exact schema:
 {
   "chapters": [
     {
-      "title": "Chapter Title",
-      "subtitle": "Chapter Subtitle",
+      "title": "Introduction to the World of Physics",
+      "subtitle": "Exploring how matter, energy, and experimentation shape our understanding of nature",
       "sections": [
         {
           "title": "Section Title (plain text only — do NOT include numbering like 1.1)",
@@ -2260,15 +2653,11 @@ You MUST respond with a valid JSON object matching this exact schema:
             // Fallback mock data if no API key
             const mockData = {
                 chapters: [
-                    { title: "Introduction", subtitle: "Getting started", sections: [{ title: "Overview", content: "This is a mock section." }] }
+                    { title: "Introduction to the World of Physics", subtitle: "Exploring how matter, energy, and experimentation shape our understanding of nature", sections: [{ title: "Overview", content: "This is a mock section." }] }
                 ]
             };
             const newBookId = 'book_' + Date.now();
-            sessionStorage.setItem('book_id', newBookId);
-            sessionStorage.setItem('generated_structure', JSON.stringify(mockData));
-            sessionStorage.setItem('book_title', state.title);
-            sessionStorage.setItem('book_grade', gradeLevel);
-            sessionStorage.setItem('book_description', state.description || '');
+            persistBookHandoff(newBookId, mockData);
             setTimeout(() => { window.location.href = 'editor.html?id=' + newBookId; }, 1000);
             return;
         }
@@ -2299,12 +2688,7 @@ You MUST respond with a valid JSON object matching this exact schema:
         
         // Pass to editor
         const newBookId = 'book_' + Date.now();
-        sessionStorage.setItem('book_id', newBookId);
-        sessionStorage.setItem('generated_structure', result);
-        sessionStorage.setItem('book_title', state.title);
-        sessionStorage.setItem('book_grade', gradeLevel);
-        sessionStorage.setItem('book_description', state.description || '');
-        
+        persistBookHandoff(newBookId, result);
         window.location.href = 'editor.html?id=' + newBookId;
 
     } catch (error) {
@@ -2325,11 +2709,116 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    state.authorProfile = loadAuthorProfile();
+    state.readingTemplate = getDefaultReadingTemplate();
+
     renderDashboard('all');
-    updateSourceSettingsSummary();
+
+    if (new URLSearchParams(window.location.search).get('openSettings') === '1') {
+        openSettingsModal();
+        history.replaceState(null, '', window.location.pathname);
+    }
 });
 
 let currentFilter = 'all';
+const DEMO_BIOLOGY_BOOK_ID = 'demo-biology-101';
+const DEMO_PEER_REVIEW_HREF = 'editor.html?importCh2=1&demoPeerReview=1';
+
+function armCellBiologyDemoLaunch(options = {}) {
+    const freshImport = options.freshImport !== false;
+    try {
+        sessionStorage.setItem('dreambook_demo_peer_review', '1');
+        if (freshImport) {
+            sessionStorage.setItem('dreambook_import_ch2_pending', 'foundation_biology_ch02');
+        } else {
+            sessionStorage.removeItem('dreambook_import_ch2_pending');
+        }
+    } catch (e) {
+        /* ignore */
+    }
+}
+
+function armFoundationBiologyDemoLaunch() {
+    armCellBiologyDemoLaunch({ freshImport: false });
+}
+
+function isFoundationBiologyDemoBook(book) {
+    const title = String(book?.title || '').toLowerCase();
+    if (title.includes('foundation') && title.includes('biology')) return true;
+    const chapters = book?.appState?.chapters || {};
+    return Object.values(chapters).some((ch) => {
+        const chapterTitle = String(ch?.title || '').toLowerCase();
+        return chapterTitle.includes('cell biology') || chapterTitle.includes('cell structure');
+    });
+}
+
+function buildEditorHrefForBook(book) {
+    const base = `editor.html?id=${encodeURIComponent(book.id)}`;
+    return isFoundationBiologyDemoBook(book) ? `${base}&demoPeerReview=1` : base;
+}
+const HIDDEN_BOOKS_KEY = 'dreambook_hidden_books';
+
+function getHiddenBookIds() {
+    try {
+        const ids = JSON.parse(localStorage.getItem(HIDDEN_BOOKS_KEY) || '[]');
+        return Array.isArray(ids) ? ids : [];
+    } catch {
+        return [];
+    }
+}
+
+function hideBookById(bookId) {
+    const hidden = getHiddenBookIds();
+    if (!hidden.includes(bookId)) {
+        hidden.push(bookId);
+        localStorage.setItem(HIDDEN_BOOKS_KEY, JSON.stringify(hidden));
+    }
+}
+
+function closeAllBookMenus() {
+    document.querySelectorAll('[data-book-menu]').forEach(el => el.classList.add('hidden'));
+}
+
+function toggleBookMenu(bookId, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const menu = document.getElementById(`book-menu-${bookId}`);
+    if (!menu) return;
+    const willOpen = menu.classList.contains('hidden');
+    closeAllBookMenus();
+    if (willOpen) menu.classList.remove('hidden');
+}
+
+function buildBookMenuHtml(bookId) {
+    return `
+        <div class="relative">
+            <button type="button" onclick="toggleBookMenu('${bookId}', event)" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-tertiary text-text-tertiary transition-all shrink-0" title="Book options">
+                <span class="material-symbols-outlined text-lg">more_vert</span>
+            </button>
+            <div id="book-menu-${bookId}" data-book-menu class="hidden absolute right-0 top-full mt-1 z-20 min-w-[9rem] bg-surface border border-border rounded-lg shadow-lg py-1">
+                <button type="button" onclick="deleteBookFromDashboard('${bookId}', event)" class="w-full text-left px-3 py-2 text-sm text-error hover:bg-error/10 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">delete</span>
+                    Delete
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function deleteBookFromDashboard(bookId, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    closeAllBookMenus();
+    if (!confirm('Remove this textbook from your library?')) return;
+    if (bookId === DEMO_BIOLOGY_BOOK_ID) {
+        hideBookById(bookId);
+    } else {
+        localStorage.removeItem('dreambook_data_' + bookId);
+    }
+    renderDashboard(currentFilter);
+}
+
+document.addEventListener('click', closeAllBookMenus);
 
 function setFilter(filterType) {
     currentFilter = filterType;
@@ -2345,26 +2834,361 @@ function setFilter(filterType) {
     renderDashboard(filterType);
 }
 
-function renderDashboard(filter = 'all') {
-    const grid = document.getElementById('dashboard-grid');
-    if (!grid) return;
-    
-    // Find all saved books in localStorage
+function getAllSavedBooks() {
     const savedBooks = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key.startsWith('dreambook_data_')) {
             try {
-                const bookData = JSON.parse(localStorage.getItem(key));
-                savedBooks.push(bookData);
-            } catch(e) {
-                console.error("Failed to parse book data", key);
+                savedBooks.push(JSON.parse(localStorage.getItem(key)));
+            } catch (e) {
+                console.error('Failed to parse book data', key);
             }
         }
     }
-    
-    // Sort by updated descending
     savedBooks.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    return savedBooks;
+}
+
+function getBookPublishMeta(book) {
+    const isPublished = book.status === 'published';
+    return {
+        isPublished,
+        hasUnpublishedChanges: isPublished && book.hasUnpublishedChanges === true
+    };
+}
+
+function buildBookStatusBadgeHtml(book) {
+    const { isPublished, hasUnpublishedChanges } = getBookPublishMeta(book);
+    if (!isPublished) {
+        return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-warning/10 text-warning text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+            Draft
+        </span>`;
+    }
+    if (hasUnpublishedChanges) {
+        return `<div class="flex flex-col gap-1">
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-success/10 text-success text-xs font-medium w-fit">
+                <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                Published
+            </span>
+            <span class="inline-flex items-center gap-1 text-[10px] text-warning font-medium">
+                <span class="w-1 h-1 rounded-full bg-warning"></span>
+                Unpublished changes
+            </span>
+        </div>`;
+    }
+    return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-success/10 text-success text-xs font-medium">
+        <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+        Published
+    </span>`;
+}
+
+let dashboardReadershipChart = null;
+
+function destroyDashboardReadershipChart() {
+    if (dashboardReadershipChart) {
+        dashboardReadershipChart.destroy();
+        dashboardReadershipChart = null;
+    }
+}
+
+function renderReadershipChart(trendOrBooks) {
+    const wrap = document.getElementById('readership-chart-wrap');
+    const empty = document.getElementById('readership-chart-empty');
+    const notesEl = document.getElementById('per-book-readership-notes');
+    if (!wrap || !empty) return;
+
+    destroyDashboardReadershipChart();
+
+    var bookSeries = null;
+    if (Array.isArray(trendOrBooks) && trendOrBooks.length && trendOrBooks[0].bookId) {
+        bookSeries = trendOrBooks;
+    } else if (trendOrBooks && trendOrBooks.values && trendOrBooks.values.length) {
+        bookSeries = [{
+            bookId: 'aggregate',
+            title: 'All books',
+            shortTitle: 'All books',
+            color: '#2E4CB9',
+            labels: trendOrBooks.labels,
+            values: trendOrBooks.values
+        }];
+    }
+
+    if (!bookSeries || !bookSeries.length) {
+        wrap.classList.add('hidden');
+        wrap.classList.remove('multi-book');
+        empty.classList.remove('hidden');
+        empty.textContent = 'Publish a book to see readership trends';
+        if (notesEl) notesEl.classList.add('hidden');
+        return;
+    }
+
+    wrap.classList.remove('hidden');
+    empty.classList.add('hidden');
+    wrap.classList.toggle('multi-book', bookSeries.length > 1);
+
+    const canvas = document.getElementById('readership-chart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const labels = bookSeries[0].labels;
+    const allValues = bookSeries.flatMap(b => b.values);
+    const minValue = Math.min(...allValues);
+    const maxValue = Math.max(...allValues);
+    const isMulti = bookSeries.length > 1;
+    const metricLabel = bookSeries[0].metricLabel || 'readers';
+
+    dashboardReadershipChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: bookSeries.map(function (book) {
+                var rgb = book.color === '#D97706' ? '217, 119, 6' : '46, 76, 185';
+                return {
+                    label: book.shortTitle || book.title,
+                    data: book.values,
+                    borderColor: book.color,
+                    backgroundColor: isMulti ? 'transparent' : 'rgba(' + rgb + ', 0.14)',
+                    fill: !isMulti,
+                    tension: 0.15,
+                    pointRadius: isMulti ? 3 : 3,
+                    pointBackgroundColor: book.color,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 1.5,
+                    borderWidth: 2.5
+                };
+            })
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: isMulti,
+                    position: 'bottom',
+                    align: 'start',
+                    labels: { boxWidth: 8, boxHeight: 8, font: { size: 10 }, padding: 10 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            var unit = bookSeries[ctx.datasetIndex].metricLabel || metricLabel;
+                            return ctx.dataset.label + ': ' + ctx.parsed.y + ' ' + unit;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 }, color: '#9CA3AF' }
+                },
+                y: {
+                    display: isMulti,
+                    min: Math.max(0, minValue - 8),
+                    max: Math.min(100, maxValue + 8),
+                    ticks: {
+                        font: { size: 9 },
+                        color: '#9CA3AF',
+                        stepSize: 10,
+                        callback: function (v) { return v; }
+                    },
+                    grid: { color: '#F1F3F9' }
+                }
+            }
+        }
+    });
+
+    renderPerBookReadershipNotes(bookSeries);
+}
+
+function renderPerBookReadershipNotes(bookSeries) {
+    const notesEl = document.getElementById('per-book-readership-notes');
+    if (!notesEl) return;
+
+    if (!bookSeries || bookSeries.length <= 1 || bookSeries[0].bookId === 'aggregate') {
+        notesEl.classList.add('hidden');
+        notesEl.innerHTML = '';
+        return;
+    }
+
+    notesEl.classList.remove('hidden');
+    notesEl.innerHTML = bookSeries.map(function (book) {
+        var deltaClass = book.trend === 'down' ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success';
+        var deltaIcon = book.trend === 'down' ? 'trending_down' : 'trending_up';
+        var deltaText = (book.delta > 0 ? '+' : '') + book.delta + '%';
+        return '<div class="rounded-lg border border-border/80 bg-surface-secondary/80 px-3 py-2">' +
+            '<div class="flex items-start gap-2">' +
+                '<span class="w-2 h-2 rounded-full mt-1.5 shrink-0" style="background:' + book.color + '"></span>' +
+                '<div class="min-w-0 flex-1">' +
+                    '<div class="flex items-center gap-2 flex-wrap">' +
+                        '<span class="text-xs font-semibold text-text-primary truncate">' + escapeImpactHtml(book.title) + '</span>' +
+                        '<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ' + deltaClass + '">' +
+                            '<span class="material-symbols-outlined text-[11px]">' + deltaIcon + '</span>' + deltaText +
+                        '</span>' +
+                    '</div>' +
+                    (book.note ? '<p class="text-[10px] text-text-tertiary mt-0.5 leading-snug">' + escapeImpactHtml(book.note) + '</p>' : '') +
+                '</div>' +
+            '</div></div>';
+    }).join('');
+}
+
+function escapeImpactHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function renderCountryReach(countries, totalReaders) {
+    const list = document.getElementById('country-reach-list');
+    const empty = document.getElementById('country-reach-empty');
+    const totalEl = document.getElementById('stat-country-total');
+    if (!list || !empty) return;
+
+    if (!countries || !countries.length) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        if (totalEl) totalEl.classList.add('hidden');
+        return;
+    }
+
+    empty.classList.add('hidden');
+    if (totalEl) {
+        totalEl.textContent = `${totalReaders.toLocaleString()} total`;
+        totalEl.classList.remove('hidden');
+    }
+
+    list.innerHTML = countries.slice(0, 5).map(country => `
+        <div class="group">
+            <div class="flex items-center justify-between text-xs mb-1 gap-2">
+                <span class="flex items-center gap-1.5 text-text-primary font-medium min-w-0">
+                    <span class="text-sm leading-none shrink-0">${country.flag}</span>
+                    <span class="truncate">${country.name}</span>
+                </span>
+                <span class="text-text-secondary shrink-0 tabular-nums">${country.readers.toLocaleString()}</span>
+            </div>
+            <div class="h-1.5 rounded-full bg-surface-tertiary overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r from-primary/60 to-primary transition-all duration-500 group-hover:from-primary group-hover:to-primary-dark" style="width: ${country.pct}%"></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateStudentImpactPanel() {
+    const impact = getDashboardStudentImpact({
+        savedBooks: getAllSavedBooks(),
+        demoVisible: !getHiddenBookIds().includes(DEMO_BIOLOGY_BOOK_ID),
+        demoBookId: DEMO_BIOLOGY_BOOK_ID
+    });
+
+    const readersEl = document.getElementById('stat-readers');
+    const readersHintEl = document.getElementById('stat-readers-hint');
+    const readersBadgeEl = document.getElementById('stat-readers-badge');
+    const trendBadgeEl = document.getElementById('stat-trend-badge');
+    const trendDeltaEl = document.getElementById('stat-trend-delta');
+    const countriesEl = document.getElementById('stat-countries');
+    const completionEl = document.getElementById('stat-completion');
+    const analyticsLinkEl = document.getElementById('impact-analytics-link');
+    const chartEmptyEl = document.getElementById('readership-chart-empty');
+
+    if (!readersEl) return;
+
+    trendBadgeEl.classList.add('hidden');
+    readersBadgeEl.classList.add('hidden');
+    analyticsLinkEl.classList.add('hidden');
+
+    if (!impact.hasAnyPublished) {
+        readersEl.textContent = '—';
+        readersEl.className = 'text-3xl font-bold text-text-tertiary tracking-tight';
+        readersHintEl.textContent = 'Publish a book to track reach';
+        countriesEl.textContent = '—';
+        completionEl.textContent = '—';
+        completionEl.className = 'text-xl font-bold text-text-tertiary leading-none';
+        renderReadershipChart(null);
+        renderCountryReach([], 0);
+        return;
+    }
+
+    analyticsLinkEl.classList.remove('hidden');
+
+    if (impact.totalReaders > 0) {
+        readersEl.textContent = impact.totalReaders.toLocaleString();
+        readersEl.className = 'text-3xl font-bold text-primary tracking-tight';
+        if (impact.usesDemoSample && impact.analyticsMode === 'demo') {
+            readersHintEl.textContent = `Across ${impact.publishedCount} published book${impact.publishedCount !== 1 ? 's' : ''} · sample dataset`;
+            readersBadgeEl.classList.remove('hidden');
+        } else if (impact.usesDemoSample) {
+            readersHintEl.textContent = `Across ${impact.publishedCount} published book${impact.publishedCount !== 1 ? 's' : ''} · includes sample data`;
+            readersBadgeEl.classList.remove('hidden');
+        } else {
+            readersHintEl.textContent = `Across ${impact.publishedCount} published book${impact.publishedCount !== 1 ? 's' : ''}`;
+        }
+    } else {
+        readersEl.textContent = '0';
+        readersEl.className = 'text-3xl font-bold text-text-tertiary tracking-tight';
+        readersHintEl.textContent = 'Preview as a student or share with your class';
+    }
+
+    if (impact.bookReadership && impact.bookReadership.length) {
+        renderReadershipChart(impact.bookReadership);
+        var downBook = impact.bookReadership.find(function (b) { return b.trend === 'down'; });
+        var upBook = impact.bookReadership.find(function (b) { return b.trend === 'up'; });
+        if (downBook && upBook) {
+            trendDeltaEl.textContent = downBook.delta + '% · +' + upBook.delta + '%';
+            var trendIcon = trendBadgeEl.querySelector('.material-symbols-outlined');
+            if (trendIcon) trendIcon.textContent = 'compare_arrows';
+            trendBadgeEl.className = 'inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-surface-tertiary text-text-secondary text-[10px] font-semibold';
+            trendBadgeEl.classList.remove('hidden');
+        } else {
+            trendBadgeEl.classList.add('hidden');
+        }
+    } else if (impact.readershipTrend && impact.readershipTrend.delta) {
+        trendDeltaEl.textContent = `+${impact.readershipTrend.delta}%`;
+        var trendIconUp = trendBadgeEl.querySelector('.material-symbols-outlined');
+        if (trendIconUp) trendIconUp.textContent = 'trending_up';
+        trendBadgeEl.className = 'inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-semibold';
+        trendBadgeEl.classList.remove('hidden');
+        renderReadershipChart(impact.readershipTrend);
+    } else {
+        renderReadershipChart(null);
+        if (chartEmptyEl) {
+            chartEmptyEl.textContent = 'Trend data builds as students read your books';
+        }
+    }
+
+    if (impact.countryCount > 0) {
+        countriesEl.textContent = String(impact.countryCount);
+        countriesEl.className = 'text-xl font-bold text-text-primary leading-none';
+        renderCountryReach(impact.countryReach, impact.totalReaders);
+    } else {
+        countriesEl.textContent = '—';
+        countriesEl.className = 'text-xl font-bold text-text-tertiary leading-none';
+        renderCountryReach([], 0);
+    }
+
+    if (impact.avgCompletion > 0) {
+        completionEl.textContent = `${impact.avgCompletion}%`;
+        completionEl.className = 'text-xl font-bold text-success leading-none';
+    } else {
+        completionEl.textContent = '—';
+        completionEl.className = 'text-xl font-bold text-text-tertiary leading-none';
+    }
+}
+
+function updateDashboardStats() {
+    updateStudentImpactPanel();
+}
+
+function renderDashboard(filter = 'all') {
+    const grid = document.getElementById('dashboard-grid');
+    if (!grid) return;
+
+    const savedBooks = getAllSavedBooks();
+    updateDashboardStats();
+    const hasFoundationBiologyBook = savedBooks.some(isFoundationBiologyDemoBook);
     
     let html = '';
     
@@ -2372,43 +3196,40 @@ function renderDashboard(filter = 'all') {
     // We will consider all local storage books as "Drafts" since publishing isn't fully implemented.
     
     savedBooks.forEach(book => {
-        // If filter is published, we don't show local drafts
-        if (filter === 'published') return;
+        const { isPublished } = getBookPublishMeta(book);
+        if (filter === 'published' && !isPublished) return;
+        if (filter === 'drafts' && isPublished) return;
 
         const chapterCount = book.appState && book.appState.chapters ? Object.keys(book.appState.chapters).length : 0;
         const gradeLevel = book.gradeLevel || book.appState?.gradeLevel || 'Undergrad Intro';
-        const lastUpdated = new Date(book.updatedAt || Date.now()).toLocaleDateString();
-        // Get description from appState (where it's actually saved) or fall back
         const desc = book.appState?.description || book.description || '';
+        const spineClass = isPublished
+            ? 'from-success/30 to-success/10'
+            : 'from-primary/20 to-primary/5';
+        const statusBadge = buildBookStatusBadgeHtml(book);
+        const isDemoBook = isFoundationBiologyDemoBook(book);
+        const editorHref = buildEditorHrefForBook(book);
+        const launchOnClick = isDemoBook ? ' onclick="armFoundationBiologyDemoLaunch()"' : '';
+        const demoBadge = isDemoBook
+            ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-medium ml-2">Peer-review demo</span>'
+            : '';
         
         html += `
-            <a href="editor.html?id=${book.id}" class="book-card bg-surface rounded-xl border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group flex flex-col relative overflow-hidden">
-                <!-- Book spine effect -->
-                <div class="absolute top-0 left-0 w-3 h-full bg-gradient-to-r from-primary/20 to-primary/5"></div>
-                
-                <!-- Corner fold for visual interest -->
+            <a href="${editorHref}"${launchOnClick} class="book-card bg-surface rounded-xl border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group flex flex-col relative">
+                <div class="absolute top-0 left-0 w-3 h-full bg-gradient-to-r ${spineClass}"></div>
                 <div class="absolute top-0 right-0 w-12 h-12 bg-surface-secondary" style="clip-path: polygon(100% 0, 0 0, 100% 100%);"></div>
                 
                 <div class="p-5 pl-6 flex flex-col h-full">
-                    <!-- Status badge -->
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-warning/10 text-warning text-xs font-medium">
-                            <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
-                            Draft
-                        </span>
-                        <button onclick="event.preventDefault(); event.stopPropagation(); if(confirm('Delete this textbook?')) { localStorage.removeItem('dreambook_data_${book.id}'); renderDashboard(currentFilter); }" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-error/10 hover:text-error text-text-tertiary transition-all" title="Delete">
-                            <span class="material-symbols-outlined text-lg">delete</span>
-                        </button>
+                    <div class="flex items-start justify-between mb-4 gap-2">
+                        <div class="flex flex-wrap items-center gap-1.5">${statusBadge}${demoBadge}</div>
+                        ${buildBookMenuHtml(book.id)}
                     </div>
                     
-                    <!-- Title -->
                     <h3 class="text-lg font-semibold text-text-primary mb-1 line-clamp-2 group-hover:text-primary transition-colors">${book.title}</h3>
-                    <p class="text-xs text-text-tertiary uppercase tracking-wide mb-3">${gradeLevel}</p>
+                    <p class="text-xs text-text-tertiary uppercase tracking-wide mb-3">${gradeLevel}${isDemoBook ? ' · Opens Cell Biology demo' : ''}</p>
                     
-                    <!-- Description -->
                     ${desc ? `<p class="text-sm text-text-secondary line-clamp-2 mb-4 flex-1" title="${desc.replace(/"/g, '&quot;')}">${desc}</p>` : '<div class="flex-1"></div>'}
                     
-                    <!-- Footer -->
                     <div class="pt-3 border-t border-border flex items-center justify-between mt-auto">
                         <span class="text-sm text-text-secondary">${chapterCount} Chapter${chapterCount !== 1 ? 's' : ''}</span>
                         <span class="material-symbols-outlined text-lg text-text-tertiary group-hover:text-primary transition-colors">arrow_forward</span>
@@ -2418,10 +3239,10 @@ function renderDashboard(filter = 'all') {
         `;
     });
     
-    // Add mock published book if filter is 'all' or 'published'
-    if (filter === 'all' || filter === 'published') {
+    // Fallback demo card when no saved Foundation Biology book exists
+    if ((filter === 'all' || filter === 'published') && !getHiddenBookIds().includes(DEMO_BIOLOGY_BOOK_ID) && !hasFoundationBiologyBook) {
         html += `
-            <a href="#" class="book-card bg-surface rounded-xl border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group flex flex-col relative overflow-hidden">
+            <a href="${DEMO_PEER_REVIEW_HREF}" onclick="armCellBiologyDemoLaunch({ freshImport: true })" class="book-card bg-surface rounded-xl border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group flex flex-col relative">
                 <!-- Book spine effect - green for published -->
                 <div class="absolute top-0 left-0 w-3 h-full bg-gradient-to-r from-success/30 to-success/10"></div>
                 
@@ -2435,21 +3256,19 @@ function renderDashboard(filter = 'all') {
                             <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
                             Published
                         </span>
-                        <button onclick="event.preventDefault(); event.stopPropagation();" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-tertiary text-text-tertiary transition-all">
-                            <span class="material-symbols-outlined text-lg">more_vert</span>
-                        </button>
+                        ${buildBookMenuHtml(DEMO_BIOLOGY_BOOK_ID)}
                     </div>
                     
                     <!-- Title -->
-                    <h3 class="text-lg font-semibold text-text-primary mb-1 line-clamp-2 group-hover:text-primary transition-colors">Biology 101: Fundamentals of Life</h3>
-                    <p class="text-xs text-text-tertiary uppercase tracking-wide mb-3">Undergraduate Level</p>
+                    <h3 class="text-lg font-semibold text-text-primary mb-1 line-clamp-2 group-hover:text-primary transition-colors">Cell Biology</h3>
+                    <p class="text-xs text-text-tertiary uppercase tracking-wide mb-3">Class 9–10 · Peer-review demo</p>
                     
                     <!-- Description -->
-                    <p class="text-sm text-text-secondary line-clamp-2 mb-4 flex-1">A comprehensive overview of cellular biology, genetics, and evolutionary principles.</p>
+                    <p class="text-sm text-text-secondary line-clamp-2 mb-4 flex-1">Foundation Biology Chapter 2 — simplify reading level, refresh figures, and walk through curated peer-review enhancements.</p>
                     
                     <!-- Footer -->
                     <div class="pt-3 border-t border-border flex items-center justify-between mt-auto">
-                        <span class="text-sm text-text-secondary">3 Chapters</span>
+                        <span class="text-sm text-text-secondary">1 Chapter</span>
                         <span class="material-symbols-outlined text-lg text-text-tertiary group-hover:text-primary transition-colors">arrow_forward</span>
                     </div>
                 </div>

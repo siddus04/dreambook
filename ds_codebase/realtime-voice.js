@@ -404,7 +404,10 @@ const RealtimeVoiceAgent = (function() {
     let initialGreetingSent = false;
     let responseInProgress = false;
     let inputEnabled = false;
+    let requireUserTranscriptBeforeResponse = false;
+    let inputCooldownTimer = null;
     const targetSampleRate = 24000;
+    const INPUT_COOLDOWN_MS = 500;
 
     function resetTranscript() {
         transcriptLines = [];
@@ -423,6 +426,16 @@ const RealtimeVoiceAgent = (function() {
         if (callbacks.onTranscriptUpdate) callbacks.onTranscriptUpdate(getFullTranscript());
     }
 
+    function buildTurnDetectionConfig() {
+        return {
+            type: 'server_vad',
+            threshold: 0.5,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 1500,
+            create_response: !requireUserTranscriptBeforeResponse
+        };
+    }
+
     function buildAgentSessionConfig(systemInstructions) {
         return {
             type: 'realtime',
@@ -433,13 +446,7 @@ const RealtimeVoiceAgent = (function() {
                 input: {
                     format: { type: 'audio/pcm', rate: 24000 },
                     transcription: { model: 'gpt-4o-mini-transcribe' },
-                    turn_detection: {
-                        type: 'server_vad',
-                        threshold: 0.5,
-                        prefix_padding_ms: 300,
-                        silence_duration_ms: 1500,
-                        create_response: true
-                    }
+                    turn_detection: buildTurnDetectionConfig()
                 },
                 output: {
                     format: { type: 'audio/pcm', rate: 24000 },
@@ -447,6 +454,55 @@ const RealtimeVoiceAgent = (function() {
                 }
             }
         };
+    }
+
+    function clearInputCooldownTimer() {
+        if (inputCooldownTimer) {
+            clearTimeout(inputCooldownTimer);
+            inputCooldownTimer = null;
+        }
+    }
+
+    function scheduleInputEnabled() {
+        clearInputCooldownTimer();
+        const delay = requireUserTranscriptBeforeResponse ? INPUT_COOLDOWN_MS : 0;
+        inputCooldownTimer = setTimeout(() => {
+            inputCooldownTimer = null;
+            if (!isActive) return;
+            inputEnabled = true;
+            if (callbacks.onInputEnabled) callbacks.onInputEnabled();
+        }, delay);
+    }
+
+    function requestFollowUpResponse() {
+        if (!ws || ws.readyState !== WebSocket.OPEN || responseInProgress || !isActive) return;
+        ws.send(JSON.stringify({ type: 'response.create' }));
+    }
+
+    function handleUserTranscriptionCompleted(text) {
+        const trimmed = (text || '').trim();
+        if (!trimmed) {
+            if (callbacks.onRejectedUserTurn) callbacks.onRejectedUserTurn(trimmed);
+            return;
+        }
+
+        if (requireUserTranscriptBeforeResponse && callbacks.validateUserTurn) {
+            const verdict = callbacks.validateUserTurn(trimmed);
+            if (verdict === 'stop') {
+                appendTranscriptLine('user', trimmed);
+                if (callbacks.onStopRequested) callbacks.onStopRequested(trimmed);
+                return;
+            }
+            if (verdict === 'reject') {
+                if (callbacks.onRejectedUserTurn) callbacks.onRejectedUserTurn(trimmed);
+                return;
+            }
+        }
+
+        appendTranscriptLine('user', trimmed);
+        if (requireUserTranscriptBeforeResponse) {
+            requestFollowUpResponse();
+        }
     }
 
     async function getEphemeralToken(key, systemInstructions) {
@@ -568,12 +624,18 @@ const RealtimeVoiceAgent = (function() {
 
         if (type === 'response.created') {
             responseInProgress = true;
+            if (requireUserTranscriptBeforeResponse) {
+                inputEnabled = false;
+            }
             return;
         }
 
         if (type === 'response.done') {
             responseInProgress = false;
-            if (!inputEnabled) {
+            if (requireUserTranscriptBeforeResponse) {
+                inputEnabled = false;
+                scheduleInputEnabled();
+            } else if (!inputEnabled) {
                 inputEnabled = true;
                 if (callbacks.onInputEnabled) callbacks.onInputEnabled();
             }
@@ -620,7 +682,7 @@ const RealtimeVoiceAgent = (function() {
         if (type === 'conversation.item.input_audio_transcription.completed') {
             const text = (msg.transcript || currentUserText || '').trim();
             currentUserText = '';
-            appendTranscriptLine('user', text);
+            handleUserTranscriptionCompleted(text);
             return;
         }
 
@@ -669,13 +731,7 @@ const RealtimeVoiceAgent = (function() {
                             input: {
                                 format: { type: 'audio/pcm', rate: 24000 },
                                 transcription: { model: 'gpt-4o-mini-transcribe' },
-                                turn_detection: {
-                                    type: 'server_vad',
-                                    threshold: 0.5,
-                                    prefix_padding_ms: 300,
-                                    silence_duration_ms: 1500,
-                                    create_response: true
-                                }
+                                turn_detection: buildTurnDetectionConfig()
                             },
                             output: {
                                 format: { type: 'audio/pcm', rate: 24000 },
@@ -767,6 +823,7 @@ const RealtimeVoiceAgent = (function() {
     }
 
     function teardown() {
+        clearInputCooldownTimer();
         stopAudioCapture();
         isActive = false;
         playbackTime = 0;
@@ -788,15 +845,20 @@ const RealtimeVoiceAgent = (function() {
                 onUserSpeaking: options.onUserSpeaking || null,
                 onInputEnabled: options.onInputEnabled || null,
                 onError: options.onError || null,
-                onReady: options.onReady || null
+                onReady: options.onReady || null,
+                validateUserTurn: options.validateUserTurn || null,
+                onStopRequested: options.onStopRequested || null,
+                onRejectedUserTurn: options.onRejectedUserTurn || null
             };
             apiKey = options.apiKey || '';
             instructions = options.instructions || '';
+            requireUserTranscriptBeforeResponse = !!options.requireUserTranscriptBeforeResponse;
             resetTranscript();
             playbackTime = 0;
             initialGreetingSent = false;
             responseInProgress = false;
             inputEnabled = false;
+            clearInputCooldownTimer();
 
             if (!apiKey) throw new Error('OpenAI API key is required');
             if (!navigator.mediaDevices?.getUserMedia) {
