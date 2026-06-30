@@ -239,43 +239,5 @@ assert(debatePolicy.minTurns === 3, 'debate minTurns is 3');
 const footer = MF.getDebateStepFooterCopy(2, 'needs_nudge', 1);
 assert(footer.includes('Step 2 of 3'), 'footer shows 3 steps');
 
-const transcriptConfused = 'let me think is it the Eukaryotic cells I always get confused';
-const step2transcript = MF.evaluateDebateStepAnswer(2, transcriptConfused, MF.createDebateSocraticState(2, cellDebateProfile));
-assert(step2transcript.should_advance === false, 'transcript confused guess does not advance');
-assert(step2transcript.feedback && step2transcript.feedback.includes('common mix-up'), 'transcript gets encouraging opener');
-assert(!String(step2transcript.nudge_question || '').match(/prokaryot|bacteria/i), 'transcript first miss nudge does not reveal prokaryotes');
-assert(step2transcript.nudge_question && step2transcript.nudge_question.includes('lacks a nucleus'), 'transcript nudge redirects');
-
-const giveawayMerged = {
-    feedback: "Actually, it's prokaryotic cells, like bacteria, that challenge the claim.",
-    should_advance: false,
-    nudge_question: 'How do you think they manage their genetic instructions?'
-};
-const clampedGiveaway = MF.clampDebateCoachReveal(
-    giveawayMerged,
-    2,
-    transcriptConfused,
-    MF.createDebateSocraticState(2, cellDebateProfile)
-);
-const clampedVisible = MF.buildDebateCoachVisibleReply(clampedGiveaway, '');
-assert(!clampedVisible.match(/prokaryot|bacteria/i), 'clamp strips prokaryote giveaway from visible reply');
-assert(clampedVisible.includes('common mix-up') || clampedVisible.includes('not the counterexample'), 'clamp uses client-safe coaching');
-
-const mergedLlmBlocks = MF.mergeDebateStepEvaluations(
-    { should_advance: true, is_complete_for_current_step: true, feedback: 'Correct.', nudge_question: null },
-    step2transcript
-);
-assert(mergedLlmBlocks.should_advance === false, 'LLM advance blocked when client incomplete');
-
-assert(MF.VOICE_MAX_PER_LADDER_STEP === 3, 'voice ladder cap is 3 exchanges per step');
-const voicePolicy = MF.buildVoiceDebateLanguagePolicy('Class 10-12');
-assert(voicePolicy.includes('Class 10-12'), 'voice language policy includes grade');
-assert(voicePolicy.includes('overgeneralization'), 'voice policy bans seminar jargon');
-assert(MF.buildVoiceDebateCoachPersona('Class 10-12').includes('lab partner'), 'voice persona is lab-partner tone');
-const voiceEvalRules = MF.buildVoiceDebateEvaluatorLanguageRules('Class 10-12');
-assert(voiceEvalRules.includes('VOICE MODE'), 'voice evaluator rules tagged');
-assert(voiceEvalRules.includes('step_complete true'), 'voice evaluator advances after cap');
-assert(MF.shouldConcludeLadderStep({ stepDone: false, exchangesOnStep: 3, maxPerStep: MF.VOICE_MAX_PER_LADDER_STEP }) === true, 'voice cap triggers step conclude at 3');
-
 console.log(`\nWidget coaching tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

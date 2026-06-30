@@ -57,21 +57,28 @@ const IMAGE_NO_SUBTITLE_RULES = `- Do NOT render any bottom caption bar, subtitl
 - The document caption appears below the image in HTML — draw the diagram only
 - No title band, page number, or paragraph text in the image`;
 
-function buildStructuredFigureFallbackPrompt(caption) {
+function buildStructuredFigureFallbackPrompt(caption, options = {}) {
     const { subject } = extractFigureSubjectFromCaption(caption);
     const subj = subject || String(caption || '').trim();
-    let style = 'Modern clean black-line scientific illustration for a biology textbook';
-    let layout = 'Center the subject with generous margins; label all important structures with thin leader lines';
+    const interactiveHotspots = options.interactiveHotspots === true;
+    const style = options.illustrationStyle === 'flat' ? 'flat' : 'vivid';
+    const styleLine = style === 'flat'
+        ? 'Modern clean black-line scientific illustration for a biology textbook'
+        : 'Vivid color-rich educational illustration with soft 3D depth and distinct structures';
+    let layout = interactiveHotspots
+        ? 'Center the subject with generous margins; leave each major structure visually distinct'
+        : 'Center the subject with generous margins; label all important structures with thin leader lines';
     if (/\bmicroscope|\bhooke\b/i.test(subj)) {
         layout = 'Portrait-oriented illustration of historical microscope apparatus or observation setup';
     }
     return [
         `Illustrate only: ${subj}`,
-        style,
+        styleLine,
         layout,
+        interactiveHotspots ? 'No text labels in the image — structures only' : '',
         IMAGE_NO_SUBTITLE_RULES,
-        'Neutral light background only.'
-    ].join('\n');
+        'Soft off-white or very light neutral background only.'
+    ].filter(Boolean).join('\n');
 }
 
 function buildImageGenerationPromptSubjectLine(userPrompt, figureCaption) {

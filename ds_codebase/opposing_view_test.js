@@ -67,6 +67,11 @@ assert(goodOpening.ok, 'canonical opening valid');
 const debateLadder = MF.buildDebateQuestionLadder();
 assert(widgetUsesQuestionLadder('debate', debateLadder) === true, 'debate ladder needs 3 prompts');
 assert(widgetUsesQuestionLadder('debate', debateLadder.slice(0, 2)) === false, 'debate rejects 2 prompts');
+assert(debateLadder[0].includes('too broad'), 'generic debate opening tests the claim');
+
+const cellLadder = MF.buildDebateQuestionLadder(priyaSamContentNoQuestions);
+assert(cellLadder[0].includes('all cells'), 'cell debate opening adapts to the cell claim');
+assert(cellLadder[1].includes('genetic instructions'), 'cell debate step 2 asks for mechanism');
 
 console.log(`\nOpposing-view tests: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

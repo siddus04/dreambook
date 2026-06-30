@@ -489,28 +489,42 @@ Rules:
         return ctx;
     }
 
-    function buildFigureImageEnrichmentSystemPrompt(gradeLevel, chapterTitle) {
+    function buildFigureImageEnrichmentSystemPrompt(gradeLevel, chapterTitle, options = {}) {
+        const interactiveHotspots = options.interactiveHotspots === true;
+        const illustrationStyle = options.illustrationStyle === 'flat' ? 'flat' : 'vivid';
+        const styleRules = interactiveHotspots
+            ? (illustrationStyle === 'flat'
+                ? `- Use clean black-line or precise vector scientific illustration — NOT clip-art or cartoon.
+- Do NOT include any text labels, leader lines, or letters in the image; structures must be visually distinct for hover hotspots.`
+                : `- Use a vivid, polished educational illustration: soft 3D depth, gentle lighting, saturated but accurate biology colors, and visually distinct structures.
+- Do NOT include any text labels, leader lines, or letters in the image; structures must be visually distinct for hover hotspots.
+- NOT clip-art, cartoon, emoji, or photorealistic microscopy.`)
+            : (illustrationStyle === 'flat'
+                ? `- If the caption says "line drawing", use clean black-line scientific illustration style — not clip-art or cartoon.
+- Specify layout and label every important structure with leader lines.`
+                : `- Prefer rich color, soft depth, and clear structure separation while keeping grade-appropriate scientific accuracy.
+- Specify layout and label every important structure with leader lines unless interactive hotspots are enabled.`);
         return `You write detailed image-generation prompts for biology textbook figures.
 
 Context:
 - Chapter: ${chapterTitle || 'Untitled'}
 - Grade level: ${gradeLevel || 'Undergrad Intro'}
 - Audience: students studying cell biology / life sciences
+- Illustration style: ${illustrationStyle}${interactiveHotspots ? ' (interactive hover labels — no text in image)' : ''}
 
 Rules:
 - The FIGURE CAPTION is authoritative. Do NOT change the figure type, scope, or subject described in the caption.
-- Section text may ONLY add specific structures, labels, relationships, and layout details that support the caption.
+- Section text may ONLY add specific structures, relationships, and layout details that support the caption.
 - Do NOT introduce unrelated subjects, scenarios, or figure types not implied by the caption.
 - Write a single detailed imagePrompt string (150–400 words) suitable for an AI image model.
-- Specify: visual style (e.g. line drawing, cross-section, side-by-side comparison), layout, every structure to label, and label placement with leader lines.
-- If the caption says "comparative" or "differences between", specify side-by-side layout with clear labels on each side.
-- If the caption says "line drawing", use clean black-line scientific illustration style — not clip-art or cartoon.
+- Specify: visual style, layout, structures to show, and (when allowed) label placement with leader lines.
+- If the caption says "comparative" or "differences between", specify side-by-side layout.
+${styleRules}
 - Include all biologically relevant structures named in the section that belong in this figure.
-- Label density and terminology must match ${gradeLevel || 'Undergrad Intro'} — detailed but grade-appropriate.
+- Terminology must match ${gradeLevel || 'Undergrad Intro'} — detailed but grade-appropriate.
 - Do NOT include figure numbers, captions, or titles in the imagePrompt (those appear in the document below the image).
 - Do NOT use FIGURE_SCOPE lines or "Figure N.N" prefixes in the imagePrompt.
 - The imagePrompt must explicitly state: no bottom caption, no subtitle bar, no footer text, and no "Figure N.N" rendered in the image pixels.
-- Describe only the diagram content and on-diagram structure labels (when labels are needed).
 - The imagePrompt MUST instruct that the entire subject fits with clear margins and nothing is cut off at any edge.
 - Choose aspectHint for the image canvas:
   - portrait — tall vertical subjects (microscope, equipment, apparatus, stacked process steps, single tall cell or structure)
@@ -520,14 +534,17 @@ Rules:
 Return JSON only: { "imagePrompt": "...", "aspectHint": "portrait|landscape|square" }`;
     }
 
-    function buildFigureImageEnrichmentUserPrompt({ figureCaption, sectionExcerpt, sectionHeading, chapterTitle }) {
+    function buildFigureImageEnrichmentUserPrompt({ figureCaption, sectionExcerpt, sectionHeading, chapterTitle, interactiveHotspots, illustrationStyle }) {
         let ctx = `Chapter: ${chapterTitle || 'Untitled'}\n`;
         if (sectionHeading) ctx += `Section: ${sectionHeading}\n`;
         ctx += `\nAUTHORITATIVE FIGURE CAPTION (must not be changed):\n${figureCaption || 'Untitled figure'}\n`;
         if (sectionExcerpt?.trim()) {
             ctx += `\nSECTION TEXT (use only to add accurate structures and labels that support the caption):\n${sectionExcerpt.trim()}\n`;
         }
-        ctx += '\nWrite imagePrompt and aspectHint JSON for a detailed, accurately labeled biology textbook diagram that strictly adheres to the caption.';
+        const styleNote = interactiveHotspots
+            ? `Write imagePrompt and aspectHint JSON for a ${illustrationStyle === 'flat' ? 'clean line-art' : 'vivid, color-rich'} unlabeled biology figure with distinct structures for hover hotspots.`
+            : `Write imagePrompt and aspectHint JSON for a detailed, accurately labeled biology textbook diagram that strictly adheres to the caption.`;
+        ctx += `\n${styleNote}`;
         return ctx;
     }
 

@@ -263,7 +263,15 @@
     
     /* Book cards - consistent sizing */
     .book-card {
-        min-height: 240px;
+        min-height: 279px;
+    }
+
+    .book-card-desc {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
     }
 
     .impact-chart-wrap {
@@ -362,12 +370,12 @@
 <aside id="sidebar" class="hidden md:flex flex-col h-full bg-surface border-r border-border w-64 shrink-0">
     <!-- Brand row — height matches main header (h-14) -->
     <div class="sidebar-brand-row border-b border-border">
-        <a href="code.html" class="sidebar-brand-link" title="Lumina AI">
+        <a href="code.html" class="sidebar-brand-link" title="DreamBook AI">
             <div class="dreambook-logo-mark" aria-hidden="true">
                 <span class="material-symbols-outlined">auto_stories</span>
             </div>
             <div class="sidebar-text sidebar-wordmark">
-                <span class="dreambook-logo-title">Lumina</span>
+                <span class="dreambook-logo-title">DreamBook</span>
                 <span class="dreambook-logo-subtitle">AI</span>
             </div>
         </a>
@@ -453,12 +461,12 @@
 
     <!-- Dashboard Content -->
     <main class="flex-1 overflow-y-auto">
-        <div class="max-w-6xl mx-auto px-8 py-8">
+        <div class="max-w-6xl mx-auto px-6 py-6">
             <!-- Page Header -->
-            <div class="flex items-start justify-between mb-8">
+            <div class="flex items-start justify-between mb-6">
                 <div>
-                    <h1 class="text-2xl font-bold text-text-primary mb-1">My Books</h1>
-                    <p class="text-sm text-text-secondary">Manage your published works and current drafts.</p>
+                    <h1 class="text-2xl font-bold text-text-primary mb-0.5">My Books</h1>
+                    <p class="text-sm text-text-secondary">Your textbooks and drafts in one place.</p>
                 </div>
                 <div class="flex items-center gap-1 bg-surface-secondary rounded-lg p-1">
                     <button id="filter-all" onclick="setFilter('all')" class="px-3 py-1.5 text-sm font-medium rounded-md bg-surface text-text-primary shadow-sm transition-all">All</button>
@@ -470,7 +478,7 @@
             <div class="flex gap-8">
                 <!-- Books Grid (Left side) -->
                 <div class="flex-1">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-grid">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="dashboard-grid">
                         <!-- Content injected by JS -->
                     </div>
                 </div>
@@ -1250,6 +1258,7 @@
     </div>
 
 <script src="realtime-voice.js"></script>
+<script src="foundation_biology_catalog.js"></script>
 <script src="analytics.js"></script>
 <script>
 // State
@@ -2743,13 +2752,7 @@ function armFoundationBiologyDemoLaunch() {
 }
 
 function isFoundationBiologyDemoBook(book) {
-    const title = String(book?.title || '').toLowerCase();
-    if (title.includes('foundation') && title.includes('biology')) return true;
-    const chapters = book?.appState?.chapters || {};
-    return Object.values(chapters).some((ch) => {
-        const chapterTitle = String(ch?.title || '').toLowerCase();
-        return chapterTitle.includes('cell biology') || chapterTitle.includes('cell structure');
-    });
+    return window.FoundationBiologyCatalog?.isFoundationBiologyBook?.(book) || false;
 }
 
 function buildEditorHrefForBook(book) {
@@ -3201,6 +3204,9 @@ function renderDashboard(filter = 'all') {
         if (filter === 'drafts' && isPublished) return;
 
         const chapterCount = book.appState && book.appState.chapters ? Object.keys(book.appState.chapters).length : 0;
+        if (isFoundationBiologyDemoBook(book)) {
+            window.FoundationBiologyCatalog?.syncCatalogToStorage?.(book);
+        }
         const gradeLevel = book.gradeLevel || book.appState?.gradeLevel || 'Undergrad Intro';
         const desc = book.appState?.description || book.description || '';
         const spineClass = isPublished
@@ -3210,29 +3216,26 @@ function renderDashboard(filter = 'all') {
         const isDemoBook = isFoundationBiologyDemoBook(book);
         const editorHref = buildEditorHrefForBook(book);
         const launchOnClick = isDemoBook ? ' onclick="armFoundationBiologyDemoLaunch()"' : '';
-        const demoBadge = isDemoBook
-            ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-medium ml-2">Peer-review demo</span>'
-            : '';
         
         html += `
-            <a href="${editorHref}"${launchOnClick} class="book-card bg-surface rounded-xl border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group flex flex-col relative">
-                <div class="absolute top-0 left-0 w-3 h-full bg-gradient-to-r ${spineClass}"></div>
-                <div class="absolute top-0 right-0 w-12 h-12 bg-surface-secondary" style="clip-path: polygon(100% 0, 0 0, 100% 100%);"></div>
+            <a href="${editorHref}"${launchOnClick} class="book-card bg-surface rounded-xl border border-border hover:border-primary/40 hover:shadow-md transition-all cursor-pointer group flex flex-col relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-2.5 h-full bg-gradient-to-r ${spineClass}"></div>
                 
-                <div class="p-5 pl-6 flex flex-col h-full">
-                    <div class="flex items-start justify-between mb-4 gap-2">
-                        <div class="flex flex-wrap items-center gap-1.5">${statusBadge}${demoBadge}</div>
+                <div class="p-4 pl-5 flex flex-col h-full min-h-0">
+                    <div class="flex items-start justify-between mb-3 gap-2">
+                        <div class="flex flex-wrap items-center gap-1.5">${statusBadge}</div>
                         ${buildBookMenuHtml(book.id)}
                     </div>
                     
-                    <h3 class="text-lg font-semibold text-text-primary mb-1 line-clamp-2 group-hover:text-primary transition-colors">${book.title}</h3>
-                    <p class="text-xs text-text-tertiary uppercase tracking-wide mb-3">${gradeLevel}${isDemoBook ? ' · Opens Cell Biology demo' : ''}</p>
+                    <h3 class="text-base font-semibold text-text-primary mb-1 line-clamp-2 group-hover:text-primary transition-colors">${book.title}</h3>
+                    <p class="text-[11px] text-text-tertiary uppercase tracking-wide mb-2">${gradeLevel}</p>
                     
-                    ${desc ? `<p class="text-sm text-text-secondary line-clamp-2 mb-4 flex-1" title="${desc.replace(/"/g, '&quot;')}">${desc}</p>` : '<div class="flex-1"></div>'}
+                    ${desc ? `<p class="book-card-desc text-sm text-text-secondary mb-3 leading-snug" title="${desc.replace(/"/g, '&quot;')}">${desc}</p>` : ''}
+                    <div class="flex-1 min-h-0" aria-hidden="true"></div>
                     
-                    <div class="pt-3 border-t border-border flex items-center justify-between mt-auto">
-                        <span class="text-sm text-text-secondary">${chapterCount} Chapter${chapterCount !== 1 ? 's' : ''}</span>
-                        <span class="material-symbols-outlined text-lg text-text-tertiary group-hover:text-primary transition-colors">arrow_forward</span>
+                    <div class="pt-2.5 border-t border-border flex items-center justify-between">
+                        <span class="text-xs text-text-secondary">${chapterCount} chapter${chapterCount !== 1 ? 's' : ''}</span>
+                        <span class="material-symbols-outlined text-base text-text-tertiary group-hover:text-primary transition-colors">arrow_forward</span>
                     </div>
                 </div>
             </a>
@@ -3242,16 +3245,11 @@ function renderDashboard(filter = 'all') {
     // Fallback demo card when no saved Foundation Biology book exists
     if ((filter === 'all' || filter === 'published') && !getHiddenBookIds().includes(DEMO_BIOLOGY_BOOK_ID) && !hasFoundationBiologyBook) {
         html += `
-            <a href="${DEMO_PEER_REVIEW_HREF}" onclick="armCellBiologyDemoLaunch({ freshImport: true })" class="book-card bg-surface rounded-xl border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group flex flex-col relative">
-                <!-- Book spine effect - green for published -->
-                <div class="absolute top-0 left-0 w-3 h-full bg-gradient-to-r from-success/30 to-success/10"></div>
+            <a href="${DEMO_PEER_REVIEW_HREF}" onclick="armCellBiologyDemoLaunch({ freshImport: true })" class="book-card bg-surface rounded-xl border border-border hover:border-primary/40 hover:shadow-md transition-all cursor-pointer group flex flex-col relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-2.5 h-full bg-gradient-to-r from-success/30 to-success/10"></div>
                 
-                <!-- Corner fold -->
-                <div class="absolute top-0 right-0 w-12 h-12 bg-surface-secondary" style="clip-path: polygon(100% 0, 0 0, 100% 100%);"></div>
-                
-                <div class="p-5 pl-6 flex flex-col h-full">
-                    <!-- Status badge -->
-                    <div class="flex items-center justify-between mb-4">
+                <div class="p-4 pl-5 flex flex-col h-full min-h-0">
+                    <div class="flex items-start justify-between mb-3 gap-2">
                         <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-success/10 text-success text-xs font-medium">
                             <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
                             Published
@@ -3259,17 +3257,15 @@ function renderDashboard(filter = 'all') {
                         ${buildBookMenuHtml(DEMO_BIOLOGY_BOOK_ID)}
                     </div>
                     
-                    <!-- Title -->
-                    <h3 class="text-lg font-semibold text-text-primary mb-1 line-clamp-2 group-hover:text-primary transition-colors">Cell Biology</h3>
-                    <p class="text-xs text-text-tertiary uppercase tracking-wide mb-3">Class 9–10 · Peer-review demo</p>
+                    <h3 class="text-base font-semibold text-text-primary mb-1 line-clamp-2 group-hover:text-primary transition-colors">Cell Biology</h3>
+                    <p class="text-[11px] text-text-tertiary uppercase tracking-wide mb-2">Class 10-12</p>
                     
-                    <!-- Description -->
-                    <p class="text-sm text-text-secondary line-clamp-2 mb-4 flex-1">Foundation Biology Chapter 2 — simplify reading level, refresh figures, and walk through curated peer-review enhancements.</p>
+                    <p class="book-card-desc text-sm text-text-secondary mb-3 leading-snug">Introduction to cell structure, organelles, and how cells carry out life processes.</p>
+                    <div class="flex-1 min-h-0" aria-hidden="true"></div>
                     
-                    <!-- Footer -->
-                    <div class="pt-3 border-t border-border flex items-center justify-between mt-auto">
-                        <span class="text-sm text-text-secondary">1 Chapter</span>
-                        <span class="material-symbols-outlined text-lg text-text-tertiary group-hover:text-primary transition-colors">arrow_forward</span>
+                    <div class="pt-2.5 border-t border-border flex items-center justify-between">
+                        <span class="text-xs text-text-secondary">1 chapter</span>
+                        <span class="material-symbols-outlined text-base text-text-tertiary group-hover:text-primary transition-colors">arrow_forward</span>
                     </div>
                 </div>
             </a>
@@ -3278,12 +3274,12 @@ function renderDashboard(filter = 'all') {
 
     // Append the Create New button (always show)
     html += `
-        <div onclick="openCreateModal()" class="book-card bg-surface-secondary rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer flex flex-col items-center justify-center text-center group">
-            <div class="w-14 h-14 rounded-full bg-surface border-2 border-border flex items-center justify-center mb-3 group-hover:border-primary group-hover:bg-primary/10 transition-all">
-                <span class="material-symbols-outlined text-text-tertiary text-2xl group-hover:text-primary transition-colors">add</span>
+        <div onclick="openCreateModal()" class="book-card bg-surface-secondary rounded-xl border-2 border-dashed border-border hover:border-primary/60 hover:bg-primary/5 transition-all cursor-pointer flex flex-col items-center justify-center text-center group">
+            <div class="w-12 h-12 rounded-full bg-surface border border-border flex items-center justify-center mb-2.5 group-hover:border-primary group-hover:bg-primary/10 transition-all">
+                <span class="material-symbols-outlined text-text-tertiary text-xl group-hover:text-primary transition-colors">add</span>
             </div>
-            <h3 class="font-semibold text-text-primary mb-1">Create New Book</h3>
-            <p class="text-xs text-text-tertiary max-w-[160px]">Start a new manuscript or import existing content</p>
+            <h3 class="text-sm font-semibold text-text-primary mb-0.5">Create New Book</h3>
+            <p class="text-xs text-text-tertiary max-w-[150px] leading-snug">Start fresh or import content</p>
         </div>
     `;
     

@@ -55,9 +55,9 @@ COUNTER-VIEW:
 The other student counters that prokaryotic cells, like bacteria, do not have a nucleus yet are still classified as biological life. They emphasize that life is divided into prokaryotic and eukaryotic cellular architectures with different levels of compartmentalization.
 
 QUESTIONS:
-1. What part of the claim sounds reasonable?
-2. What kind of cell challenges the idea that all cells need a nucleus?
-3. Rewrite the claim so it becomes scientifically accurate.
+1. One student says every cell needs a nucleus — what's actually fair about that idea?
+2. What kind of cell breaks the idea that every cell needs a nucleus?
+3. Now rewrite the claim so it's scientifically accurate.
 
 AUTHOR NOTE:
 Misconception: All cells have a nucleus
@@ -593,6 +593,13 @@ Evidence to use: circular DNA, 70S ribosomes, binary fission, inner membrane com
         return { ok: true, insertedEl };
     }
 
+    function getTaCandidWeaknessSummary() {
+        const gap = String(DEMO_PEER_NOTES.gap || '').trim();
+        const focus = String(DEMO_PEER_NOTES.focus || '').trim();
+        if (gap && focus) return `${gap} ${focus}`;
+        return gap || focus || 'Your chapter could use stronger visuals and more interactive checkpoints.';
+    }
+
     global.DreamBookChapterEnhancementsDemo = {
         DEMO_FLAG,
         DEMO_SESSION_KEY,
@@ -601,6 +608,7 @@ Evidence to use: circular DNA, 70S ribosomes, binary fission, inner membrane com
         isDemoPeerReviewEnabled,
         demoSleep,
         getDemoPeerNotes,
+        getTaCandidWeaknessSummary,
         buildDemoBandSpecs,
         buildCuratedChapterEnhancementFindings,
         runStagedDemoAnalysisProgress,

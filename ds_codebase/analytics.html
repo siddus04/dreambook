@@ -86,8 +86,16 @@
     .chart-wrap { position: relative; width: 100%; }
     .metric-ring { @apply w-11 h-11 rounded-full shrink-0 relative; background: conic-gradient(#2E4CB9 var(--pct), #E5E7EB 0); }
     .metric-ring-inner { @apply absolute inset-1 rounded-full bg-surface flex items-center justify-center; }
-    .heatmap-tile { @apply rounded-lg border-2 transition-all cursor-default min-h-[3.5rem] flex flex-col justify-end p-2; }
-    .heatmap-tile-label { @apply text-[10px] font-medium text-white/95 leading-tight line-clamp-2 drop-shadow-sm; }
+    .heatmap-section-card { @apply rounded-xl border p-4 bg-surface transition-all; }
+    .heatmap-section-card.urgent { @apply border-rose-200 bg-rose-50; }
+    .heatmap-section-card.watch { @apply border-amber-200 bg-amber-50; }
+    .heatmap-section-card.low { @apply border-slate-200 bg-slate-50; }
+    .heatmap-priority-badge { @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider; }
+    .heatmap-priority-badge.urgent { @apply bg-rose-100 text-rose-700; }
+    .heatmap-priority-badge.watch { @apply bg-amber-100 text-amber-700; }
+    .heatmap-priority-badge.low { @apply bg-slate-200 text-slate-700; }
+    .heatmap-evidence { @apply text-xs text-text-tertiary mt-2; }
+    .heatmap-intervention { @apply mt-3 pt-3 border-t border-border/50; }
     .insight-card { @apply bg-surface rounded-xl border border-border p-5; }
     .dreambook-logo-mark {
         width: 36px;
@@ -222,18 +230,115 @@
     }
     .ai-tool-panel { @apply insight-card h-full; }
     .data-feed-row { @apply flex flex-col sm:flex-row sm:items-start gap-2 py-2.5 border-b border-border/40 last:border-0 text-sm; }
+    .insight-hero-kpi { @apply rounded-2xl border p-4 bg-surface shadow-sm relative overflow-hidden; }
+    .insight-hero-kpi.primary { @apply border-primary/20 bg-primary-bg/40; }
+    .insight-hero-kpi.success { @apply border-success/20 bg-success-bg/50; }
+    .insight-hero-kpi.warning { @apply border-warning/20 bg-warning-bg/50; }
+    .insight-hero-kpi.ai { @apply border-ai-border bg-ai-bg/60; }
+    .insight-metric-icon { @apply w-9 h-9 rounded-xl flex items-center justify-center shrink-0; }
+    .insight-kicker { @apply text-[10px] font-semibold uppercase tracking-wider text-text-tertiary; }
+    .insight-big-number { @apply text-3xl font-bold tracking-tight text-text-primary mt-3; }
+    .insight-definition { @apply hidden; }
+    .insight-muted { @apply text-xs text-text-secondary mt-2 leading-5; }
+    .insight-kpi-topline { @apply flex items-center gap-3; }
+    .analytics-panel-grid { @apply grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8; }
+    .analytics-panel-card { @apply bg-surface rounded-2xl border border-border p-6; }
+    .analytics-card-title { @apply text-lg font-semibold text-text-primary flex items-center gap-2; }
+    .analytics-card-subtitle { @apply text-sm text-text-secondary mt-1; }
+    .recommendation-card { @apply rounded-xl border border-border p-4 bg-surface-secondary/40 hover:border-primary/30 transition-colors; }
+    .recommendation-badge { @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider; }
+    .recommendation-badge.reasoning { @apply bg-ai-bg text-ai-text border border-ai-border; }
+    .recommendation-badge.clarity { @apply bg-primary-bg text-primary border border-primary/15; }
+    .recommendation-badge.diagram { @apply bg-warning-bg text-warning border border-warning/20; }
+    .recommendation-badge.suggested { @apply bg-surface-tertiary text-text-secondary border border-border; }
+    .recommendation-badge.high-friction { @apply bg-warning-bg text-warning border border-warning/20; }
+    .recommendation-badge.resolved { @apply bg-success-bg text-success border border-success/20; }
+    .mini-funnel-row { @apply flex items-center gap-3 py-2; }
+    .mini-funnel-track { @apply flex-1 h-2.5 rounded-full bg-surface-tertiary overflow-hidden; }
+    .mini-funnel-fill { @apply h-full rounded-full bg-primary; }
+    .trust-row { @apply py-3 border-b border-border/50 last:border-0; }
+    .trust-stack { @apply mt-2 h-2.5 rounded-full overflow-hidden bg-surface-tertiary flex; }
+    .trust-accept { background:#2E4CB9; }
+    .trust-edit { background:#7C8FE0; }
+    .trust-reject { background:#E5E7EB; }
+    .trust-publish { background:#059669; }
+    .lift-row { @apply py-3 border-b border-border/50 last:border-0; }
+    .lift-track { @apply mt-2 h-2.5 rounded-full bg-surface-tertiary overflow-hidden; }
+    .lift-fill { @apply h-full rounded-full bg-success; }
+    .readiness-column { @apply rounded-2xl border border-border p-4 bg-surface-secondary/40; }
+    .readiness-item { @apply text-sm text-text-secondary py-2 border-b border-border/40 last:border-0; }
+    .hero-compact-stat { @apply inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-surface text-sm text-text-secondary; }
+    .explorer-select { @apply text-sm border border-border rounded-lg px-3 py-2 bg-surface w-full; }
+    .explorer-detail-card { @apply rounded-2xl border border-border bg-surface-secondary/30 p-5 mt-4; }
+    .explorer-metric-grid { @apply grid grid-cols-2 xl:grid-cols-4 gap-3 mt-4; }
+    .explorer-metric { @apply rounded-xl border border-border bg-surface p-3; }
+    .explorer-metric-icon { @apply w-8 h-8 rounded-lg bg-primary-bg text-primary flex items-center justify-center mb-2; }
+    .explorer-action-row { @apply flex flex-wrap gap-2 mt-4; }
+    .explorer-action-chip { @apply inline-flex items-center px-3 py-1.5 rounded-full border border-primary/15 bg-primary-bg text-primary text-xs font-medium; }
+    .explorer-evidence-list { @apply mt-4 space-y-2; }
+    .explorer-evidence-item { @apply text-sm text-text-secondary flex items-start gap-2; }
+    .friction-overview-grid { @apply grid grid-cols-1 md:grid-cols-2 gap-3 mt-4; }
+    .friction-heat-tile { @apply rounded-xl border p-3 bg-surface cursor-pointer transition-all hover:border-primary/35; }
+    .friction-heat-tile.active { @apply ring-2 ring-primary/20 border-primary/30; }
+    .friction-confusion-list { @apply mt-5 space-y-3; }
+    .friction-confusion-item { @apply rounded-xl border border-border bg-surface p-3; }
+    .intervention-type-grid { @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-4; }
+    .intervention-type-card { @apply rounded-xl border border-border bg-surface-secondary/40 p-4; }
+    .chapter-table-wrap table { @apply w-full text-left; }
+    .chapter-table-wrap th { @apply text-xs text-text-tertiary uppercase tracking-wider font-semibold pb-2 pr-4 border-b border-border; }
+    .chapter-table-wrap td { @apply py-3 pr-4 text-sm border-b border-border/40; }
+    .publisher-book-card { @apply rounded-xl border border-border p-4 bg-surface-secondary/40; }
+    .publisher-book-status { @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider; }
+    .publisher-book-status.improving { @apply bg-success-bg text-success border border-success/20; }
+    .publisher-book-status.active { @apply bg-ai-bg text-ai-text border border-ai-border; }
+    .publisher-book-status.watch { @apply bg-warning-bg text-warning border border-warning/20; }
+    .publisher-overview-grid { @apply grid grid-cols-1 gap-4 mt-4; }
+    .publisher-overview-card { @apply rounded-xl border border-border bg-surface-secondary/40 p-4; }
+    .publisher-overview-meta { @apply grid grid-cols-2 gap-3 mt-4 text-sm; }
+    .publisher-mini-stat { @apply rounded-xl border border-border bg-surface p-3; }
+    .publisher-readiness-grid { @apply grid grid-cols-1 md:grid-cols-3 gap-3 mt-4; }
+    .publisher-readiness-card { @apply rounded-xl border border-border bg-surface-secondary/40 p-4; }
+    .publisher-compare-list { @apply mt-4 space-y-3; }
+    .publisher-compare-row { @apply grid grid-cols-[1.15fr,0.85fr,0.85fr,0.7fr] gap-3 items-center rounded-xl border border-border bg-surface p-3; }
+    .publisher-adoption-grid { @apply grid grid-cols-1 md:grid-cols-2 gap-3 mt-4; }
+    .publisher-adoption-card { @apply rounded-xl border border-border bg-surface p-4; }
+    .publisher-feature-list { @apply mt-4 space-y-3; }
+    .publisher-feature-card { @apply rounded-xl border border-border bg-surface-secondary/40 p-4; }
+    .publisher-feature-grid { @apply grid grid-cols-2 xl:grid-cols-4 gap-3 mt-4 text-sm; }
+    .publisher-outcomes-grid { @apply grid grid-cols-1 xl:grid-cols-[1.1fr,0.9fr] gap-4 mt-4; }
+    .publisher-outcome-stack { @apply rounded-xl border border-border bg-surface-secondary/40 p-4; }
+    .publisher-book-outcome-row { @apply py-3 border-b border-border/50 last:border-0; }
+    .publisher-action-list { @apply grid grid-cols-1 gap-4 mt-4; }
+    .publisher-action-card { @apply rounded-xl border border-border bg-surface-secondary/40 p-4; }
+    .publisher-action-card.high { @apply border-warning/30 bg-warning-bg/30; }
+    .publisher-action-card.medium { @apply border-primary/20 bg-primary-bg/20; }
+    .matrix-table { @apply w-full text-sm border-separate border-spacing-y-2; }
+    .matrix-table th { @apply text-xs text-text-tertiary uppercase tracking-wider font-semibold text-left pb-1; }
+    .matrix-row-label { @apply font-medium text-text-primary; }
+    .matrix-cell { @apply text-center rounded-lg px-2 py-2 font-semibold text-xs; }
+    .matrix-note { @apply text-xs text-text-tertiary; }
+    .pattern-row { @apply py-3 border-b border-border/50 last:border-0; }
+    .pattern-stack { @apply mt-2 h-2.5 rounded-full overflow-hidden bg-surface-tertiary flex; }
+    .pattern-accept { background:#2E4CB9; }
+    .pattern-edit { background:#8FA0EA; }
+    .pattern-reject { background:#E5E7EB; }
+    .flywheel-grid { @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3; }
+    .flywheel-node { @apply rounded-2xl border border-border p-4 bg-surface-secondary/40; }
+    .opportunity-card { @apply rounded-xl border border-border p-4 bg-surface-secondary/40; }
+    .opportunity-card.high { @apply border-warning/30 bg-warning-bg/30; }
+    .opportunity-card.medium { @apply border-primary/20 bg-primary-bg/20; }
 </style>
 </head>
 <body class="bg-surface-secondary text-text-primary font-sans flex h-screen overflow-hidden antialiased">
 
 <aside id="sidebar" class="hidden md:flex flex-col h-full bg-surface border-r border-border w-64 shrink-0">
     <div class="sidebar-brand-row border-b border-border">
-        <a href="code.html" class="sidebar-brand-link" title="Lumina AI">
+        <a href="code.html" class="sidebar-brand-link" title="DreamBook AI">
             <div class="dreambook-logo-mark" aria-hidden="true">
                 <span class="material-symbols-outlined">auto_stories</span>
             </div>
             <div class="sidebar-text sidebar-wordmark">
-                <span class="dreambook-logo-title">Lumina</span>
+                <span class="dreambook-logo-title">DreamBook</span>
                 <span class="dreambook-logo-subtitle">AI</span>
             </div>
         </a>
@@ -291,14 +396,13 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl font-bold text-text-primary mb-1">Analytics</h1>
-                    <p class="text-sm text-text-secondary">Tactical decision traces and how they improve Peer Review and the AI interviewer.</p>
+                    <p class="text-sm text-text-secondary">Authoring intelligence from student learning signals, AI interventions, and measured outcomes.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-4">
-                    <div class="flex items-center gap-2">
-                        <label for="book-select" class="text-xs font-medium text-text-tertiary uppercase tracking-wider">Book</label>
+                    <div class="flex flex-wrap items-center gap-3 px-4 py-2 bg-surface rounded-xl border border-border">
+                        <label for="book-select" class="text-xs font-medium text-text-tertiary uppercase tracking-wider">Textbook</label>
                         <select id="book-select" onchange="onBookChange()" class="text-sm border border-border rounded-lg px-3 py-2 bg-surface min-w-[200px] max-w-[280px]"></select>
-                    </div>
-                    <div class="flex items-center gap-3 px-4 py-2 bg-surface rounded-lg border border-border">
+                        <div class="w-px h-6 bg-border hidden sm:block"></div>
                         <span id="mode-label-demo" class="text-sm font-medium text-text-primary">Demo</span>
                         <div id="mode-toggle" class="toggle-switch" onclick="toggleDataMode()" role="switch" aria-checked="false" title="Toggle live vs demo data">
                             <div class="toggle-dot"></div>
@@ -311,203 +415,125 @@
             <div class="flex flex-wrap items-center gap-2 mb-6 p-1 bg-surface rounded-xl border border-border w-fit">
                 <button type="button" id="tab-tactical" class="analytics-tab active" onclick="switchAnalyticsTab('tactical')">
                     <span class="material-symbols-outlined text-base align-middle mr-1">monitoring</span>
-                    Tactical
+                    Author Insights
                 </button>
                 <button type="button" id="tab-strategic" class="analytics-tab" onclick="switchAnalyticsTab('strategic')">
                     <span class="material-symbols-outlined text-base align-middle mr-1">hub</span>
-                    Strategic
+                    Publisher Insights
                 </button>
             </div>
 
             <div id="panel-tactical">
-            <section id="tactical-hero" class="hero-gradient rounded-2xl border border-primary/10 p-6 lg:p-8 mb-8 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-                <div class="relative flex flex-col lg:flex-row lg:items-center gap-8">
-                    <div class="flex items-center gap-6 shrink-0">
-                        <div class="relative w-32 h-32 shrink-0">
-                            <canvas id="hero-donut-chart"></canvas>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span id="hero-donut-value" class="text-2xl font-bold text-primary">—</span>
-                                <span class="text-[9px] text-text-tertiary uppercase tracking-wider">explored</span>
-                            </div>
-                        </div>
-                        <div class="lg:hidden min-w-0">
-                            <p id="hero-book-title-mobile" class="text-lg font-semibold text-text-primary truncate"></p>
-                        </div>
-                    </div>
+            <section class="hero-gradient rounded-2xl border border-primary/10 p-6 lg:p-8 mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+                <div class="relative flex flex-col lg:flex-row lg:items-start gap-6">
                     <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-2 mb-2">
                             <span id="mode-badge" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium mode-badge-demo"></span>
                             <span id="period-label" class="text-xs text-text-tertiary"></span>
                         </div>
-                        <h2 id="hero-book-title" class="text-xl font-bold text-text-primary mb-1 hidden lg:block"></h2>
-                        <p class="text-sm font-medium text-text-secondary mb-1">Section exploration &amp; decision traces</p>
+                        <h2 id="hero-book-title" class="text-2xl font-bold text-text-primary mb-1"></h2>
+                        <p class="text-sm font-medium text-text-secondary mb-2">Author Insights</p>
                         <p id="hero-secondary" class="text-sm text-text-secondary max-w-2xl"></p>
-                        <div class="flex flex-wrap gap-4 mt-4 text-sm">
-                            <span class="flex items-center gap-1.5 text-text-secondary">
-                                <span class="material-symbols-outlined text-base text-ai-text">school</span>
-                                <span id="hero-student-sessions">—</span> student AI sessions
-                            </span>
-                            <span class="flex items-center gap-1.5 text-text-secondary">
-                                <span class="material-symbols-outlined text-base text-primary">edit_note</span>
-                                <span id="hero-author-sessions">—</span> author decisions
-                            </span>
-                        </div>
                     </div>
                     <div class="shrink-0 w-full sm:w-auto">
                         <label for="quality-chapter-select" class="text-xs font-medium text-text-tertiary uppercase tracking-wider block mb-1">Chapter</label>
-                        <select id="quality-chapter-select" onchange="onQualityChapterChange()" class="text-sm border border-border rounded-lg px-3 py-2 bg-surface min-w-[180px] w-full sm:w-auto"></select>
+                        <select id="quality-chapter-select" onchange="onQualityChapterChange()" class="text-sm border border-border rounded-lg px-3 py-2 bg-surface min-w-[220px] w-full sm:w-auto"></select>
                     </div>
                 </div>
+                <div id="author-hero-kpis" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6"></div>
             </section>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="metric-columns"></div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <section class="insight-card">
-                    <div class="mb-4">
-                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-                            <span class="material-symbols-outlined text-ai-text">school</span>
-                            Student decisions
-                        </h2>
-                        <p class="text-sm text-text-secondary mt-1">Skips, questions, and re-reads — paths that never appear in scores.</p>
+            <div class="analytics-panel-grid">
+                <section class="analytics-panel-card">
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-primary">apps</span>Concept Friction Map</h2>
+                    <p class="analytics-card-subtitle">Heat-map overview plus section-level evidence, confusion signals, and interventions.</p>
+                    <div id="friction-heatmap-overview" class="friction-overview-grid"></div>
+                    <div class="mt-4">
+                        <label for="friction-section-select" class="text-xs font-medium text-text-tertiary uppercase tracking-wider block mb-2">Section</label>
+                        <select id="friction-section-select" onchange="onFrictionSectionChange()" class="explorer-select"></select>
                     </div>
-                    <div id="decisions-student-funnel" class="mb-6"></div>
-                    <h3 class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Signals</h3>
-                    <div id="decisions-student-signals"></div>
+                    <div id="friction-section-detail"></div>
+                    <div id="heatmap-empty" class="hidden text-center py-12 text-text-tertiary">
+                        <p class="text-sm">No sections yet. Add chapter content in the editor.</p>
+                    </div>
                 </section>
-                <section class="insight-card">
-                    <div class="mb-4">
-                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">edit_note</span>
-                            Author decisions
-                        </h2>
-                        <p class="text-sm text-text-secondary mt-1">Review accepts, dismissals, and enrichment choices.</p>
-                    </div>
-                    <div id="decisions-author-signals" class="mb-6"></div>
-                    <h3 class="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Editorial clusters</h3>
-                    <div id="decisions-author-clusters"></div>
+                <section class="analytics-panel-card">
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-warning">lightbulb</span>Next Best Author Actions</h2>
+                    <p class="analytics-card-subtitle">DreamBook recommendations ranked by likely learning lift.</p>
+                    <div id="author-recommendation-cards" class="grid grid-cols-1 gap-4 mt-4"></div>
                 </section>
             </div>
 
-            <section class="bg-surface rounded-xl border border-border p-6 mb-8">
-                <div class="mb-4">
-                    <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-                        <span class="material-symbols-outlined text-ai-text">bubble_chart</span>
-                        Question clusters
-                    </h2>
-                    <p class="text-sm text-text-secondary mt-1">Aggregated topics from checkpoints and Learning Assistant — no raw transcripts.</p>
-                </div>
-                <div id="decisions-student-clusters" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                <div id="decisions-clusters-empty" class="hidden text-center py-8 text-text-tertiary text-sm">No clusters yet.</div>
-            </section>
-
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
-                <section class="insight-card lg:col-span-3">
-                    <div class="mb-4">
-                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">show_chart</span>
-                            Reading journey
-                        </h2>
-                        <p class="text-sm text-text-secondary mt-1">Section completion and friction by chapter.</p>
-                    </div>
-                    <div class="chart-wrap h-52">
-                        <canvas id="journey-chart"></canvas>
-                    </div>
-                    <div id="journey-empty" class="hidden text-center py-8 text-text-tertiary text-sm">No chapters yet.</div>
-                </section>
-                <section class="insight-card lg:col-span-2 flex flex-col">
-                    <div class="mb-4">
-                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">pie_chart</span>
-                            Widget outcomes
-                        </h2>
-                        <p class="text-sm text-text-secondary mt-1">Completed vs skipped vs not opened.</p>
-                    </div>
-                    <div class="flex-1 flex items-center justify-center min-h-[160px]">
-                        <div class="w-40 h-40 relative">
-                            <canvas id="funnel-chart"></canvas>
-                        </div>
-                    </div>
-                    <div id="funnel-legend" class="flex flex-wrap justify-center gap-3 mt-2 text-xs text-text-secondary"></div>
+            <div class="analytics-panel-grid">
+                <section class="analytics-panel-card">
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-primary">checklist</span>Author Review Queue</h2>
+                    <p class="analytics-card-subtitle">What is live, what still needs attention, and what is waiting for an author decision.</p>
+                    <div id="publish-readiness" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4"></div>
                 </section>
             </div>
 
-            <section class="bg-surface rounded-xl border border-border p-6 mb-8">
-                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-                    <div>
-                        <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">apps</span>
-                            Section heatmap
-                        </h2>
-                        <p class="text-sm text-text-secondary mt-1">Friction by section — inputs for Peer Review prioritization.</p>
-                    </div>
-                    <div class="flex items-center gap-4 text-xs text-text-tertiary shrink-0">
-                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-400"></span> Smooth</span>
-                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-sky-400"></span> Moderate</span>
-                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-400"></span> High</span>
-                    </div>
-                </div>
-                <div id="heatmap-tiles" class="space-y-5"></div>
-                <div id="heatmap-empty" class="hidden text-center py-12 text-text-tertiary">
-                    <p class="text-sm">No sections yet. Add chapter content in the editor.</p>
-                </div>
-            </section>
-
-            <section class="insight-card mb-8">
+            <section class="analytics-panel-card mb-8">
                 <div class="mb-4">
-                    <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">library_books</span>
-                        Chapter breakdown
-                    </h2>
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-primary">category</span>Intervention Effectiveness</h2>
+                    <p class="analytics-card-subtitle">How well each intervention type supports the learning objective through better engagement, completion, and success.</p>
                 </div>
-                <div id="decisions-chapter-table" class="overflow-x-auto"></div>
-            </section>
-
-            <section>
-                <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-warning">lightbulb</span>
-                    Suggested edits
-                </h2>
-                <div id="action-cards" class="grid grid-cols-1 lg:grid-cols-3 gap-4"></div>
+                <div id="intervention-type-cards" class="intervention-type-grid"></div>
             </section>
             </div><!-- /panel-tactical -->
 
             <div id="panel-strategic">
-            <section class="insight-card mb-6">
-                <p id="strategic-intro" class="text-sm text-text-secondary leading-relaxed"></p>
-                <div id="strategic-data-inventory" class="flex flex-wrap gap-3 mt-4"></div>
+            <section class="hero-gradient rounded-2xl border border-primary/10 p-6 lg:p-8 mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary">hub</span>
+                        <p class="text-sm font-medium text-text-secondary">Publisher Insights</p>
+                    </div>
+                    <h2 class="text-2xl font-bold text-text-primary mb-2">What DreamBook Is Learning Across The Catalog</h2>
+                    <p id="publisher-summary" class="text-sm text-text-secondary max-w-3xl"></p>
+                </div>
+                <div id="publisher-hero-kpis" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6"></div>
             </section>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <section class="ai-tool-panel" id="panel-peer-reviewer"></section>
-                <section class="ai-tool-panel" id="panel-interviewer"></section>
+            <div class="analytics-panel-grid">
+                <section class="analytics-panel-card">
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-primary">monitoring</span>Portfolio Health</h2>
+                    <p class="analytics-card-subtitle">Which textbooks are gaining readership, where AI is already live, and where adoption still needs attention.</p>
+                    <div id="publisher-portfolio-overview" class="publisher-overview-grid"></div>
+                </section>
+                <section class="analytics-panel-card">
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-success">auto_awesome</span>AI Readiness And AI vs Non-AI</h2>
+                    <p class="analytics-card-subtitle">How much of the portfolio is ready for AI, and how AI-enabled material performs versus traditional material.</p>
+                    <div id="publisher-ai-readiness"></div>
+                </section>
             </div>
 
-            <section class="mb-8">
-                <div class="mb-4">
-                    <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-                        <span class="material-symbols-outlined text-success">sync</span>
-                        Closed loops
-                    </h2>
-                    <p class="text-sm text-text-secondary mt-1">When a signal drove an edit, did student behavior change?</p>
-                </div>
-                <div id="improvement-loops" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
-            </section>
+            <div class="analytics-panel-grid">
+                <section class="analytics-panel-card">
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-primary">group</span>Author Engagement</h2>
+                    <p class="analytics-card-subtitle">How deeply authors are using DreamBook and whether co-authoring behavior is becoming habitual.</p>
+                    <div id="publisher-author-adoption"></div>
+                </section>
+                <section class="analytics-panel-card">
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-warning">bolt</span>AI Feature Effectiveness</h2>
+                    <p class="analytics-card-subtitle">Which AI features authors use, how much manual editing they require, and whether they improve outcomes.</p>
+                    <div id="publisher-feature-effectiveness"></div>
+                </section>
+            </div>
 
-            <section class="insight-card">
-                <div class="mb-4">
-                    <h2 class="text-lg font-semibold text-text-primary flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">show_chart</span>
-                        Resolution after edits
-                    </h2>
-                    <p class="text-sm text-text-secondary mt-1">Chapter-level learning resolution before and after the last publish cycle.</p>
-                </div>
-                <div class="chart-wrap h-52">
-                    <canvas id="quality-journey-chart"></canvas>
-                </div>
-                <div id="quality-journey-empty" class="hidden text-center py-8 text-text-tertiary text-sm">No chapter data yet.</div>
-            </section>
+            <div class="analytics-panel-grid">
+                <section class="analytics-panel-card">
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-ai-text">school</span>Student Learning Outcomes</h2>
+                    <p class="analytics-card-subtitle">Aggregate student outcome signals across the portfolio, with drill-down into the currently selected textbook.</p>
+                    <div id="publisher-learning-outcomes"></div>
+                </section>
+                <section class="analytics-panel-card">
+                    <h2 class="analytics-card-title"><span class="material-symbols-outlined text-primary">flag</span>Portfolio Actions</h2>
+                    <p class="analytics-card-subtitle">The highest-leverage moves a publisher can make next across content, authors, and AI rollout.</p>
+                    <div id="publisher-portfolio-actions" class="publisher-action-list"></div>
+                </section>
+            </div>
             </div><!-- /panel-strategic -->
         </div>
     </main>
@@ -518,8 +544,11 @@
     var currentBookId = new URLSearchParams(window.location.search).get('id') || null;
     var chartInstances = {};
     var currentQualityChapter = 'all';
-    var currentAnalyticsTab = new URLSearchParams(window.location.search).get('tab') === 'strategic' ? 'strategic' : 'tactical';
+    var initialTab = new URLSearchParams(window.location.search).get('tab');
+    var currentAnalyticsTab = (initialTab === 'strategic' || initialTab === 'publisher') ? 'strategic' : 'tactical';
     var cachedQualityData = null;
+    var currentFrictionSectionId = null;
+    var currentClusterId = null;
 
     function destroyChart(key) {
         if (chartInstances[key]) {
@@ -537,7 +566,13 @@
         var books = listSavedBooks();
         select.innerHTML = '';
         if (!books.length) {
-            select.innerHTML = '<option value="">No saved books</option>';
+            if (getAnalyticsMode() === 'demo') {
+                currentBookId = currentBookId || 'demo-biology-101';
+                select.innerHTML = '<option value="demo-biology-101">Foundation Biology (Demo)</option>';
+                select.value = currentBookId;
+            } else {
+                select.innerHTML = '<option value="">No saved books</option>';
+            }
             return;
         }
         books.forEach(function (book) {
@@ -571,6 +606,7 @@
     function toggleDataMode() {
         setAnalyticsMode(getAnalyticsMode() === 'live' ? 'demo' : 'live');
         syncModeToggleUI();
+        populateBookSelect();
         renderDashboard();
     }
 
@@ -676,26 +712,117 @@
     }
 
     function renderHeatmapTiles(sections) {
-        var container = document.getElementById('heatmap-tiles');
+        return;
+    }
+
+    function populateFrictionSectionSelect(items) {
+        var select = document.getElementById('friction-section-select');
+        if (!select) return;
+        select.innerHTML = '';
+        (items || []).forEach(function (item) {
+            var opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.label;
+            select.appendChild(opt);
+        });
+        if (items && items.length) {
+            if (!currentFrictionSectionId || !items.some(function (item) { return item.id === currentFrictionSectionId; })) {
+                currentFrictionSectionId = items[0].id;
+            }
+            select.value = currentFrictionSectionId;
+        }
+    }
+
+    function renderFrictionSectionDetail(items) {
+        var detail = document.getElementById('friction-section-detail');
         var empty = document.getElementById('heatmap-empty');
-        if (!sections || !sections.length) {
-            container.innerHTML = '';
-            empty.classList.remove('hidden');
+        if (!detail) return;
+        if (!items || !items.length) {
+            detail.innerHTML = '';
+            if (empty) empty.classList.remove('hidden');
             return;
         }
-        empty.classList.add('hidden');
-        var groups = groupSectionsByChapter(sections);
-        container.innerHTML = groups.map(function (g) {
-            var tiles = g.sections.map(function (s) {
-                var short = s.sectionLabel.replace(/^\d+\.\d+\s*/, '');
-                if (short.length > 22) short = short.slice(0, 20) + '…';
-                return '<div class="heatmap-tile ' + intensityTileClass(s.signals.intensity) + '" title="' + escapeHtml(s.sectionLabel) + '">' +
-                    '<span class="heatmap-tile-label">' + escapeHtml(short) + '</span></div>';
-            }).join('');
-            return '<div><div class="flex items-center gap-2 mb-2"><span class="text-xs font-semibold text-text-tertiary uppercase">Ch.' + g.chapterNum + '</span>' +
-                '<span class="text-xs text-text-tertiary truncate">' + escapeHtml(g.chapterTitle) + '</span></div>' +
-                '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">' + tiles + '</div></div>';
+        if (empty) empty.classList.add('hidden');
+        var item = items.find(function (entry) { return entry.id === currentFrictionSectionId; }) || items[0];
+        currentFrictionSectionId = item.id;
+        detail.innerHTML = '<div class="explorer-detail-card">' +
+            '<div class="flex items-start justify-between gap-3">' +
+                '<div><p class="text-sm font-semibold text-text-primary">' + escapeHtml(item.label) + '</p>' +
+                '<p class="text-xs text-text-tertiary mt-1">' + escapeHtml(item.chapterLabel) + '</p></div>' +
+                '<span class="heatmap-priority-badge ' + ((item.priority || '').toLowerCase() === 'urgent' ? 'urgent' : (item.priority || '').toLowerCase() === 'watch' ? 'watch' : 'low') + '">' + escapeHtml(item.priority) + '</span>' +
+            '</div>' +
+            '<p class="text-sm text-text-secondary mt-4">' + escapeHtml(item.summary || '') + '</p>' +
+            '<div class="explorer-metric-grid">' +
+                (item.metrics || []).map(function (metric) {
+                    return '<div class="explorer-metric">' +
+                        '<div class="explorer-metric-icon"><span class="material-symbols-outlined text-base">' + escapeHtml(metric.icon) + '</span></div>' +
+                        '<p class="text-lg font-semibold text-text-primary">' + escapeHtml(String(metric.value)) + '</p>' +
+                        '<p class="text-xs text-text-tertiary mt-1">' + escapeHtml(metric.label) + '</p>' +
+                    '</div>';
+                }).join('') +
+            '</div>' +
+            '<div class="mt-5">' +
+                '<p class="insight-kicker mb-2">Evidence from student behavior</p>' +
+            '<div class="explorer-evidence-list">' +
+                (item.evidence || []).map(function (line) {
+                    return '<div class="explorer-evidence-item"><span class="material-symbols-outlined text-sm text-primary mt-0.5">subdirectory_arrow_right</span><span>' + escapeHtml(line) + '</span></div>';
+                }).join('') +
+            '</div></div>' +
+            '<div class="mt-5">' +
+                '<p class="insight-kicker mb-2">Main confusion signals</p>' +
+            '<div class="friction-confusion-list">' +
+                (item.confusions && item.confusions.length ? item.confusions.map(function (confusion) {
+                    return '<div class="friction-confusion-item">' +
+                        '<div class="flex items-start justify-between gap-2"><p class="text-sm font-medium text-text-primary">' + escapeHtml(confusion.topic) + '</p>' +
+                        '<span class="topic-cluster-chip">' + escapeHtml(confusion.action) + '</span></div>' +
+                        '<p class="text-xs text-text-secondary mt-2">' + escapeHtml(confusion.summary || '') + '</p>' +
+                    '</div>';
+                }).join('') : '<p class="text-sm text-text-tertiary">No major confusion cluster is concentrated in this section yet.</p>') +
+            '</div></div>' +
+            '<div class="mt-5">' +
+                '<p class="insight-kicker mb-2">Suggested interventions</p>' +
+            '<div class="explorer-action-row">' +
+                (item.actions || []).map(function (action) {
+                    return '<span class="explorer-action-chip">' + escapeHtml(action) + '</span>';
+                }).join('') +
+            '</div></div>' +
+        '</div>';
+    }
+
+    function onFrictionSectionChange() {
+        currentFrictionSectionId = document.getElementById('friction-section-select').value || null;
+        var authorView = getAuthorInsightsView(filterQualityDashboardByChapter(cachedQualityData, currentQualityChapter));
+        renderFrictionHeatmapOverview(authorView.frictionSections || []);
+        renderFrictionSectionDetail(authorView.frictionSections || []);
+    }
+
+    function renderFrictionHeatmapOverview(items) {
+        var container = document.getElementById('friction-heatmap-overview');
+        if (!container) return;
+        if (!items || !items.length) {
+            container.innerHTML = '';
+            return;
+        }
+        container.innerHTML = items.map(function (item) {
+            var level = (item.priority || '').toLowerCase() === 'urgent' ? 'urgent' : (item.priority || '').toLowerCase() === 'watch' ? 'watch' : 'low';
+            return '<button type="button" class="friction-heat-tile ' + (item.id === currentFrictionSectionId ? 'active' : '') + '" onclick="selectFrictionSection(\'' + escapeHtml(item.id) + '\')">' +
+                '<div class="flex items-start justify-between gap-3">' +
+                    '<div><p class="text-sm font-semibold text-text-primary text-left">' + escapeHtml(item.label) + '</p>' +
+                    '<p class="text-xs text-text-tertiary mt-1 text-left">' + escapeHtml(item.chapterLabel) + '</p></div>' +
+                    '<span class="heatmap-priority-badge ' + level + '">' + escapeHtml(item.priority) + '</span>' +
+                '</div>' +
+                '<p class="text-xs text-text-secondary mt-3 text-left">' + escapeHtml(item.recommendedAction || '') + '</p>' +
+            '</button>';
         }).join('');
+    }
+
+    function selectFrictionSection(id) {
+        currentFrictionSectionId = id;
+        var select = document.getElementById('friction-section-select');
+        if (select) select.value = id;
+        var authorView = getAuthorInsightsView(filterQualityDashboardByChapter(cachedQualityData, currentQualityChapter));
+        renderFrictionHeatmapOverview(authorView.frictionSections || []);
+        renderFrictionSectionDetail(authorView.frictionSections || []);
     }
 
     function renderActionCards(actions) {
@@ -979,28 +1106,72 @@
     }
 
     function renderTopicClusterCards(containerId, clusters, emptyId) {
-        var container = document.getElementById(containerId);
-        var empty = document.getElementById(emptyId);
-        if (!clusters || !clusters.length) {
-            container.innerHTML = '';
+        return;
+    }
+
+    function populateClusterSelect(items) {
+        var select = document.getElementById('cluster-select');
+        if (!select) return;
+        select.innerHTML = '';
+        (items || []).forEach(function (item) {
+            var opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.label;
+            select.appendChild(opt);
+        });
+        if (items && items.length) {
+            if (!currentClusterId || !items.some(function (item) { return item.id === currentClusterId; })) {
+                currentClusterId = items[0].id;
+            }
+            select.value = currentClusterId;
+        }
+    }
+
+    function renderClusterDetail(items) {
+        var detail = document.getElementById('cluster-detail');
+        var empty = document.getElementById('decisions-clusters-empty');
+        if (!detail) return;
+        if (!items || !items.length) {
+            detail.innerHTML = '';
             if (empty) empty.classList.remove('hidden');
             return;
         }
         if (empty) empty.classList.add('hidden');
-        container.innerHTML = clusters.map(function (c) {
-            var share = c.sharePct != null ? c.sharePct + '% of questions' : c.count + ' events';
-            var sections = (c.sections || []).slice(0, 2).map(function (sec) {
-                return '<span class="topic-cluster-chip">' + escapeHtml(sec) + '</span>';
-            }).join('');
-            return '<div class="rounded-xl border border-border p-4 bg-surface-secondary/50 hover:border-primary/30 transition-colors">' +
-                '<div class="flex items-start justify-between gap-2 mb-2">' +
-                    '<p class="text-sm font-semibold text-text-primary">' + escapeHtml(c.topic) + '</p>' +
-                    trendIcon(c.trend) +
-                '</div>' +
-                '<p class="text-2xl font-bold text-primary mb-1">' + c.count + '</p>' +
-                '<p class="text-xs text-text-tertiary mb-3">' + share + '</p>' +
-                '<div class="flex flex-wrap gap-1">' + sections + '</div></div>';
-        }).join('');
+        var item = items.find(function (entry) { return entry.id === currentClusterId; }) || items[0];
+        currentClusterId = item.id;
+        detail.innerHTML = '<div class="explorer-detail-card">' +
+            '<div class="flex items-start justify-between gap-3">' +
+                '<div><p class="text-sm font-semibold text-text-primary">' + escapeHtml(item.label) + '</p>' +
+                '<p class="text-xs text-text-tertiary mt-1">' + escapeHtml(item.share) + '</p></div>' +
+                '<span class="topic-cluster-chip">' + escapeHtml((item.sections || []).length ? item.sections.length + ' sections' : 'Book-wide') + '</span>' +
+            '</div>' +
+            '<p class="text-sm text-text-secondary mt-4">' + escapeHtml(item.summary || '') + '</p>' +
+            '<div class="explorer-metric-grid">' +
+                (item.metrics || []).map(function (metric) {
+                    return '<div class="explorer-metric">' +
+                        '<div class="explorer-metric-icon"><span class="material-symbols-outlined text-base">' + escapeHtml(metric.icon) + '</span></div>' +
+                        '<p class="text-lg font-semibold text-text-primary">' + escapeHtml(String(metric.value)) + '</p>' +
+                        '<p class="text-xs text-text-tertiary mt-1">' + escapeHtml(metric.label) + '</p>' +
+                    '</div>';
+                }).join('') +
+            '</div>' +
+            '<div class="flex flex-wrap gap-1 mt-4">' +
+                (item.sections || []).map(function (section) {
+                    return '<span class="topic-cluster-chip">' + escapeHtml(section) + '</span>';
+                }).join('') +
+            '</div>' +
+            '<div class="explorer-action-row">' +
+                (item.actions || []).map(function (action) {
+                    return '<span class="explorer-action-chip">' + escapeHtml(action) + '</span>';
+                }).join('') +
+            '</div>' +
+        '</div>';
+    }
+
+    function onClusterChange() {
+        currentClusterId = document.getElementById('cluster-select').value || null;
+        var authorView = getAuthorInsightsView(filterQualityDashboardByChapter(cachedQualityData, currentQualityChapter));
+        renderClusterDetail(authorView.confusionClusters || []);
     }
 
     function renderAuthorTopicList(containerId, clusters) {
@@ -1015,6 +1186,354 @@
                     '<p class="text-sm font-medium text-text-primary truncate">' + escapeHtml(c.topic) + '</p>' +
                     '<p class="text-xs text-text-tertiary">' + c.count + ' decisions · ' + (c.sharePct != null ? c.sharePct + '%' : '') + '</p>' +
                 '</div>' + trendIcon(c.trend) + '</div>';
+        }).join('');
+    }
+
+    function kpiToneClass(tone) {
+        if (tone === 'success') return 'success';
+        if (tone === 'warning') return 'warning';
+        if (tone === 'ai') return 'ai';
+        return 'primary';
+    }
+
+    function renderInsightHeroKpis(containerId, kpis) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = (kpis || []).map(function (item) {
+            var tooltip = [item.label, item.definition, item.hint].filter(Boolean).join(' — ');
+            return '<div class="insight-hero-kpi ' + kpiToneClass(item.tone) + '">' +
+                '<div class="insight-kpi-topline" title="' + escapeHtml(tooltip) + '">' +
+                    '<div class="insight-metric-icon ' + (item.tone === 'success' ? 'bg-success-bg text-success' : item.tone === 'warning' ? 'bg-warning-bg text-warning' : item.tone === 'ai' ? 'bg-ai-bg text-ai-text' : 'bg-primary-bg text-primary') + '">' +
+                        '<span class="material-symbols-outlined">' + escapeHtml(item.icon || 'insights') + '</span>' +
+                    '</div>' +
+                    '<p class="insight-kicker">' + escapeHtml(item.label) + '</p>' +
+                '</div>' +
+                '<p class="insight-big-number">' + escapeHtml(item.value) + '</p>' +
+                '<p class="insight-muted">' + escapeHtml(item.hint || '') + '</p>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderInterventionTypeCards(items) {
+        var container = document.getElementById('intervention-type-cards');
+        if (!container) return;
+        if (!items || !items.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No intervention effectiveness data yet.</p>';
+            return;
+        }
+        container.innerHTML = items.map(function (item) {
+            return '<div class="intervention-type-card">' +
+                '<div class="flex items-start justify-between gap-2">' +
+                    '<p class="text-sm font-semibold text-text-primary">' + escapeHtml(item.type) + '</p>' +
+                    '<span class="topic-cluster-chip">Impact ' + escapeHtml(item.effectiveness || '—') + '</span>' +
+                '</div>' +
+                '<div class="grid grid-cols-2 gap-3 mt-4 text-sm">' +
+                    '<div><p class="insight-kicker">Engagement lift</p><p class="font-medium text-text-primary">' + escapeHtml(item.engagement || '—') + '</p></div>' +
+                    '<div><p class="insight-kicker">Completion lift</p><p class="font-medium text-text-primary">' + escapeHtml(item.completion || '—') + '</p></div>' +
+                    '<div><p class="insight-kicker">Live in book</p><p class="font-medium text-text-primary">' + escapeHtml(item.publishRate || '—') + '</p></div>' +
+                    '<div><p class="insight-kicker">Author acceptance</p><p class="font-medium text-text-primary">' + escapeHtml(item.acceptance || '—') + '</p></div>' +
+                '</div>' +
+                '<p class="text-xs text-text-secondary mt-4">' + escapeHtml(item.bestUse || '') + '</p>' +
+            '</div>';
+        }).join('');
+    }
+
+    function recommendationBadgeClass(badge) {
+        var key = String(badge || '').toLowerCase().replace(/\s+/g, '-');
+        return ['reasoning', 'clarity', 'diagram', 'suggested', 'high-friction', 'resolved'].indexOf(key) >= 0 ? key : 'suggested';
+    }
+
+    function renderAuthorRecommendationCards(cards) {
+        var container = document.getElementById('author-recommendation-cards');
+        if (!container) return;
+        if (!cards || !cards.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No ranked recommendations yet.</p>';
+            return;
+        }
+        container.innerHTML = cards.map(function (card) {
+            return '<div class="recommendation-card">' +
+                '<div class="flex items-start justify-between gap-3">' +
+                    '<div><p class="text-sm font-semibold text-text-primary">' + escapeHtml(card.title) + '</p>' +
+                    '<p class="text-xs text-text-tertiary mt-1">' + escapeHtml(card.issue) + '</p></div>' +
+                    '<span class="recommendation-badge ' + recommendationBadgeClass(card.badge) + '">' + escapeHtml(card.badge || 'Suggested') + '</span>' +
+                '</div>' +
+                '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 text-sm">' +
+                    '<div><p class="insight-kicker">Recommended action</p><p class="text-text-primary font-medium">' + escapeHtml(card.action) + '</p></div>' +
+                    '<div><p class="insight-kicker">Predicted lift</p><p class="text-success font-semibold">' + escapeHtml(card.predictedLift || '—') + '</p></div>' +
+                    '<div><p class="insight-kicker">Confidence</p><p class="text-text-primary font-medium">' + escapeHtml(card.confidence || '—') + '</p></div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderCoauthorFunnel(steps) {
+        var container = document.getElementById('coauthor-funnel');
+        if (!container) return;
+        if (!steps || !steps.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No co-authoring funnel data yet.</p>';
+            return;
+        }
+        var max = Math.max.apply(null, steps.map(function (s) { return s.value || 0; }).concat([1]));
+        container.innerHTML = steps.map(function (step) {
+            var pct = Math.round(((step.value || 0) / max) * 100);
+            return '<div class="mini-funnel-row">' +
+                '<span class="text-xs text-text-secondary w-20 shrink-0">' + escapeHtml(step.label) + '</span>' +
+                '<div class="mini-funnel-track"><div class="mini-funnel-fill" style="width:' + pct + '%"></div></div>' +
+                '<span class="text-xs font-semibold text-text-primary w-10 text-right">' + escapeHtml(String(step.value)) + '</span>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderCoauthorTypeBars(rows) {
+        var container = document.getElementById('coauthor-type-bars');
+        if (!container) return;
+        if (!rows || !rows.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No suggestion-type trust data yet.</p>';
+            return;
+        }
+        container.innerHTML = rows.map(function (row) {
+            return '<div class="trust-row">' +
+                '<div class="flex items-center justify-between gap-2">' +
+                    '<p class="text-sm font-medium text-text-primary">' + escapeHtml(row.type) + '</p>' +
+                    '<p class="text-xs text-text-tertiary">accept ' + escapeHtml(String(row.accepted || 0)) + '% · edit ' + escapeHtml(String(row.edited || 0)) + '%</p>' +
+                '</div>' +
+                '<div class="trust-stack">' +
+                    '<div class="trust-accept" style="width:' + Math.min(100, row.accepted || 0) + '%"></div>' +
+                    '<div class="trust-edit" style="width:' + Math.min(100, row.edited || 0) + '%"></div>' +
+                    '<div class="trust-reject" style="width:' + Math.min(100, row.rejected || 0) + '%"></div>' +
+                '</div>' +
+                '<p class="text-[11px] text-text-tertiary mt-2">Publish-through: ' + escapeHtml(String(row.published || 0)) + '%</p>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderInterventionLift(items) {
+        var container = document.getElementById('intervention-lift-list');
+        if (!container) return;
+        if (!items || !items.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No intervention outcome comparisons yet.</p>';
+            return;
+        }
+        var maxDelta = Math.max.apply(null, items.map(function (item) { return item.delta || 0; }).concat([1]));
+        container.innerHTML = items.map(function (item) {
+            var pct = Math.round(((item.delta || 0) / maxDelta) * 100);
+            var before = item.before != null ? (item.before + '%') : '—';
+            var after = item.after != null ? (item.after + '%') : (item.delta != null ? ('+' + item.delta + ' pts') : '—');
+            return '<div class="lift-row">' +
+                '<div class="flex items-center justify-between gap-3">' +
+                    '<div><p class="text-sm font-medium text-text-primary">' + escapeHtml(item.label) + '</p>' +
+                    '<p class="text-xs text-text-tertiary mt-1">' + escapeHtml(item.note || '') + '</p></div>' +
+                    '<p class="text-sm font-semibold text-success whitespace-nowrap">' + before + ' → ' + after + '</p>' +
+                '</div>' +
+                '<div class="lift-track"><div class="lift-fill" style="width:' + pct + '%"></div></div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderPublishReadiness(readiness) {
+        var container = document.getElementById('publish-readiness');
+        if (!container) return;
+        var cols = [
+            { key: 'ready', title: 'Ready', icon: 'task_alt' },
+            { key: 'watch', title: 'Watch', icon: 'visibility' },
+            { key: 'pending', title: 'Pending', icon: 'schedule' }
+        ];
+        container.innerHTML = cols.map(function (col) {
+            var items = (readiness && readiness[col.key]) || [];
+            return '<div class="readiness-column">' +
+                '<p class="analytics-card-title text-base"><span class="material-symbols-outlined text-primary text-base">' + col.icon + '</span>' + col.title + '</p>' +
+                '<div class="mt-3">' + (items.length ? items.map(function (item) {
+                    return '<div class="readiness-item">' + escapeHtml(item) + '</div>';
+                }).join('') : '<p class="text-sm text-text-tertiary">No items.</p>') + '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderAuthorChapterTable(rows) {
+        var container = document.getElementById('author-chapter-table');
+        if (!container) return;
+        if (!rows || !rows.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No chapter data yet.</p>';
+            return;
+        }
+        var body = rows.map(function (row) {
+            var isSelected = currentQualityChapter !== 'all' && String(currentQualityChapter) === String(row.chapterNum);
+            return '<tr class="' + (isSelected ? 'bg-primary-bg/30' : '') + '">' +
+                '<td>Ch. ' + row.chapterNum + '</td>' +
+                '<td class="text-text-secondary">' + escapeHtml(row.title) + '</td>' +
+                '<td class="font-semibold text-text-primary">' + escapeHtml(String(row.resolution)) + '%</td>' +
+                '<td class="text-text-secondary">' + escapeHtml(String(row.atRisk || 0)) + '</td>' +
+                '<td><p class="text-sm font-medium text-text-primary">' + escapeHtml(row.topSignal || '—') + '</p><p class="text-xs text-text-tertiary mt-1">' + escapeHtml(row.topSignalEvidence || '') + '</p></td>' +
+                '<td class="text-text-secondary">' + escapeHtml(row.nextMove || '—') + '</td>' +
+                '<td class="text-success font-semibold">' + (row.lift != null ? ('+' + row.lift + ' pts') : '—') + '</td>' +
+            '</tr>';
+        }).join('');
+        container.innerHTML = '<table><thead><tr><th>#</th><th>Chapter</th><th>Resolution</th><th>At risk</th><th>Top signal</th><th>Next move</th><th>Lift</th></tr></thead><tbody>' + body + '</tbody></table>';
+    }
+
+    function renderPublisherPortfolioOverview(books) {
+        var container = document.getElementById('publisher-portfolio-overview');
+        if (!container) return;
+        if (!books || !books.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No portfolio books yet.</p>';
+            return;
+        }
+        container.innerHTML = books.map(function (book) {
+            return '<div class="publisher-overview-card">' +
+                '<div class="flex items-start justify-between gap-3">' +
+                    '<div><p class="text-sm font-semibold text-text-primary">' + escapeHtml(book.title) + '</p>' +
+                    '<p class="text-xs text-text-tertiary mt-1">' + escapeHtml(book.subject || '') + '</p></div>' +
+                    '<span class="publisher-book-status ' + escapeHtml(book.status || 'watch') + '">' + escapeHtml(book.aiState || book.status || 'watch') + '</span>' +
+                '</div>' +
+                '<div class="publisher-overview-meta">' +
+                    '<div class="publisher-mini-stat"><p class="insight-kicker">Readers</p><p class="font-semibold text-text-primary">' + escapeHtml(book.readers || '—') + '</p></div>' +
+                    '<div class="publisher-mini-stat"><p class="insight-kicker">Growth</p><p class="font-semibold text-success">' + escapeHtml(book.growth || '—') + '</p></div>' +
+                    '<div class="publisher-mini-stat"><p class="insight-kicker">AI ready</p><p class="font-semibold text-ai-text">' + escapeHtml(book.aiReady || '—') + '</p></div>' +
+                    '<div class="publisher-mini-stat"><p class="insight-kicker">Learning</p><p class="font-semibold text-text-primary">' + escapeHtml(book.outcome || '—') + '</p></div>' +
+                '</div>' +
+                '<p class="text-xs text-text-secondary mt-3">' + escapeHtml(book.note || '') + '</p>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderPublisherAiReadiness(data) {
+        var container = document.getElementById('publisher-ai-readiness');
+        if (!container) return;
+        if (!data) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No AI readiness data yet.</p>';
+            return;
+        }
+        var tiers = (data.tiers || []).map(function (item) {
+            return '<div class="publisher-readiness-card">' +
+                '<p class="insight-kicker">' + escapeHtml(item.label) + '</p>' +
+                '<p class="text-2xl font-semibold text-text-primary mt-1">' + escapeHtml(item.value || '—') + '</p>' +
+                '<p class="text-xs text-text-secondary mt-2">' + escapeHtml(item.hint || '') + '</p>' +
+            '</div>';
+        }).join('');
+        var compare = (data.compare || []).map(function (item) {
+            return '<div class="publisher-compare-row">' +
+                '<p class="text-sm font-medium text-text-primary">' + escapeHtml(item.label) + '</p>' +
+                '<div><p class="insight-kicker">AI-enabled</p><p class="font-semibold text-success">' + escapeHtml(item.ai || '—') + '</p></div>' +
+                '<div><p class="insight-kicker">Traditional</p><p class="font-semibold text-text-primary">' + escapeHtml(item.nonAi || '—') + '</p></div>' +
+                '<div><p class="insight-kicker">Gap</p><p class="font-semibold text-primary">' + escapeHtml(item.delta || '—') + '</p></div>' +
+            '</div>';
+        }).join('');
+        container.innerHTML = '<div class="publisher-readiness-grid">' + tiers + '</div>' +
+            '<div class="publisher-compare-list">' + compare + '</div>' +
+            '<p class="text-xs text-text-secondary mt-4">' + escapeHtml(data.note || '') + '</p>';
+    }
+
+    function renderPublisherAuthorAdoption(data) {
+        var container = document.getElementById('publisher-author-adoption');
+        if (!container) return;
+        if (!data) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No author adoption data yet.</p>';
+            return;
+        }
+        var summary = (data.summary || []).map(function (item) {
+            return '<div class="publisher-adoption-card">' +
+                '<div class="explorer-metric-icon"><span class="material-symbols-outlined text-base">' + escapeHtml(item.icon || 'insights') + '</span></div>' +
+                '<p class="text-xl font-semibold text-text-primary mt-3">' + escapeHtml(item.value || '—') + '</p>' +
+                '<p class="text-sm font-medium text-text-primary mt-1">' + escapeHtml(item.label) + '</p>' +
+                '<p class="text-xs text-text-secondary mt-2">' + escapeHtml(item.hint || '') + '</p>' +
+            '</div>';
+        }).join('');
+        var features = (data.features || []).map(function (item) {
+            return '<div class="publisher-feature-card">' +
+                '<div class="flex items-start justify-between gap-3">' +
+                    '<div><p class="text-sm font-semibold text-text-primary">' + escapeHtml(item.name) + '</p>' +
+                    '<p class="text-xs text-text-tertiary mt-1">Usage ' + escapeHtml(item.usage || '—') + '</p></div>' +
+                    '<span class="topic-cluster-chip">' + escapeHtml(item.depth || '—') + '</span>' +
+                '</div>' +
+                '<p class="text-xs text-text-secondary mt-3">' + escapeHtml(item.note || '') + '</p>' +
+            '</div>';
+        }).join('');
+        container.innerHTML = '<div class="publisher-adoption-grid">' + summary + '</div>' +
+            '<div class="publisher-feature-list">' + features + '</div>';
+    }
+
+    function renderPublisherFeatureEffectiveness(items) {
+        var container = document.getElementById('publisher-feature-effectiveness');
+        if (!container) return;
+        if (!items || !items.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No AI feature effectiveness data yet.</p>';
+            return;
+        }
+        container.innerHTML = items.map(function (item) {
+            return '<div class="publisher-feature-card">' +
+                '<div class="flex items-start justify-between gap-3">' +
+                    '<div><p class="text-sm font-semibold text-text-primary">' + escapeHtml(item.name) + '</p>' +
+                    '<p class="text-xs text-text-tertiary mt-1">' + escapeHtml(item.note || '') + '</p></div>' +
+                    '<span class="topic-cluster-chip">' + escapeHtml(item.impact || '—') + '</span>' +
+                '</div>' +
+                '<div class="publisher-feature-grid">' +
+                    '<div><p class="insight-kicker">Author use</p><p class="font-semibold text-text-primary">' + escapeHtml(item.adoption || '—') + '</p></div>' +
+                    '<div><p class="insight-kicker">Published</p><p class="font-semibold text-text-primary">' + escapeHtml(item.publishRate || '—') + '</p></div>' +
+                    '<div><p class="insight-kicker">Manual edits</p><p class="font-semibold text-warning">' + escapeHtml(item.manualEdit || '—') + '</p></div>' +
+                    '<div><p class="insight-kicker">Outcome</p><p class="font-semibold text-success">' + escapeHtml(item.impact || '—') + '</p></div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderPublisherLearningOutcomes(data) {
+        var container = document.getElementById('publisher-learning-outcomes');
+        if (!container) return;
+        if (!data) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No learning outcome data yet.</p>';
+            return;
+        }
+        var portfolio = (data.portfolio || []).map(function (item) {
+            return '<div class="publisher-adoption-card">' +
+                '<div class="explorer-metric-icon"><span class="material-symbols-outlined text-base">' + escapeHtml(item.icon || 'school') + '</span></div>' +
+                '<p class="text-xl font-semibold text-text-primary mt-3">' + escapeHtml(item.value || '—') + '</p>' +
+                '<p class="text-sm font-medium text-text-primary mt-1">' + escapeHtml(item.label) + '</p>' +
+                '<p class="text-xs text-success mt-2">' + escapeHtml(item.delta || '—') + '</p>' +
+            '</div>';
+        }).join('');
+        var selected = data.selectedBook || {};
+        var books = (data.books || []).map(function (item) {
+            return '<div class="publisher-book-outcome-row">' +
+                '<div class="flex items-start justify-between gap-3">' +
+                    '<div><p class="text-sm font-medium text-text-primary">' + escapeHtml(item.title) + '</p>' +
+                    '<p class="text-xs text-text-tertiary mt-1">Recall ' + escapeHtml(item.recall || '—') + ' · Retention ' + escapeHtml(item.retention || '—') + ' · Completion ' + escapeHtml(item.completion || '—') + '</p></div>' +
+                    '<span class="topic-cluster-chip">' + escapeHtml(item.trend || '—') + '</span>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+        container.innerHTML = '<div class="publisher-adoption-grid">' + portfolio + '</div>' +
+            '<div class="publisher-outcomes-grid">' +
+                '<div class="publisher-outcome-stack">' +
+                    '<p class="insight-kicker">Selected textbook drill-down</p>' +
+                    '<p class="text-lg font-semibold text-text-primary mt-2">' + escapeHtml(selected.title || '—') + '</p>' +
+                    '<p class="text-xs text-text-tertiary mt-1">' + escapeHtml(selected.subject || '') + '</p>' +
+                    '<div class="publisher-feature-grid">' +
+                        '<div><p class="insight-kicker">Recall</p><p class="font-semibold text-text-primary">' + escapeHtml(selected.recall || '—') + '</p></div>' +
+                        '<div><p class="insight-kicker">Retention</p><p class="font-semibold text-text-primary">' + escapeHtml(selected.retention || '—') + '</p></div>' +
+                        '<div><p class="insight-kicker">Completion</p><p class="font-semibold text-text-primary">' + escapeHtml(selected.completion || '—') + '</p></div>' +
+                        '<div><p class="insight-kicker">Impact</p><p class="font-semibold text-success">' + escapeHtml(selected.impact || '—') + '</p></div>' +
+                    '</div>' +
+                    '<p class="text-xs text-text-secondary mt-3">' + escapeHtml(selected.note || '') + '</p>' +
+                '</div>' +
+                '<div class="publisher-outcome-stack">' +
+                    '<p class="insight-kicker">Portfolio textbook comparison</p>' +
+                    '<div class="mt-3">' + books + '</div>' +
+                '</div>' +
+            '</div>';
+    }
+
+    function renderPublisherActions(items) {
+        var container = document.getElementById('publisher-portfolio-actions');
+        if (!container) return;
+        if (!items || !items.length) {
+            container.innerHTML = '<p class="text-sm text-text-tertiary py-4">No portfolio actions yet.</p>';
+            return;
+        }
+        container.innerHTML = items.map(function (item) {
+            return '<div class="publisher-action-card ' + escapeHtml(item.severity || 'medium') + '">' +
+                '<p class="text-sm font-semibold text-text-primary">' + escapeHtml(item.title) + '</p>' +
+                '<p class="text-sm text-text-secondary mt-2">' + escapeHtml(item.body || '') + '</p>' +
+            '</div>';
         }).join('');
     }
 
@@ -1083,21 +1602,25 @@
         ['donut', 'journey', 'funnel', 'qualityJourney'].forEach(destroyChart);
 
         if (!currentBookId) {
-            document.getElementById('hero-donut-value').textContent = '—';
+            document.getElementById('hero-book-title').textContent = 'No book selected';
             document.getElementById('hero-secondary').textContent = 'Create a book to view analytics.';
-            renderStrategicStory(null);
             return;
         }
 
         var bookData = loadBookData(currentBookId);
         cachedQualityData = getBookQualityDashboard(currentBookId, bookData);
         var data = filterQualityDashboardByChapter(cachedQualityData, currentQualityChapter);
+        var authorView = getAuthorInsightsView(data);
+        var fullAuthorView = getAuthorInsightsView(cachedQualityData);
+        var publisherView = getPublisherPortfolioInsights({
+            savedBooks: listSavedBooks(),
+            currentBookId: currentBookId,
+            qualityData: cachedQualityData
+        });
         var isLive = data.mode === 'live';
-        var tacticalHero = data.tacticalHero || {};
 
         document.title = 'Analytics · ' + (data.bookTitle || 'DreamBook');
         document.getElementById('hero-book-title').textContent = data.bookTitle;
-        document.getElementById('hero-book-title-mobile').textContent = data.bookTitle;
 
         var badge = document.getElementById('mode-badge');
         badge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ' +
@@ -1107,34 +1630,24 @@
             : '<span class="material-symbols-outlined text-sm">science</span> Demo data';
 
         document.getElementById('period-label').textContent = data.period || '';
-        document.getElementById('hero-secondary').textContent = tacticalHero.secondary || data.hero.secondary || '';
-        document.getElementById('hero-student-sessions').textContent = data.hero.studentSessions != null ? data.hero.studentSessions.toLocaleString() : '—';
-        document.getElementById('hero-author-sessions').textContent = data.hero.authorSessions != null ? data.hero.authorSessions.toLocaleString() : '—';
-
-        renderHeroDonut(tacticalHero.completionPct != null ? tacticalHero.completionPct : 0);
-
-        if (data.reach && data.engagementCol && data.impact) {
-            document.getElementById('metric-columns').innerHTML =
-                renderMetricColumn(data.reach, 'reach') +
-                renderMetricColumn(data.engagementCol, 'engagement') +
-                renderMetricColumn(data.impact, 'impact');
-        }
-
+        document.getElementById('hero-secondary').textContent = authorView.summary || data.hero.secondary || '';
         populateQualityChapterSelect(cachedQualityData.chapters);
-        renderDecisionFunnel(data.student.funnel);
-        renderDecisionSignals('decisions-student-signals', data.student.signals, 'No signals for this scope.');
-        renderDecisionSignals('decisions-author-signals', data.author.signals, 'No author decisions yet.');
-        renderAuthorTopicList('decisions-author-clusters', data.author.topicClusters);
-        renderTopicClusterCards('decisions-student-clusters', data.student.topicClusters, 'decisions-clusters-empty');
-        renderJourneyChart(data.chapterOverview);
-        renderFunnelChart(data.widgetFunnel);
-        renderHeatmapTiles(data.sections);
-        renderActionCards(data.actions);
-        renderDecisionChapterTable(cachedQualityData.chapters);
+        renderInsightHeroKpis('author-hero-kpis', authorView.heroKpis);
+        populateFrictionSectionSelect(authorView.frictionSections || []);
+        renderFrictionHeatmapOverview(authorView.frictionSections || []);
+        renderFrictionSectionDetail(authorView.frictionSections || []);
+        renderAuthorRecommendationCards(authorView.recommendationCards);
+        renderInterventionTypeCards(authorView.interventionTypes);
+        renderPublishReadiness(authorView.publishReadiness);
 
-        renderStrategicStory(data.strategicStory);
-        renderImprovementLoops(data.improvementLoops);
-        renderQualityJourneyChart(data.chapterQualityOverview);
+        document.getElementById('publisher-summary').textContent = publisherView.summary || '';
+        renderInsightHeroKpis('publisher-hero-kpis', publisherView.heroKpis);
+        renderPublisherPortfolioOverview(publisherView.portfolioBooks);
+        renderPublisherAiReadiness(publisherView.aiReadiness);
+        renderPublisherAuthorAdoption(publisherView.authorAdoption);
+        renderPublisherFeatureEffectiveness(publisherView.featureEffectiveness);
+        renderPublisherLearningOutcomes(publisherView.learningOutcomes);
+        renderPublisherActions(publisherView.actions);
     }
 
     populateBookSelect();

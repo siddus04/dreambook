@@ -12,8 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
     <!-- Add base styles to reset any browser defaults that might be overriding Tailwind -->
     <style>
         body {
@@ -6713,9 +6711,6 @@
                     <button onclick="insertImage()" class="toolbar-btn" title="Insert Image">
                         <span class="material-symbols-outlined text-lg">image</span>
                     </button>
-                    <button onclick="insertEquation()" class="toolbar-btn" title="Insert Equation">
-                        <span class="material-symbols-outlined text-lg">functions</span>
-                    </button>
                     <button onclick="insertTable()" class="toolbar-btn" title="Insert Table">
                         <span class="material-symbols-outlined text-lg">table_chart</span>
                     </button>
@@ -8506,7 +8501,6 @@
     <script src="foundation_biology_catalog.js"></script>
     <script src="phet_catalog.js"></script>
     <script src="prompts_ta.js"></script>
-    <script src="equation.js"></script>
     <script src="prompts_review_llm.js"></script>
     <script src="module_formats.js"></script>
     <script src="scenario_registry.js"></script>
@@ -9895,19 +9889,15 @@
         return !!parsed?.stepDone;
     }
 
-    function injectLadderQuestion(chat, questionText, options = {}) {
+    function injectLadderQuestion(chat, questionText) {
         if (!questionText?.trim()) return;
-        const trimmed = questionText.trim();
-        if (!options.skipChatEcho) {
-            addWidgetChatMessage('assistant', trimmed, chat.persona);
-        }
-        chat.history.push({ role: 'assistant', content: trimmed });
-        chat.openingPrompt = trimmed;
+        addWidgetChatMessage('assistant', questionText.trim(), chat.persona);
+        chat.history.push({ role: 'assistant', content: questionText.trim() });
         const widgetEl = getWidgetElement(chat.widgetId);
-        recordWidgetSessionTurn(chat, widgetEl, 'assistant', trimmed);
+        recordWidgetSessionTurn(chat, widgetEl, 'assistant', questionText.trim());
     }
 
-    function advanceLadderIfReady(chat, widgetEl, options = {}) {
+    function advanceLadderIfReady(chat, widgetEl) {
         if (!widgetUsesQuestionLadder(chat.type, chat.questionLadder)) return false;
 
         const ladder = chat.questionLadder || [];
@@ -9920,7 +9910,7 @@
             chat.socraticStep = 1;
             chat.scenarioDone = true;
             if (widgetEl) widgetEl.dataset.socraticScenarioDone = 'true';
-            injectLadderQuestion(chat, ladder[0], options);
+            injectLadderQuestion(chat, ladder[0]);
             refreshSocraticWidgetUI(widgetEl, chat);
             persistSocraticProgress(chat.widgetId, chat);
             return true;
@@ -9935,7 +9925,7 @@
                 chat.debateSocraticState = MF.createDebateSocraticState(chat.socraticStep, chat.debateSocraticState?.rubric_profile || null);
                 chat.debateSocraticState.step_status = 'active';
             }
-            injectLadderQuestion(chat, ladder[chat.socraticStep - 1], options);
+            injectLadderQuestion(chat, ladder[chat.socraticStep - 1]);
             refreshSocraticWidgetUI(widgetEl, chat);
             persistSocraticProgress(chat.widgetId, chat);
             return true;
@@ -9943,7 +9933,7 @@
 
         if (step >= 1 && step < 3 && !isDebateRubricChat(chat, widgetEl)) {
             chat.socraticStep = step + 1;
-            injectLadderQuestion(chat, ladder[chat.socraticStep - 1], options);
+            injectLadderQuestion(chat, ladder[chat.socraticStep - 1]);
             refreshSocraticWidgetUI(widgetEl, chat);
             persistSocraticProgress(chat.widgetId, chat);
             return true;
@@ -10269,7 +10259,7 @@
                 broader_principle: !!stateDelta.broader_principle,
                 repaired_claim: false
             };
-            const coachEval = {
+            const mergedEval = {
                 feedback: turnEval.step_complete ? turnEval.coach_reply : '',
                 is_correct: ['correct', 'partially_correct', 'asks_for_help', 'memory_lapse'].includes(turnEval.student_state),
                 is_complete_for_current_step: turnEval.step_complete === true,
@@ -10279,18 +10269,9 @@
                 nudge_question: turnEval.step_complete ? null : turnEval.coach_reply,
                 known_concepts: modelKnownConcepts
             };
-            const clientEval = MF.evaluateDebateStepAnswer
-                ? MF.evaluateDebateStepAnswer(step, lastStudentMessage, chat.debateSocraticState)
-                : {};
-            let mergedEval = MF.mergeDebateStepEvaluations
-                ? MF.mergeDebateStepEvaluations(coachEval, clientEval)
-                : coachEval;
-            if (MF.clampDebateCoachReveal) {
-                mergedEval = MF.clampDebateCoachReveal(mergedEval, step, lastStudentMessage, chat.debateSocraticState);
-            }
-            visibleReply = MF.buildDebateCoachVisibleReply
-                ? MF.buildDebateCoachVisibleReply(mergedEval, '')
-                : (turnEval.coach_reply || parsed.text);
+            visibleReply = turnEval.coach_reply || (MF.buildDebateCoachVisibleReply
+                ? MF.buildDebateCoachVisibleReply(mergedEval, parsed.text)
+                : parsed.text);
             chat.debateSocraticState = MF.updateDebateSocraticState
                 ? MF.updateDebateSocraticState(chat.debateSocraticState, step, mergedEval, lastStudentMessage)
                 : chat.debateSocraticState;
@@ -12697,9 +12678,6 @@ ${subject}`;
             resetChapterGenSession();
             resetEditorUndoHistory();
             patchLegacyPedagogyBlocks();
-            if (window.DreamBookEquations?.initEquationBlocks) {
-                DreamBookEquations.initEquationBlocks(document.getElementById('editor'));
-            }
             initAuthorRecallBlocks();
             updateDraftPendingUI();
             updateChapterSections();
@@ -13113,7 +13091,6 @@ Do not invent news headlines or dates. Do not force a news story if none fits. R
         { id: 'mini-case-study', label: 'Mini Case Study', desc: 'Apply the concept in a scenario', icon: 'cases', accent: 'violet', category: 'Interactive', context: 'both', widget: true, requiresContext: true },
         { id: 'explain-to-peer', label: 'Explain to a Peer', desc: 'Teach the concept to a curious classmate', icon: 'school', accent: 'sky', category: 'Interactive', context: 'both', widget: true, requiresContext: true },
         { id: 'insert-image', label: 'AI image', desc: 'Generate a visual with AI', icon: 'image', accent: 'slate', category: 'Media', context: 'both', action: 'openImageGenModal' },
-        { id: 'insert-equation', label: 'Equation', desc: 'Insert math (KaTeX, describe, or image)', icon: 'functions', accent: 'slate', category: 'Media', context: 'both', action: 'openEquationModal' },
         { id: 'insert-video', label: 'YouTube video', desc: 'Embed a relevant video', icon: 'smart_display', accent: 'slate', category: 'Media', context: 'both', action: 'openVideoModal' },
     ];
 
@@ -13355,11 +13332,6 @@ Do not invent news headlines or dates. Do not force a news story if none fits. R
                     el.classList.remove('is-selected');
                 });
             }
-            if (!e.target.closest('.equation-block')) {
-                document.querySelectorAll('.equation-block.is-selected').forEach((el) => {
-                    el.classList.remove('is-selected');
-                });
-            }
         });
         
         // Initialize Drag and Drop for Chapters
@@ -13530,8 +13502,6 @@ Do not invent news headlines or dates. Do not force a news story if none fits. R
                     closeExampleModal();
                 } else if (!document.getElementById('image-gen-modal').classList.contains('hidden')) {
                     closeImageGenModal();
-                } else if (window.DreamBookEquations?.isModalOpen?.()) {
-                    DreamBookEquations.closeModal();
                 } else if (!document.getElementById('lecture-podcast-modal').classList.contains('hidden')) {
                     closeLecturePodcastModal();
                 } else if (!document.getElementById('exercise-transform-modal').classList.contains('hidden')) {
@@ -14357,12 +14327,6 @@ Do not invent news headlines or dates. Do not force a news story if none fits. R
         openImageGenModal();
     }
 
-    function insertEquation() {
-        if (window.DreamBookEquations?.openModal) {
-            DreamBookEquations.openModal();
-        }
-    }
-
     function insertTable() {
         const editor = getFormatTargetEditor();
         if (editor) editor.focus();
@@ -14419,16 +14383,6 @@ Do not invent news headlines or dates. Do not force a news story if none fits. R
             if (selectedImage) {
                 event.preventDefault();
                 selectedImage.remove();
-                checkPlaceholder();
-                updateWordCount();
-                saveCurrentChapterState();
-                saveBook({ markDirty: true });
-                return;
-            }
-            const selectedEquation = document.querySelector('#editor .equation-block.is-selected');
-            if (selectedEquation) {
-                event.preventDefault();
-                selectedEquation.remove();
                 checkPlaceholder();
                 updateWordCount();
                 saveCurrentChapterState();
@@ -15080,7 +15034,6 @@ Verification status: unverified — confirm before publish`;
             openReadingLevelModal,
             openExampleModal,
             openImageGenModal,
-            openEquationModal,
             openVideoModal,
             openSimulationSetupModal,
             openLecturePodcastModal,
@@ -18881,7 +18834,6 @@ ${sourceText}
         if (['h1', 'h2', 'h3', 'h4', 'table', 'hr'].includes(tag)) return true;
         if (tag === 'blockquote' || isFigurePlaceholderBlock(el)) return true;
         if (el.classList?.contains('editor-image') || el.classList?.contains('image-pending')) return true;
-        if (el.classList?.contains('equation-block')) return true;
         if (el.classList?.contains('simulation-block') || el.classList?.contains('pedagogy-widget')
             || el.classList?.contains('pedagogy-block-inserted')) return true;
         if (typeof isBeautifyPreservedBlock === 'function' && isBeautifyPreservedBlock(el)) return true;
@@ -20418,19 +20370,6 @@ ${brokenMarkdown}
 
     function insertCopilotResponseIntoEditor(rawMarkdown, opts) {
         opts = opts || {};
-        const copilotLatex = window.DreamBookEquations?.extractLatexFromCopilot?.(rawMarkdown);
-        if (copilotLatex) {
-            const placement = opts.placement || getCopilotInsertPlacementFromButton(opts.triggerBtn) || getCopilotInsertPlacementSnapshot() || {};
-            const inserted = DreamBookEquations.insertBlock(copilotLatex, {
-                placement,
-                promptPlacement: opts.promptPlacement !== false,
-                fromCopilot: true
-            });
-            if (inserted === null && copilotInsertPending?.html) {
-                return null;
-            }
-            return inserted;
-        }
         const extracted = extractCopilotInsertContent(rawMarkdown);
         if (!extracted.trim()) {
             showReviewToast('Nothing to insert from this response.', true);
@@ -28342,7 +28281,6 @@ Your task is to write ONE analogy that explains ONLY the concept in the user's s
         if (el.classList?.contains('pedagogy-block-inserted')) return true;
         if (el.classList?.contains('pedagogy-block')) return true;
         if (el.classList?.contains('simulation-block')) return true;
-        if (el.classList?.contains('equation-block')) return true;
         if (el.classList?.contains('editor-image')) return true;
         if (el.classList?.contains('image-pending')) return true;
         if (el.hasAttribute('data-widget-id')) return true;
@@ -29866,14 +29804,10 @@ You receive the full text of the author's current chapter plus an outline of all
         const insertFormatHint = /highlighted this specific passage/i.test(lastUserMessage)
             ? '\nWhen providing insertable chapter content, put conversational notes before a line `---` and the insertable markdown suggestion after it.'
             : '';
-        const equationAddon = window.DreamBookEquations?.getCopilotPromptAddon?.(lastUserMessage) || '';
-        const fullSystemPrompt = systemPrompt + insertFormatHint + equationAddon;
+        const fullSystemPrompt = systemPrompt + insertFormatHint;
 
         if (!state.apiKey) {
-            let mock = getMockCopilotResponse(lastUserMessage);
-            if (window.DreamBookEquations?.isEquationIntent?.(lastUserMessage)) {
-                mock = window.DreamBookEquations.getMockCopilotEquationResponse(lastUserMessage);
-            }
+            const mock = getMockCopilotResponse(lastUserMessage);
             if (onToken) {
                 let full = '';
                 for (const part of mock.split(/(\s+)/)) {
@@ -29963,8 +29897,6 @@ You receive the full text of the author's current chapter plus an outline of all
     }
     
     function formatCopilotContent(content) {
-        const eqPreview = window.DreamBookEquations?.formatCopilotPreview?.(content);
-        if (eqPreview) return eqPreview;
         return markdownToEditorHTML(content, { preview: true });
     }
     
@@ -36994,199 +36926,6 @@ Do NOT give author or drafting advice. Be supportive, concise, and educational. 
         }
     }
 
-    async function processVoiceLadderUserTurn(chat, widgetEl, message) {
-        if (!widgetUsesQuestionLadder(chat.type, chat.questionLadder)) return null;
-
-        const MF = getCoachModuleFormats();
-        ensureDebateQuestionLadder(chat, widgetEl);
-        const scenarioHook = chat.scenarioHook || getSocraticScenarioHook(widgetEl);
-        const isDebateRubric = isDebateRubricChat(chat, widgetEl);
-
-        let step;
-        if (isDebateRubric) {
-            resolveChatStepConcluded(chat);
-            step = MF.resolveDebateActiveStep?.(chat.stepConcluded) || 3;
-            chat.socraticStep = step;
-            if (!chat.debateSocraticState) {
-                chat.debateSocraticState = MF.createDebateSocraticState?.(step) || null;
-            }
-        } else {
-            step = chat.socraticStep ?? getSocraticInitialStep(scenarioHook, widgetEl?.dataset?.socraticStep);
-            chat.socraticStep = step;
-        }
-        resolveChatStepConcluded(chat);
-
-        const lastHist = chat.history[chat.history.length - 1];
-        if (!(lastHist?.role === 'user' && lastHist.content === message)) {
-            chat.history.push({ role: 'user', content: message });
-            recordWidgetSessionTurn(chat, widgetEl, 'user', message);
-        }
-
-        incrementStepExchange(chat, step);
-        if (isWeakStudentTurn(message)) incrementWeakTry(chat, step);
-
-        let shouldConclude = false;
-        let coachHint = '';
-        const voiceMaxPerStep = MF.VOICE_MAX_PER_LADDER_STEP || 3;
-        const exchangesOnStep = chat.stepMessages[step] || 0;
-
-        if (isDebateRubric) {
-            const turnEvalResult = await evaluateDebateTurnWithLLM(chat, widgetEl, step, message, { voiceMode: true })
-                .catch(error => ({
-                    eval: buildFallbackStructuredDebateEval(chat, step, message),
-                    raw: `ERROR: ${error.message || error}`,
-                    parsed: null,
-                    fallback: true,
-                    error: error.message || String(error)
-                }));
-            const turnEval = turnEvalResult.eval;
-            const stateDelta = turnEval.state_delta || {};
-            const modelKnownConcepts = {
-                nucleus_controls_eukaryotes: !!stateDelta.nucleus_controls_eukaryotes,
-                prokaryotes_lack_nucleus: !!stateDelta.prokaryotes_lack_nucleus,
-                nucleoid_or_dna: !!stateDelta.nucleoid_or_dna,
-                broader_principle: !!stateDelta.broader_principle,
-                repaired_claim: false
-            };
-            const coachEval = {
-                feedback: turnEval.step_complete ? turnEval.coach_reply : '',
-                is_correct: ['correct', 'partially_correct', 'asks_for_help', 'memory_lapse'].includes(turnEval.student_state),
-                is_complete_for_current_step: turnEval.step_complete === true,
-                missing_piece: turnEval.misconception || '',
-                should_advance: turnEval.step_complete === true,
-                next_step: turnEval.step_complete ? (turnEval.advance_to_step || (step + 1)) : null,
-                nudge_question: turnEval.step_complete ? null : turnEval.coach_reply,
-                known_concepts: modelKnownConcepts
-            };
-            const clientEval = MF.evaluateDebateStepAnswer
-                ? MF.evaluateDebateStepAnswer(step, message, chat.debateSocraticState)
-                : {};
-            let mergedEval = MF.mergeDebateStepEvaluations
-                ? MF.mergeDebateStepEvaluations(coachEval, clientEval)
-                : coachEval;
-            if (MF.clampDebateCoachReveal) {
-                mergedEval = MF.clampDebateCoachReveal(mergedEval, step, message, chat.debateSocraticState);
-            }
-            coachHint = MF.buildDebateCoachVisibleReply
-                ? MF.buildDebateCoachVisibleReply(mergedEval, '')
-                : (turnEval.coach_reply || '');
-            chat.debateSocraticState = MF.updateDebateSocraticState
-                ? MF.updateDebateSocraticState(chat.debateSocraticState, step, mergedEval, message)
-                : chat.debateSocraticState;
-            if (chat.debateSocraticState) {
-                chat.debateSocraticState.last_turn_evaluation = {
-                    student_state: turnEval.student_state,
-                    mastery_estimate: turnEval.mastery_estimate,
-                    coach_move: turnEval.coach_move,
-                    misconception: turnEval.misconception || '',
-                    used_fallback: !!turnEvalResult.fallback
-                };
-            }
-            shouldConclude = mergedEval.should_advance === true;
-            if (!shouldConclude && MF.shouldConcludeLadderStep) {
-                shouldConclude = MF.shouldConcludeLadderStep({
-                    stepDone: false,
-                    exchangesOnStep,
-                    maxPerStep: voiceMaxPerStep
-                });
-            }
-        } else if (MF.shouldConcludeLadderStep) {
-            shouldConclude = MF.shouldConcludeLadderStep({
-                stepDone: false,
-                exchangesOnStep,
-                maxPerStep: voiceMaxPerStep
-            });
-        } else {
-            shouldConclude = exchangesOnStep >= voiceMaxPerStep;
-        }
-
-        let stepAdvanced = false;
-        if (shouldConclude) {
-            if (chat.debateSocraticState) chat.debateSocraticState.step_status = 'complete';
-            markLadderStepConcluded(chat, step);
-            stepAdvanced = advanceLadderIfReady(chat, widgetEl, { skipChatEcho: true });
-            if (isLadderChatComplete(chat)) {
-                chat.ladderComplete = true;
-                if (isDebateRubric && step === 3) fireDebateCompletionConfetti();
-            }
-        } else if (isDebateRubric && chat.debateSocraticState) {
-            chat.debateSocraticState.step_status = 'needs_nudge';
-        }
-
-        refreshSocraticWidgetUI(widgetEl, chat);
-        persistSocraticProgress(chat.widgetId, chat);
-        updateWidgetDoneButtonState();
-
-        const userLines = (typeof RealtimeVoiceAgent !== 'undefined' && RealtimeVoiceAgent.getTranscript)
-            ? RealtimeVoiceAgent.getTranscript().split('\n').filter(line => line.trim().startsWith('You:'))
-            : [];
-        chat.voiceProcessedTurnCount = userLines.length || ((chat.voiceProcessedTurnCount || 0) + 1);
-
-        if (chat.ladderComplete) chat.voicePendingAutoComplete = true;
-
-        return {
-            shouldConclude,
-            stepAdvanced,
-            coachHint,
-            step,
-            isDebateRubric,
-            exchangesOnStep
-        };
-    }
-
-    function buildWidgetVoiceTurnDirective(chat, widgetEl, turnResult) {
-        if (!turnResult) return '';
-        const MF = getCoachModuleFormats();
-        const ladder = chat.questionLadder || [];
-        const step = chat.socraticStep ?? 1;
-        const currentQ = ladder[step - 1] || chat.openingPrompt || '';
-
-        if (chat.ladderComplete) {
-            return [
-                'CHECKPOINT COMPLETE: All 3 module steps are done.',
-                'Give a warm 2-sentence wrap-up in plain words — like "Nice work" and what they figured out.',
-                'Do NOT ask any new questions.',
-                'Mention they can tap Done to finish.'
-            ].join(' ');
-        }
-
-        if (turnResult.shouldConclude && turnResult.stepAdvanced) {
-            const nextQ = ladder[step - 1] || chat.openingPrompt || '';
-            return [
-                `STEP TRANSITION: Step ${turnResult.step} is complete.`,
-                'Briefly affirm what the student got right (one short sentence, plain words).',
-                `Then ask EXACTLY this one question and stop: "${nextQ}"`,
-                'Do not add extra challenges or case-study follow-ups.'
-            ].join(' ');
-        }
-
-        if (turnResult.shouldConclude && !turnResult.stepAdvanced && step === 3) {
-            return [
-                'FINAL STEP: Affirm their bigger-picture insight in one simple sentence.',
-                'Do not ask follow-up questions — the checkpoint will finish after your reply.'
-            ].join(' ');
-        }
-
-        const voiceMax = MF?.VOICE_MAX_PER_LADDER_STEP || 3;
-        const exchangeNote = turnResult.exchangesOnStep
-            ? `Exchange ${turnResult.exchangesOnStep} of ~${voiceMax} on this step. `
-            : '';
-        let directive = `CURRENT STEP ${step} of 3. ${exchangeNote}Stay on this module question: "${currentQ}". `;
-        directive += 'Push back gently if needed — one counterpoint, plain spoken English, like a lab partner. ';
-        directive += 'Do NOT use seminar phrases or stack multiple precision drills. ';
-        if (turnResult.coachHint) {
-            directive += `Coaching angle (rephrase simply for speech): ${turnResult.coachHint} `;
-        }
-        directive += 'End with one clear question tied to the current step.';
-        return directive;
-    }
-
-    function buildWidgetVoiceInstructionsWithTurnDirective(widgetEl, chat, turnDirective) {
-        const base = buildWidgetVoiceInstructions(widgetEl, chat);
-        if (!turnDirective?.trim()) return base;
-        return `${base}\n\nTHIS TURN DIRECTIVE (follow exactly for your next spoken reply):\n${turnDirective.trim()}`;
-    }
-
     async function processLastVoiceTurnForLadder(chat, widgetEl, transcript) {
         if (!widgetUsesQuestionLadder(chat.type, chat.questionLadder)) return;
         const userLines = transcript.split('\n')
@@ -37196,7 +36935,9 @@ Do NOT give author or drafting advice. Be supportive, concise, and educational. 
         const processed = chat.voiceProcessedTurnCount || 0;
         if (userLines.length <= processed) return;
         const message = userLines[userLines.length - 1];
-        await processVoiceLadderUserTurn(chat, widgetEl, message);
+        chat.history.push({ role: 'user', content: message });
+        await processLadderStudentTurn(chat, widgetEl);
+        chat.voiceProcessedTurnCount = userLines.length;
         saveBook();
     }
 
@@ -37314,34 +37055,25 @@ Do NOT give author or drafting advice. Be supportive, concise, and educational. 
         const generatedContent = chat.generatedContent || decodeBlockDataset(widgetEl, 'content') || '';
         const spokenOpening = getWidgetVoiceOpeningPrompt(chat);
         const MF = getCoachModuleFormats();
-        const ladder = chat.questionLadder || [];
         let grounding = '';
         if (sourcePassage) grounding += `\nSource passage:\n${sourcePassage.slice(0, 1200)}`;
         if (generatedContent && chat.type !== 'socratic' && !widgetUsesQuestionLadder(chat.type, chat.questionLadder)) {
             grounding += `\nCheckpoint content (reference only — do not lecture through this on turn 1):\n${generatedContent.slice(0, 800)}`;
         }
         if (widgetUsesQuestionLadder(chat.type, chat.questionLadder)) {
-            const activeStep = chat.socraticStep || 1;
-            grounding += `\nLadder step ${activeStep} of 3. Current question: ${spokenOpening}`;
-            if (ladder.length >= 3) {
-                grounding += '\nModule question ladder (do not ask future steps early):';
-                ladder.slice(0, 3).forEach((q, i) => {
-                    grounding += `\n  Step ${i + 1}${i + 1 === activeStep ? ' (ACTIVE)' : ''}: ${q}`;
-                });
-            }
+            grounding += `\nLadder step ${chat.socraticStep || 1} of 3. Current question: ${spokenOpening}`;
             if (chat.type === 'debate') {
                 const parsed = MF?.parseOpposingChallengeContent?.(generatedContent);
                 if (parsed?.claim && parsed?.counter) {
                     grounding += `\nTHE CLAIM (reference only):\n${parsed.claim.slice(0, 400)}\nCOUNTER-VIEW (reference only):\n${parsed.counter.slice(0, 400)}`;
                 }
-                grounding += '\nStay within this counter-argument module. Do not invent new debate topics outside the ladder.';
             }
         }
 
         const explainPeerRule = chat.type === 'explain'
             ? `\nEXPLAIN-TO-PEER RULE: You are Sam, a confused peer. On your FIRST turn, do NOT teach or explain the concept. Ask the student to explain in their own words (use the opening prompt). Only ask clarifying follow-ups AFTER the student has spoken.`
             : (chat.type === 'debate' && widgetUsesQuestionLadder(chat.type, chat.questionLadder)
-                ? `\nDEBATE LADDER RULE: You are coaching a 3-step counter-argument checkpoint. Ask ONLY the current ladder question. After a few back-and-forths on a step, you will receive a STEP TRANSITION directive with the next question. Do NOT combine evaluation steps, invent new topics, or read all four parts aloud. Affirm what the student got right; nudge with one passage term if stuck — do not answer upcoming steps.`
+                ? `\nDEBATE LADDER RULE: Ask ONLY the current ladder question. Do NOT combine evaluation steps or read all four parts aloud. Affirm what the student got right; nudge with one passage term if stuck — do not answer upcoming steps.`
                 : '');
 
         const tutorVoicePolicy = MF.buildSharedTutorPolicy
@@ -37352,24 +37084,14 @@ Do NOT give author or drafting advice. Be supportive, concise, and educational. 
             }).replace(/\[STEP_DONE\]/g, '').replace(/append\s+on its own line/gi, 'signal step completion briefly')
             : '';
 
-        const isDebateVoiceLadder = chat.type === 'debate'
-            && widgetUsesQuestionLadder(chat.type, chat.questionLadder);
-        const voiceCoachPersona = isDebateVoiceLadder && MF.buildVoiceDebateCoachPersona
-            ? MF.buildVoiceDebateCoachPersona(appState.gradeLevel)
-            : (chat.pedagogySystem || chat.persona.systemPrompt);
-        const voiceLanguagePolicy = isDebateVoiceLadder && MF.buildVoiceDebateLanguagePolicy
-            ? `\n${MF.buildVoiceDebateLanguagePolicy(appState.gradeLevel)}`
-            : '';
-
         return `You are ${chat.persona.name}, a conversational learning coach for a ${appState.gradeLevel} student checkpoint.
 
-${voiceCoachPersona}
+${chat.pedagogySystem || chat.persona.systemPrompt}
 
 ${gradeContext}
 ${grounding}
 ${explainPeerRule}
 ${tutorVoicePolicy ? `\n${tutorVoicePolicy}` : ''}
-${voiceLanguagePolicy}
 
 Learning goal: ${chat.goal || 'Help the student engage deeply with the material.'}
 
@@ -37384,9 +37106,9 @@ CRITICAL TURN-TAKING RULES:
 Opening question (speak this first — one concise question only, max 2 sentences): "${spokenOpening}"
 
 After the student responds:
-- Keep each reply to 2-3 short spoken sentences and end with one question when appropriate.
+- Keep each reply to 2-3 sentences and end with one question when appropriate.
 - Aim for about ${maxTurns} student responses total.
-- Be encouraging and age-appropriate.${isDebateVoiceLadder ? ' Sound like a supportive lab partner, not a case-study seminar.' : ''}${getStudentPrivacyPromptAddon()}`;
+- Be encouraging and age-appropriate.${getStudentPrivacyPromptAddon()}`;
     }
 
     function fallbackWidgetVoiceToTextChat(widgetEl) {
@@ -37445,22 +37167,6 @@ After the student responds:
                 onInputEnabled: setVoiceHintListening,
                 onTranscriptUpdate: (transcript) => syncWidgetVoiceTranscript(transcript),
                 onAssistantPartial: () => {},
-                onUserTurnAccepted: async (text) => {
-                    if (!widgetUsesQuestionLadder(chat.type, chat.questionLadder)) return null;
-                    const el = getWidgetElement(chat.widgetId);
-                    if (!el) return null;
-                    const turnResult = await processVoiceLadderUserTurn(chat, el, text);
-                    const directive = buildWidgetVoiceTurnDirective(chat, el, turnResult);
-                    return {
-                        instructions: buildWidgetVoiceInstructionsWithTurnDirective(el, chat, directive)
-                    };
-                },
-                onAssistantTurnDone: async () => {
-                    const active = state.activeWidgetChat;
-                    if (!active?.voicePendingAutoComplete || !active.ladderComplete) return;
-                    active.voicePendingAutoComplete = false;
-                    await autoCompleteWidgetFromChat(active.widgetId, active, { delayMs: 600 });
-                },
                 onError: (error) => {
                     showReadingToast(error.message || 'Voice brainstorm failed.');
                     stopWidgetVoiceIfActive({ skipAutoComplete: true });
@@ -37852,7 +37558,6 @@ After the student responds:
             weakTriesPerStep: analyticsRecord?.weakTriesPerStep || {},
             debateSocraticState: analyticsRecord?.debateSocraticState || null,
             voiceProcessedTurnCount: analyticsRecord?.voiceProcessedTurnCount || 0,
-            voicePendingAutoComplete: false,
             sourcePassage,
             generatedContent,
             ladderComplete: ladderCompleteOnInit
@@ -38104,9 +37809,8 @@ After the student responds:
         };
     }
 
-    async function evaluateDebateTurnWithLLM(chat, widgetEl, step, studentMessage, options = {}) {
+    async function evaluateDebateTurnWithLLM(chat, widgetEl, step, studentMessage) {
         const MF = getCoachModuleFormats();
-        const voiceMode = !!options.voiceMode;
         const generatedContent = chat.generatedContent || decodeBlockDataset(widgetEl, 'content') || '';
         const sourcePassage = chat.sourcePassage || decodeBlockDataset(widgetEl, 'sourcePassage') || '';
         const profile = chat.debateSocraticState?.rubric_profile
@@ -38152,25 +37856,18 @@ Allowed coach_move values:
 Rules:
 - Advance only if the CURRENT step is satisfactorily complete.
 - Prefer open-ended coaching first, then become more explicit if the student is stuck.
-- When student_state is asks_for_help, memory_lapse, unclear, or the student hedges ("let me think", "I get confused"): empathize and give a hint that helps them remember — do NOT name the counterexample or correct answer yet.
-- Never use "Actually, it's …" or similar giveaway framing when correcting a wrong guess.
-- Step 2 cell-type debates: on the first wrong cell-type guess (e.g. eukaryotes), affirm what is true about that cell type and ask which cells lack the feature — do not name prokaryotes/bacteria until the second miss.
-- coach_move correct must still end with a question that lets the student supply the term.
 - Escalate help by struggle level:
   - first miss: ask an open-ended nudge that keeps the student reasoning
-  - second miss: give a more pointed hint (may name a category like bacteria only if needed)
+  - second miss: give a more pointed hint
   - third miss: give the missing fact briefly, then ask the student to apply it
   - fourth miss or clear frustration: stop looping, give a concise orienting explanation, and ask for one small response
-- If the student explicitly asks for help or says they do not remember, prefer a hint over repeating the same question — but still do not give the full answer on the first miss.
-- If the student names the wrong category tentatively or with confusion, encourage them and redirect with a hint — do not lecture the answer.
-- If the student names the wrong category confidently, correct briefly and redirect without naming the full answer on the first miss.
+- If the student explicitly asks for help or says they do not remember, prefer a hint over repeating the same question.
+- If the student names the wrong category confidently, correct briefly and redirect.
 - If the student gives a partly correct answer, acknowledge the part that works before nudging.
 - Avoid repeating the exact same coaching move on consecutive turns unless the student is making new progress.
 - Keep coach_reply to at most 2 sentences and at most 1 question.
 - Do NOT ask the next step question yourself if step_complete is true. Just acknowledge the completed thinking.
-- Return strict JSON only, with no markdown fences.${voiceMode && MF.buildVoiceDebateEvaluatorLanguageRules
-            ? `\n\n${MF.buildVoiceDebateEvaluatorLanguageRules(appState.gradeLevel)}`
-            : ''}`;
+- Return strict JSON only, with no markdown fences.`;
 
         const userPrompt = `CURRENT STEP: ${step}
 CURRENT QUESTION: ${currentQuestion}
@@ -38234,7 +37931,7 @@ Return JSON with exactly these keys:
                     { role: 'user', content: userPrompt }
                 ],
                 max_tokens: 350,
-                temperature: 0.1,
+                temperature: 0.2,
                 response_format: { type: 'json_object' }
             })
         });

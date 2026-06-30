@@ -474,9 +474,46 @@ const RealtimeVoiceAgent = (function() {
         }, delay);
     }
 
-    function requestFollowUpResponse() {
+    function requestFollowUpResponse(responsePayload) {
         if (!ws || ws.readyState !== WebSocket.OPEN || responseInProgress || !isActive) return;
-        ws.send(JSON.stringify({ type: 'response.create' }));
+        const payload = { type: 'response.create' };
+        if (responsePayload && typeof responsePayload === 'object') {
+            payload.response = responsePayload;
+        }
+        ws.send(JSON.stringify(payload));
+    }
+
+    function updateSessionInstructions(newInstructions) {
+        instructions = newInstructions || '';
+        return new Promise((resolve) => {
+            if (!ws || ws.readyState !== WebSocket.OPEN || !instructions) {
+                resolve(false);
+                return;
+            }
+            let settled = false;
+            const finish = (ok) => {
+                if (settled) return;
+                settled = true;
+                ws.removeEventListener('message', onMessage);
+                clearTimeout(timer);
+                resolve(ok);
+            };
+            const onMessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'session.updated') finish(true);
+                } catch (e) { /* ignore */ }
+            };
+            const timer = setTimeout(() => finish(false), 2500);
+            ws.addEventListener('message', onMessage);
+            ws.send(JSON.stringify({
+                type: 'session.update',
+                session: {
+                    type: 'realtime',
+                    instructions
+                }
+            }));
+        });
     }
 
     function handleUserTranscriptionCompleted(text) {
@@ -500,9 +537,25 @@ const RealtimeVoiceAgent = (function() {
         }
 
         appendTranscriptLine('user', trimmed);
-        if (requireUserTranscriptBeforeResponse) {
-            requestFollowUpResponse();
+        if (!requireUserTranscriptBeforeResponse) return;
+
+        if (callbacks.onUserTurnAccepted) {
+            Promise.resolve(callbacks.onUserTurnAccepted(trimmed))
+                .then(async (result) => {
+                    if (result?.skipResponse) return;
+                    if (result?.instructions) {
+                        await updateSessionInstructions(result.instructions);
+                    }
+                    requestFollowUpResponse(result?.responseCreate || null);
+                })
+                .catch((error) => {
+                    console.warn('RealtimeVoiceAgent: onUserTurnAccepted failed', error);
+                    requestFollowUpResponse();
+                });
+            return;
         }
+
+        requestFollowUpResponse();
     }
 
     async function getEphemeralToken(key, systemInstructions) {
@@ -657,6 +710,7 @@ const RealtimeVoiceAgent = (function() {
             const text = (msg.transcript || currentAssistantText || '').trim();
             currentAssistantText = '';
             appendTranscriptLine('assistant', text);
+            if (callbacks.onAssistantTurnDone) callbacks.onAssistantTurnDone(text);
             return;
         }
 
@@ -670,6 +724,7 @@ const RealtimeVoiceAgent = (function() {
             const text = (msg.text || currentAssistantText || '').trim();
             currentAssistantText = '';
             appendTranscriptLine('assistant', text);
+            if (callbacks.onAssistantTurnDone) callbacks.onAssistantTurnDone(text);
             return;
         }
 
@@ -848,7 +903,9 @@ const RealtimeVoiceAgent = (function() {
                 onReady: options.onReady || null,
                 validateUserTurn: options.validateUserTurn || null,
                 onStopRequested: options.onStopRequested || null,
-                onRejectedUserTurn: options.onRejectedUserTurn || null
+                onRejectedUserTurn: options.onRejectedUserTurn || null,
+                onUserTurnAccepted: options.onUserTurnAccepted || null,
+                onAssistantTurnDone: options.onAssistantTurnDone || null
             };
             apiKey = options.apiKey || '';
             instructions = options.instructions || '';
@@ -907,6 +964,10 @@ const RealtimeVoiceAgent = (function() {
 
         getTranscript: function() {
             return getFullTranscript();
+        },
+
+        updateInstructions: function(newInstructions) {
+            return updateSessionInstructions(newInstructions);
         }
     };
 })();

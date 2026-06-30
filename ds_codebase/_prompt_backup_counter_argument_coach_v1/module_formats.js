@@ -317,7 +317,6 @@ Takeaway: (one sentence)`,
     const COACH_STEP_EVAL_OPEN = '[STEP_EVAL]';
     const COACH_STEP_EVAL_CLOSE = '[/STEP_EVAL]';
     const DEFAULT_MAX_PER_LADDER_STEP = 4;
-    const VOICE_MAX_PER_LADDER_STEP = 3;
 
     const WIDGET_CHAT_POLICIES = {
         socratic: { minTurns: 1, maxPerLadderStep: DEFAULT_MAX_PER_LADDER_STEP, minTurnsRecall: 2 },
@@ -633,48 +632,6 @@ Takeaway: (one sentence)`,
         return { prokaryoteMention, eukaryoteMention, prokaryoteHasNucleus, eukaryoteLacksNucleus };
     }
 
-    function detectStudentHedgingOrConfusion(text) {
-        const t = String(text || '').toLowerCase();
-        return /let me think|always get confused|get confused|not sure|is it the|maybe it'?s|i'?m confused|i always get/i.test(t);
-    }
-
-    function debateCoachReplyRevealsAnswer(replyText, step, state) {
-        const r = String(replyText || '').toLowerCase();
-        if (!r.trim()) return false;
-        const n = parseInt(step, 10) || 1;
-        const followups = state?.followups_in_current_step || 0;
-        const profile = state?.rubric_profile || null;
-        const giveawayFraming = /\b(actually,? it'?s|the answer is|it'?s prokaryot|it is prokaryot|prokaryotic cells,? like bacteria)\b/i.test(r);
-
-        if (n === 2 && profile?.kind === 'cell_nucleus' && followups < 2) {
-            if (giveawayFraming) return true;
-            if (/\b(prokaryot|bacteri|archaea|nucleoid)\b/i.test(r)) return true;
-        }
-        if (n === 2 && profile?.kind === 'generic' && followups < 1) {
-            const counterTerms = (profile.counterTerms || []).filter(term => String(term).length > 4);
-            const hitCount = counterTerms.filter(term => r.includes(String(term).toLowerCase())).length;
-            if (hitCount >= 1 && giveawayFraming) return true;
-        }
-        return false;
-    }
-
-    function clampDebateCoachReveal(mergedEval, step, studentText, state) {
-        const merged = { ...(mergedEval || {}) };
-        const replyText = [merged.feedback, merged.nudge_question].filter(Boolean).join(' ');
-        if (!debateCoachReplyRevealsAnswer(replyText, step, state)) return merged;
-
-        const clientEval = evaluateDebateStepAnswer(step, studentText, state);
-        merged.feedback = clientEval.feedback || merged.feedback;
-        merged.nudge_question = clientEval.nudge_question || null;
-        merged.missing_piece = clientEval.missing_piece || merged.missing_piece;
-        merged.known_concepts = clientEval.known_concepts || merged.known_concepts;
-        merged.is_correct = !!clientEval.is_correct;
-        merged.is_complete_for_current_step = clientEval.is_complete_for_current_step === true;
-        merged.should_advance = clientEval.should_advance === true;
-        merged.next_step = merged.should_advance ? (clientEval.next_step || merged.next_step) : null;
-        return merged;
-    }
-
     function mergeKnownConcepts(existing, detected) {
         const base = existing || createEmptyKnownConcepts();
         const next = detected || {};
@@ -832,11 +789,9 @@ Takeaway: (one sentence)`,
             return result;
         }
         if (n === 2) {
-            const hedging = detectStudentHedgingOrConfusion(t);
-            const encourage = hedging ? 'Yes — this is a common mix-up. ' : '';
             if (confusion.eukaryoteMention && !confusion.prokaryoteMention) {
                 result.missing_piece = 'the cell type that actually lacks a nucleus';
-                result.feedback = `${encourage}Eukaryotic cells do have a nucleus, so they are not the counterexample here.`;
+                result.feedback = 'Eukaryotic cells have a nucleus, so they are not the counterexample here.';
                 result.nudge_question = (state?.followups_in_current_step || 0) >= 1
                     ? 'Think about bacteria. What kind of cell lacks a nucleus?'
                     : 'Which kind of cell lacks a nucleus instead?';
@@ -845,7 +800,7 @@ Takeaway: (one sentence)`,
             }
             if (confusion.eukaryoteLacksNucleus) {
                 result.missing_piece = 'the cell type that actually lacks a nucleus';
-                result.feedback = `${encourage}Eukaryotic cells do have a nucleus.`;
+                result.feedback = 'Eukaryotic cells do have a nucleus.';
                 result.nudge_question = (state?.followups_in_current_step || 0) >= 1
                     ? 'Think about bacteria. What kind of cell lacks a nucleus?'
                     : 'Which kind of cell lacks a nucleus instead?';
@@ -943,15 +898,13 @@ Takeaway: (one sentence)`,
         // Client good-enough wins even when the coach is conservative or omits STEP_EVAL.
         let shouldAdvance = clientComplete && (clientAdvance || coachAdvance);
         if (!coach && clientAdvance) shouldAdvance = true;
+        const feedback = (client.feedback && (clientComplete || client.is_correct))
+            ? client.feedback
+            : ((coach && coach.feedback) || client.feedback || '');
         let nudgeQuestion = null;
         if (!shouldAdvance) {
             nudgeQuestion = client.nudge_question || (coach && coach.nudge_question) || null;
         }
-        const feedback = !shouldAdvance && client.feedback && client.nudge_question
-            ? client.feedback
-            : ((client.feedback && (clientComplete || client.is_correct))
-                ? client.feedback
-                : ((coach && coach.feedback) || client.feedback || ''));
         return {
             feedback,
             is_correct: !!(coach && coach.is_correct) || !!client.is_correct,
@@ -1173,42 +1126,6 @@ Takeaway: (one sentence)`,
         const exchangesOnStep = opts?.exchangesOnStep || 0;
         const maxPerStep = opts?.maxPerStep || DEFAULT_MAX_PER_LADDER_STEP;
         return stepDone || exchangesOnStep >= maxPerStep;
-    }
-
-    function buildVoiceDebateCoachPersona(gradeLevel) {
-        const grade = gradeLevel || 'Class 10-12';
-        return [
-            `You are a friendly Critical Challenger coaching a ${grade} student out loud.`,
-            'Push back once when reasoning is weak — like a smart lab partner, not a seminar professor.',
-            'Keep each reply to 2–3 short spoken sentences and end with one clear question.',
-            'Coach with encouragement; do not stack multiple follow-up challenges on the same step.'
-        ].join(' ');
-    }
-
-    function buildVoiceDebateLanguagePolicy(gradeLevel) {
-        const grade = gradeLevel || 'Class 10-12';
-        return [
-            'VOICE LANGUAGE (you will be heard aloud):',
-            `- Audience: ${grade} students.`,
-            '- Use conversational spoken English — short sentences, everyday words first.',
-            '- Science terms from the passage are OK (nucleus, prokaryote, nucleoid); avoid seminar words (overgeneralization, nuance, shorthand, compartments, justify precisely).',
-            '- Do not say "as a devil\'s advocate" or "your justification needs precision" out loud.',
-            '- Prefer: "Good start — which cells have a nucleus?" over formal case-study phrasing.',
-            '- One friendly pushback per turn is enough; then let the student answer.',
-            `- After ${VOICE_MAX_PER_LADDER_STEP} back-and-forths on a step, wrap that step and move on.`
-        ].join('\n');
-    }
-
-    function buildVoiceDebateEvaluatorLanguageRules(gradeLevel) {
-        const grade = gradeLevel || 'Class 10-12';
-        return [
-            `VOICE MODE: coach_reply will be spoken aloud to ${grade} students.`,
-            '- Write coach_reply in plain spoken English (about 10th-grade reading level).',
-            '- Max ~15 words per sentence; max 2 sentences and 1 question.',
-            '- No seminar jargon unless the student already used it.',
-            '- Advance the step when the core idea is right — do not demand extra precision drills (boundaries, shorthand, gene-regulation detail) if they already named the key contrast (e.g. prokaryote vs eukaryote, nucleoid).',
-            `- If ${VOICE_MAX_PER_LADDER_STEP} follow-ups on this step, set step_complete true and coach_reply to a brief affirmation only.`
-        ].join('\n');
     }
 
     function buildSharedTutorPolicy(opts) {
@@ -3193,8 +3110,6 @@ Every paragraph in THE ANALOGY and CONCEPT MAPPING must reflect this domain.\n`;
         buildDebateCoachVisibleReply,
         evaluateDebateStepAnswer,
         mergeDebateStepEvaluations,
-        clampDebateCoachReveal,
-        detectStudentHedgingOrConfusion,
         isDebateLadderConcluded,
         getDebateStepFooterCopy,
         opposingClaimCounterViolates,
@@ -3229,10 +3144,6 @@ Every paragraph in THE ANALOGY and CONCEPT MAPPING must reflect this domain.\n`;
         isLadderStepsConcluded,
         migrateStepConcludedFromLegacy,
         shouldConcludeLadderStep,
-        VOICE_MAX_PER_LADDER_STEP,
-        buildVoiceDebateLanguagePolicy,
-        buildVoiceDebateCoachPersona,
-        buildVoiceDebateEvaluatorLanguageRules,
         COACH_STEP_DONE_TAG,
         parseCoachResponse,
         shouldUseDebateRubricMode,
